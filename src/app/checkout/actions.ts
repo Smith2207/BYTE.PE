@@ -12,11 +12,15 @@ import {
   actualizarEstadoPedido,
   generarNumeroPedido,
   guardarPedido,
+  getPedido,
   type PedidoItemMock,
 } from "@/lib/pedidos/store";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validations/checkout";
 import { consultarDni, consultarRuc } from "@/lib/documento/apiperu";
-import { desglosarIGV } from "@/lib/format";
+import { desglosarIGV, formatoPEN } from "@/lib/format";
+import { enviarCorreo } from "@/lib/email/client";
+import { plantillaConfirmacionPedido, plantillaNuevoPedidoAdmin } from "@/lib/email/plantillas";
+import { siteConfig } from "@/lib/site-config";
 
 type ResultadoConsultaDocumento =
   | { ok: true; tipo: "dni"; nombre: string }
@@ -157,7 +161,33 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
     return numeroPedido;
   });
 
+  // Fuera de la transacción: un correo que falla no debe deshacer un
+  // pedido real ya confirmado en base de datos.
+  enviarCorreosDePedido(numeroPedido).catch((error) => {
+    console.error("[checkout] Error enviando correos del pedido:", error);
+  });
+
   return { numeroPedido, total, items: itemsPedido };
+}
+
+async function enviarCorreosDePedido(numeroPedido: string) {
+  const pedido = await getPedido(numeroPedido);
+  if (!pedido) return;
+
+  await Promise.all([
+    enviarCorreo({
+      para: pedido.emailComprador,
+      asunto: `Pedido ${pedido.numeroPedido} recibido — ${siteConfig.nombre}`,
+      html: plantillaConfirmacionPedido(pedido),
+    }),
+    process.env.EMAIL_USER
+      ? enviarCorreo({
+          para: process.env.EMAIL_USER,
+          asunto: `Nuevo pedido: ${pedido.numeroPedido} (${formatoPEN(pedido.total)})`,
+          html: plantillaNuevoPedidoAdmin(pedido),
+        })
+      : Promise.resolve(),
+  ]);
 }
 
 export async function confirmarPedidoAction(input: ConfirmarPedidoInput) {
