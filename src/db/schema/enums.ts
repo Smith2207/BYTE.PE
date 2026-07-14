@@ -60,6 +60,16 @@ export const estadoDevolucionEnum = pgEnum("estado_devolucion", [
   "completada",
 ]);
 
+// Gastos operativos del negocio (no mercadería — eso ya se registra en
+// "compras"), para poder ver una utilidad neta real y no solo margen bruto.
+export const categoriaGastoEnum = pgEnum("categoria_gasto", [
+  "alquiler",
+  "marketing",
+  "sueldos",
+  "servicios",
+  "otros",
+]);
+
 export type RolUsuario = (typeof rolUsuarioEnum.enumValues)[number];
 export type TipoDocumento = (typeof tipoDocumentoEnum.enumValues)[number];
 export type EstadoPedido = (typeof estadoPedidoEnum.enumValues)[number];
@@ -70,3 +80,4 @@ export type EstadoCompra = (typeof estadoCompraEnum.enumValues)[number];
 export type ProveedorCompra = (typeof proveedorCompraEnum.enumValues)[number];
 export type TipoDevolucion = (typeof tipoDevolucionEnum.enumValues)[number];
 export type EstadoDevolucion = (typeof estadoDevolucionEnum.enumValues)[number];
+export type CategoriaGasto = (typeof categoriaGastoEnum.enumValues)[number];

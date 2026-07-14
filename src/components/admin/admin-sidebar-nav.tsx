@@ -2,7 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Tag, Tags, Receipt, Truck, FileWarning, Undo2 } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  Tag,
+  Tags,
+  Receipt,
+  Truck,
+  FileWarning,
+  Undo2,
+  Wallet,
+  ClipboardList,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const ADMIN_NAV_ITEMS = [
@@ -14,6 +25,8 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/pedidos", label: "Pedidos", icon: Receipt },
   { href: "/admin/devoluciones", label: "Devoluciones", icon: Undo2 },
   { href: "/admin/reclamos", label: "Reclamos", icon: FileWarning },
+  { href: "/admin/gastos", label: "Gastos", icon: Wallet },
+  { href: "/admin/kardex", label: "Kardex", icon: ClipboardList },
 ];
 
 function esActivo(pathname: string, href: string) {

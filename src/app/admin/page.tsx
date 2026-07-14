@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Truck,
+  Wallet,
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { TopProductosChart } from "@/components/admin/top-productos-chart";
 import { adminListarProductos } from "@/lib/mock/repo";
 import { listarPedidos, getVariacionUltimos30Dias } from "@/lib/pedidos/store";
 import { getResumenCompras } from "@/lib/compras/store";
+import { listarGastos } from "@/lib/gastos/store";
 import { formatoPEN } from "@/lib/format";
 
 export const metadata = { title: "Admin — Dashboard" };
@@ -43,6 +45,7 @@ export default async function AdminDashboardPage() {
   const productos = await adminListarProductos();
   const resumenCompras = await getResumenCompras();
   const variacion = await getVariacionUltimos30Dias();
+  const gastos = await listarGastos();
 
   const pedidosValidos = pedidos.filter((p) => p.estado !== "cancelado");
   const ventasTotales = pedidosValidos.reduce((acc, p) => acc + p.total, 0);
@@ -72,6 +75,12 @@ export default async function AdminDashboardPage() {
   const margenBruto = ingresosPorProductos - costoVentas;
   const margenPorcentaje =
     ingresosPorProductos > 0 ? Math.round((margenBruto / ingresosPorProductos) * 100) : 0;
+
+  // Utilidad neta = margen bruto (ya sin IGV ni costo de mercadería) menos
+  // los gastos operativos (alquiler, marketing, sueldos...) — todo a nivel
+  // histórico total, igual que el resto de tarjetas de esta sección.
+  const gastosOperativosTotales = gastos.reduce((acc, g) => acc + g.monto, 0);
+  const utilidadNeta = margenBruto - gastosOperativosTotales;
 
   const conteoVentasPorProducto = new Map<string, number>();
   for (const pedido of pedidos) {
@@ -172,7 +181,7 @@ export default async function AdminDashboardPage() {
           Contabilidad (solo admin)
         </h2>
         <RevealOnScroll
-          className="grid gap-4 sm:grid-cols-3"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           selector="[data-kpi-card]"
           stagger={0.06}
           y={14}
@@ -223,6 +232,25 @@ export default async function AdminDashboardPage() {
                 <Link href="/admin/compras" className="text-[11px] text-primary hover:underline">
                   Ver compras
                 </Link>
+              </div>
+            </CardContent>
+          </Card>
+          <Card data-kpi-card>
+            <CardContent className="flex items-center gap-4 pt-6">
+              <div
+                className={`flex size-11 items-center justify-center rounded-xl ${utilidadNeta >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"}`}
+              >
+                <Wallet className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Utilidad neta estimada</p>
+                <p className="text-lg font-bold">{formatoPEN(utilidadNeta)}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Margen bruto − {formatoPEN(gastosOperativosTotales)} en gastos ·{" "}
+                  <Link href="/admin/gastos" className="text-primary hover:underline">
+                    Ver gastos
+                  </Link>
+                </p>
               </div>
             </CardContent>
           </Card>
