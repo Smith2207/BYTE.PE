@@ -26,6 +26,7 @@ import {
 import { categoriasNav, siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart/cart-context";
+import { ModeToggle } from "@/components/mode-toggle";
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
@@ -113,6 +114,7 @@ export function Navbar() {
           <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Buscar">
             <Search className="size-5" />
           </Button>
+          <ModeToggle />
           <Button variant="ghost" size="icon" asChild aria-label="Lista de deseos">
             <Link href="/cuenta/wishlist">
               <Heart className="size-5" />

@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { ModeToggle } from "@/components/mode-toggle";
 import { ABRIR_COMMAND_PALETTE_EVENT } from "./admin-command-palette";
 
 export function AdminTopbar({
@@ -59,6 +60,7 @@ export function AdminTopbar({
       </button>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <ModeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
