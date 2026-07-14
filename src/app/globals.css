@@ -2,26 +2,144 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/*
+ * Paleta minimalista: escala de grises neutra (sin tinte de color en fondo
+ * ni texto) + un solo acento azul, al estilo Apple. Modo oscuro sigue
+ * siendo el default (sección 7 del brief), pero ahora es negro/gris neutro
+ * en vez de negro-índigo con degradados violeta/cian.
+ */
+@layer base {
+  :root {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    --primary: oklch(0.55 0.19 255);
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.96 0 0);
+    --secondary-foreground: oklch(0.16 0 0);
+    --muted: oklch(0.96 0 0);
+    --muted-foreground: oklch(0.5 0 0);
+    --accent: oklch(0.96 0 0);
+    --accent-foreground: oklch(0.16 0 0);
+    --destructive: oklch(0.58 0.22 25);
+    --destructive-foreground: oklch(0.99 0 0);
+    --border: oklch(0.9 0 0);
+    --input: oklch(0.9 0 0);
+    --ring: oklch(0.55 0.19 255);
+    --chart-1: oklch(0.55 0.19 255);
+    --chart-2: oklch(0.63 0.15 200);
+    --chart-3: oklch(0.6 0.02 260);
+    --chart-4: oklch(0.72 0.16 145);
+    --chart-5: oklch(0.75 0 0);
+    --radius: 0.75rem;
+    --font-sans: var(--font-inter);
+    --font-display: var(--font-inter);
+  }
+
+  .dark {
+    --background: oklch(0.13 0 0);
+    --foreground: oklch(0.97 0 0);
+    --card: oklch(0.17 0 0);
+    --card-foreground: oklch(0.97 0 0);
+    --popover: oklch(0.17 0 0);
+    --popover-foreground: oklch(0.97 0 0);
+    --primary: oklch(0.65 0.18 255);
+    --primary-foreground: oklch(0.1 0 0);
+    --secondary: oklch(0.22 0 0);
+    --secondary-foreground: oklch(0.97 0 0);
+    --muted: oklch(0.22 0 0);
+    --muted-foreground: oklch(0.63 0 0);
+    --accent: oklch(0.24 0 0);
+    --accent-foreground: oklch(0.97 0 0);
+    --destructive: oklch(0.62 0.2 25);
+    --destructive-foreground: oklch(0.98 0 0);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 12%);
+    --ring: oklch(0.65 0.18 255);
+    --chart-1: oklch(0.65 0.18 255);
+    --chart-2: oklch(0.7 0.14 200);
+    --chart-3: oklch(0.65 0.02 260);
+    --chart-4: oklch(0.74 0.15 145);
+    --chart-5: oklch(0.7 0 0);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+/* Fondo blanco al imprimir (ej. la boleta), sin depender de que el
+   usuario tenga activado "imprimir gráficos de fondo" en su navegador. */
+@media print {
+  body {
+    background: #fff;
+  }
+}
+
+/* Transición fade + escala sutil entre páginas (grilla → detalle de
+   producto), vía View Transitions API nativa — ver producto-link.tsx.
+   Navegadores sin soporte simplemente no ejecutan estas reglas. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-fade-out 280ms ease-in forwards;
+  }
+  ::view-transition-new(root) {
+    animation: vt-fade-in 380ms ease-out forwards;
+  }
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(1.015);
+  }
+}
+
+@layer components {
+  /* Realce sutil de una palabra dentro de un titular — un solo color
+     plano (el acento), no degradado. */
+  .text-accent-brand {
+    color: var(--primary);
+  }
+
+  .glow-border {
+    box-shadow: 0 0 0 1px var(--border);
+  }
+
+  /* bg-background/NN (el modificador de opacidad de Tailwind) no genera
+     ninguna regla porque --background guarda un oklch(...) completo, no
+     canales sueltos — Tailwind no puede aplicarle alpha. Estas clases lo
+     resuelven con color-mix() explícito. */
+  .bg-background-40 {
+    background-color: color-mix(in oklch, var(--background) 40%, transparent);
+  }
+  .bg-background-70 {
+    background-color: color-mix(in oklch, var(--background) 70%, transparent);
+  }
+  .bg-background-80 {
+    background-color: color-mix(in oklch, var(--background) 80%, transparent);
+  }
+  .bg-background-95 {
+    background-color: color-mix(in oklch, var(--background) 95%, transparent);
   }
 }

@@ -28,6 +28,11 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# subida de imágenes en desarrollo local (fallback sin Vercel Blob, ver
+# src/app/api/admin/upload/route.ts) — en producción se usa Vercel Blob
+/public/uploads/productos/*
+!/public/uploads/productos/.gitkeep
+
 # vercel
 .vercel
 
