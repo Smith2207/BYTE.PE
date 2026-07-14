@@ -10,6 +10,7 @@ import { adminListarCategorias, adminListarProductos } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
 import { EliminarProductoBoton } from "./eliminar-boton";
 import { ProductoSheet } from "./producto-sheet";
+import { ImportarProductosDialog } from "./importar-dialog";
 
 export const metadata = { title: "Admin — Productos" };
 
@@ -35,16 +36,19 @@ export default async function AdminProductosPage({
             </p>
           )}
         </div>
-        <Magnetic strength={0.15} className="inline-block">
-          <ProductoSheet
-            categorias={categorias}
-            trigger={
-              <Button>
-                <Plus className="size-4" /> Nuevo producto
-              </Button>
-            }
-          />
-        </Magnetic>
+        <div className="flex items-center gap-2">
+          <ImportarProductosDialog />
+          <Magnetic strength={0.15} className="inline-block">
+            <ProductoSheet
+              categorias={categorias}
+              trigger={
+                <Button>
+                  <Plus className="size-4" /> Nuevo producto
+                </Button>
+              }
+            />
+          </Magnetic>
+        </div>
       </div>
 
       {productos.length === 0 ? (
