@@ -34,6 +34,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
 export default async function ProductoPage({ params }: { params: { slug: string } }) {
   const data = await getProductoBySlug(params.slug);
   if (!data) notFound();
@@ -44,8 +46,33 @@ export default async function ProductoPage({ params }: { params: { slug: string 
     ? await estaEnWishlist(session.user.id, producto.id)
     : false;
 
+  const productoJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: producto.nombre,
+    description: producto.descripcion,
+    sku: producto.sku,
+    brand: { "@type": "Brand", name: producto.marca },
+    image: producto.imagenes,
+    category: producto.categoria.nombre,
+    offers: {
+      "@type": "Offer",
+      url: `${BASE_URL}/productos/${producto.slug}`,
+      priceCurrency: "PEN",
+      price: producto.precioFinal,
+      availability: producto.disponible
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <div className="relative">
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productoJsonLd) }}
+      />
       <div className="pointer-events-none fixed inset-0 -z-10">
         <AtmosphereLayer
           glowPosition="50% 0%"

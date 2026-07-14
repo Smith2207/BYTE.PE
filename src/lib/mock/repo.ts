@@ -183,6 +183,15 @@ export async function getMarcas(): Promise<string[]> {
   return filas.map((f) => f.marca).filter((m): m is string => Boolean(m)).sort();
 }
 
+/** Solo slug + fecha de actualización, para el sitemap — evita traer la
+ * ficha completa de cada producto solo para listar URLs. */
+export async function listarSlugsProductos(): Promise<{ slug: string; updatedAt: Date }[]> {
+  return db
+    .select({ slug: productos.slug, updatedAt: productos.updatedAt })
+    .from(productos)
+    .where(eq(productos.activo, true));
+}
+
 export async function getProductosDestacados(limit = 4): Promise<ProductoCatalogo[]> {
   const categoriasPorId = await mapaCategorias();
   const filas = await db

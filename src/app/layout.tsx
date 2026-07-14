@@ -18,12 +18,26 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // cada <h1> del admin/checkout/etc. en texto condensado mayúscula.
 const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-bebas" });
 
+const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(BASE_URL),
   title: {
     default: `${siteConfig.nombre} — Electrónica y tecnología en Perú`,
     template: `%s | ${siteConfig.nombre}`,
   },
   description: siteConfig.descripcion,
+};
+
+const organizacionJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: siteConfig.nombre,
+  url: BASE_URL,
+  logo: `${BASE_URL}/favicon.ico`,
+  email: siteConfig.email,
+  description: siteConfig.descripcion,
+  areaServed: "PE",
 };
 
 export default function RootLayout({
@@ -34,6 +48,11 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${inter.variable} ${bebasNeue.variable}`} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizacionJsonLd) }}
+        />
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <SessionProvider>
             <CartProvider>
