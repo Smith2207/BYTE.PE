@@ -10,6 +10,7 @@ export * from "./resenas";
 export * from "./wishlist";
 export * from "./soporte";
 export * from "./compras";
+export * from "./couriers";
 export * from "./devoluciones";
 export * from "./gastos";
 export * from "./relations";

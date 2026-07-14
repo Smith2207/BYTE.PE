@@ -85,6 +85,7 @@ export function PedidoFila({ pedido }: { pedido: PedidoMock }) {
         <div className="flex flex-col gap-1.5">
           <Input
             placeholder="Courier (Olva, Shalom...)"
+            list="couriers-datalist"
             value={courier}
             onChange={(e) => setCourier(e.target.value)}
             className="h-8 text-xs"

@@ -34,6 +34,9 @@ type ItemForm = {
   categoriaId: string;
   marca: string;
   precioVenta: string;
+  // Opcional — si TODOS los ítems lo traen, el envío/aduana se reparte por
+  // peso en vez de en partes iguales por unidad.
+  pesoKg: string;
 };
 
 function itemVacio(): ItemForm {
@@ -45,6 +48,7 @@ function itemVacio(): ItemForm {
     categoriaId: "",
     marca: "",
     precioVenta: "",
+    pesoKg: "",
   };
 }
 
@@ -63,6 +67,8 @@ export function CompraForm({
   const [fechaCompra, setFechaCompra] = React.useState(new Date().toISOString().slice(0, 10));
   const [costoEnvioImportacion, setCostoEnvioImportacion] = React.useState("0");
   const [otrosCostos, setOtrosCostos] = React.useState("0");
+  const [courierInternacional, setCourierInternacional] = React.useState("");
+  const [trackingInternacional, setTrackingInternacional] = React.useState("");
   const [comprobanteUrl, setComprobanteUrl] = React.useState("");
   const [notas, setNotas] = React.useState("");
   const [items, setItems] = React.useState<ItemForm[]>([itemVacio()]);
@@ -105,9 +111,12 @@ export function CompraForm({
           categoriaId: i.productoId === SIN_PRODUCTO ? i.categoriaId : undefined,
           marca: i.productoId === SIN_PRODUCTO ? i.marca || undefined : undefined,
           precioVenta: i.productoId === SIN_PRODUCTO ? Number(i.precioVenta) : undefined,
+          pesoKg: i.pesoKg ? Number(i.pesoKg) : undefined,
         })),
         costoEnvioImportacion: Number(costoEnvioImportacion) || 0,
         otrosCostos: Number(otrosCostos) || 0,
+        courierInternacional: courierInternacional || undefined,
+        trackingInternacional: trackingInternacional || undefined,
         comprobanteUrl: comprobanteUrl || undefined,
         notas: notas || undefined,
       });
@@ -169,6 +178,37 @@ export function CompraForm({
               className="mt-1.5"
               value={fechaCompra}
               onChange={(e) => setFechaCompra(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <p className="mb-1 text-sm font-semibold">Tramo internacional (USA → Perú)</p>
+            <p className="text-xs text-muted-foreground">
+              El forwarder que trae el paquete hasta Perú — distinto del courier que reparte al
+              cliente final.
+            </p>
+          </div>
+          <div>
+            <Label htmlFor="courierInternacional">Courier / forwarder (opcional)</Label>
+            <Input
+              id="courierInternacional"
+              className="mt-1.5"
+              placeholder="Ej: MyUS, Aerobox, JetBox..."
+              value={courierInternacional}
+              onChange={(e) => setCourierInternacional(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="trackingInternacional">N° de tracking internacional (opcional)</Label>
+            <Input
+              id="trackingInternacional"
+              className="mt-1.5"
+              value={trackingInternacional}
+              onChange={(e) => setTrackingInternacional(e.target.value)}
             />
           </div>
         </CardContent>
@@ -242,6 +282,15 @@ export function CompraForm({
                       className="w-40"
                       value={item.costoUnitario}
                       onChange={(e) => actualizarItem(i, { costoUnitario: e.target.value })}
+                    />
+                    <Input
+                      type="number"
+                      step="0.001"
+                      min="0"
+                      placeholder="Peso unitario (kg, opcional)"
+                      className="w-48"
+                      value={item.pesoKg}
+                      onChange={(e) => actualizarItem(i, { pesoKg: e.target.value })}
                     />
                     {items.length > 1 && (
                       <Button

@@ -24,6 +24,9 @@ export type CompraItemAlmacenado = {
   categoriaId?: string;
   marca?: string;
   precioVenta?: number;
+  // Peso unitario real (kg) — si TODOS los ítems de la compra lo traen, el
+  // envío/aduana se reparte por peso en vez de en partes iguales por unidad.
+  pesoKg?: number;
 };
 
 export type CompraAlmacenada = {
@@ -41,6 +44,10 @@ export type CompraAlmacenada = {
   costoTotal: number;
   comprobanteUrl?: string;
   notas?: string;
+  // Tramo internacional USA→Perú (forwarder), distinto del courier de
+  // reparto local que se asigna en el pedido al cliente.
+  courierInternacional?: string;
+  trackingInternacional?: string;
   createdAt: string;
 };
 
@@ -53,6 +60,7 @@ function aCompraItemAlmacenado(i: typeof compraItems.$inferSelect): CompraItemAl
     categoriaId: i.categoriaId ?? undefined,
     marca: i.marca ?? undefined,
     precioVenta: i.precioVenta != null ? Number(i.precioVenta) : undefined,
+    pesoKg: i.pesoKg != null ? Number(i.pesoKg) : undefined,
   };
 }
 
@@ -73,6 +81,8 @@ async function aCompraAlmacenada(c: typeof compras.$inferSelect): Promise<Compra
     costoTotal: Number(c.costoTotal),
     comprobanteUrl: c.comprobanteUrl ?? undefined,
     notas: c.notas ?? undefined,
+    courierInternacional: c.courierInternacional ?? undefined,
+    trackingInternacional: c.trackingInternacional ?? undefined,
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -97,6 +107,8 @@ export type CompraFormInput = {
   otrosCostos: number;
   comprobanteUrl?: string;
   notas?: string;
+  courierInternacional?: string;
+  trackingInternacional?: string;
 };
 
 export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacenada> {
@@ -117,6 +129,8 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
       costoTotal: costoTotal.toFixed(2),
       comprobanteUrl: input.comprobanteUrl,
       notas: input.notas,
+      courierInternacional: input.courierInternacional,
+      trackingInternacional: input.trackingInternacional,
     })
     .returning();
 
@@ -131,6 +145,7 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
         categoriaId: i.categoriaId,
         marca: i.marca,
         precioVenta: i.precioVenta != null ? i.precioVenta.toFixed(2) : null,
+        pesoKg: i.pesoKg != null ? i.pesoKg.toFixed(3) : null,
       })),
     );
   }
@@ -159,12 +174,27 @@ export async function actualizarEstadoCompra(id: string, estado: EstadoCompra) {
     cambios.fechaRecibido = new Date();
 
     const itemsFilas = await db.select().from(compraItems).where(eq(compraItems.compraId, id));
+    const costoAdicionalTotal = Number(compraFila.costoEnvioImportacion) + Number(compraFila.otrosCostos);
+
+    // Si TODOS los ítems traen peso, el envío/aduana se reparte proporcional
+    // al peso real de cada uno (más justo: un celular no debería cargar lo
+    // mismo que una laptop en el mismo paquete) — si falta el peso de
+    // cualquier ítem, se cae al reparto en partes iguales por unidad, que
+    // siempre es calculable.
+    const pesoTotal = itemsFilas.reduce(
+      (acc, i) => acc + (i.pesoKg != null ? Number(i.pesoKg) * i.cantidad : 0),
+      0,
+    );
+    const repartoPorPeso = pesoTotal > 0 && itemsFilas.every((i) => i.pesoKg != null);
+
     const unidadesTotales = itemsFilas.reduce((acc, i) => acc + i.cantidad, 0) || 1;
-    const costoAdicionalPorUnidad =
-      (Number(compraFila.costoEnvioImportacion) + Number(compraFila.otrosCostos)) / unidadesTotales;
+    const costoAdicionalPorUnidad = costoAdicionalTotal / unidadesTotales;
 
     for (const item of itemsFilas) {
-      const costoFinal = Number(item.costoUnitario) + costoAdicionalPorUnidad;
+      const costoAdicionalItem = repartoPorPeso
+        ? (costoAdicionalTotal * ((Number(item.pesoKg) * item.cantidad) / pesoTotal)) / item.cantidad
+        : costoAdicionalPorUnidad;
+      const costoFinal = Number(item.costoUnitario) + costoAdicionalItem;
 
       if (item.productoId) {
         // Producto ya existente en el catálogo: suma stock y recalcula costo.

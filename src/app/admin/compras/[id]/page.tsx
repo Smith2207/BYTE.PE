@@ -44,6 +44,18 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
                 <p>{compra.numeroOrdenExterno}</p>
               </div>
             )}
+            {compra.courierInternacional && (
+              <div>
+                <p className="text-muted-foreground">Courier internacional</p>
+                <p>{compra.courierInternacional}</p>
+              </div>
+            )}
+            {compra.trackingInternacional && (
+              <div>
+                <p className="text-muted-foreground">Tracking internacional</p>
+                <p className="font-mono text-xs">{compra.trackingInternacional}</p>
+              </div>
+            )}
             {compra.comprobanteUrl && (
               <div>
                 <p className="text-muted-foreground">Comprobante</p>
@@ -66,6 +78,9 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
               <div key={i} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {item.cantidad}x {item.descripcion}
+                  {item.pesoKg != null && (
+                    <span className="ml-1.5 text-xs">({item.pesoKg} kg c/u)</span>
+                  )}
                   {item.productoId ? (
                     <Link
                       href={`/admin/productos?editar=${item.productoId}`}

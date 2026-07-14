@@ -4,6 +4,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { PaginacionAdmin } from "@/components/admin/paginacion-admin";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { listarPedidos, type PedidoMock } from "@/lib/pedidos/store";
+import { listarCouriers } from "@/lib/couriers/store";
 import { PedidoFila } from "./pedido-fila";
 import { PedidosFiltros } from "./pedidos-filtros";
 
@@ -16,7 +17,7 @@ export default async function AdminPedidosPage({
 }: {
   searchParams: { q?: string; estado?: string; pagina?: string };
 }) {
-  const todos = await listarPedidos();
+  const [todos, couriers] = await Promise.all([listarPedidos(), listarCouriers()]);
   const q = searchParams.q?.trim().toLowerCase();
   const estado = searchParams.estado as PedidoMock["estado"] | undefined;
 
@@ -54,6 +55,12 @@ export default async function AdminPedidosPage({
       </div>
 
       <PedidosFiltros />
+
+      <datalist id="couriers-datalist">
+        {couriers.filter((c) => c.activo).map((c) => (
+          <option key={c.id} value={c.nombre} />
+        ))}
+      </datalist>
 
       {todos.length === 0 ? (
         <p className="text-sm text-muted-foreground">Todavía no hay pedidos registrados.</p>

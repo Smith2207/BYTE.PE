@@ -13,6 +13,7 @@ import {
   Undo2,
   Wallet,
   ClipboardList,
+  Route,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/categorias", label: "Categorías", icon: Tags },
   { href: "/admin/compras", label: "Compras", icon: Truck },
+  { href: "/admin/couriers", label: "Couriers", icon: Route },
   { href: "/admin/cupones", label: "Cupones", icon: Tag },
   { href: "/admin/pedidos", label: "Pedidos", icon: Receipt },
   { href: "/admin/devoluciones", label: "Devoluciones", icon: Undo2 },

@@ -23,6 +23,10 @@ export const compras = pgTable("compras", {
   costoTotal: numeric("costo_total", { precision: 10, scale: 2 }).notNull(),
   comprobanteUrl: text("comprobante_url"),
   notas: text("notas"),
+  // Tramo internacional (USA→Perú vía forwarder: MyUS, Aerobox, JetBox...)
+  // — distinto del courier que reparte localmente al cliente final.
+  courierInternacional: text("courier_internacional"),
+  trackingInternacional: text("tracking_internacional"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -42,6 +46,10 @@ export const compraItems = pgTable("compra_items", {
   categoriaId: uuid("categoria_id").references(() => categorias.id),
   marca: text("marca"),
   precioVenta: numeric("precio_venta", { precision: 10, scale: 2 }),
+  // Peso unitario real — si TODOS los ítems de una compra lo tienen, el
+  // costo de envío/aduana se reparte proporcional al peso en vez de en
+  // partes iguales por unidad (ver actualizarEstadoCompra).
+  pesoKg: numeric("peso_kg", { precision: 10, scale: 3 }),
 });
 
 export type Compra = typeof compras.$inferSelect;
