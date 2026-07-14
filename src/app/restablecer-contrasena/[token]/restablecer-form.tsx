@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Magnetic } from "@/components/fx/magnetic";
 import { restablecerPasswordAction } from "../actions";
 
 export function RestablecerContrasenaForm({ token }: { token: string }) {
@@ -61,9 +62,11 @@ export function RestablecerContrasenaForm({ token }: { token: string }) {
               onChange={(e) => setConfirmacion(e.target.value)}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={enviando}>
-            {enviando ? <Loader2 className="size-4 animate-spin" /> : "Guardar contraseña"}
-          </Button>
+          <Magnetic strength={0.15} className="block">
+            <Button type="submit" className="w-full" disabled={enviando}>
+              {enviando ? <Loader2 className="size-4 animate-spin" /> : "Guardar contraseña"}
+            </Button>
+          </Magnetic>
         </form>
       </CardContent>
     </Card>

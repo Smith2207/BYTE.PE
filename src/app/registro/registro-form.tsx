@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { Magnetic } from "@/components/fx/magnetic";
 import { registrarUsuarioAction } from "./actions";
 
 export function RegistroForm() {
@@ -82,9 +83,11 @@ export function RegistroForm() {
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={enviando}>
-            {enviando ? <Loader2 className="size-4 animate-spin" /> : "Crear cuenta"}
-          </Button>
+          <Magnetic strength={0.15} className="block">
+            <Button type="submit" className="w-full" disabled={enviando}>
+              {enviando ? <Loader2 className="size-4 animate-spin" /> : "Crear cuenta"}
+            </Button>
+          </Magnetic>
         </form>
 
         <div className="flex items-center gap-3">
@@ -93,15 +96,17 @@ export function RegistroForm() {
           <Separator className="flex-1" />
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => signIn("google", { callbackUrl: "/cuenta" })}
-        >
-          <GoogleIcon className="size-4" />
-          Continuar con Google
-        </Button>
+        <Magnetic strength={0.15} className="block">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => signIn("google", { callbackUrl: "/cuenta" })}
+          >
+            <GoogleIcon className="size-4" />
+            Continuar con Google
+          </Button>
+        </Magnetic>
 
         <p className="text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{" "}

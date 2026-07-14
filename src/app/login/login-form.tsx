@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoogleIcon } from "@/components/icons/google-icon";
+import { Magnetic } from "@/components/fx/magnetic";
 
 export function LoginForm() {
   const router = useRouter();
@@ -73,9 +74,11 @@ export function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          <Button type="submit" className="w-full" disabled={enviando}>
-            {enviando ? <Loader2 className="size-4 animate-spin" /> : "Iniciar sesión"}
-          </Button>
+          <Magnetic strength={0.15} className="block">
+            <Button type="submit" className="w-full" disabled={enviando}>
+              {enviando ? <Loader2 className="size-4 animate-spin" /> : "Iniciar sesión"}
+            </Button>
+          </Magnetic>
         </form>
 
         <div className="flex items-center gap-3">
@@ -84,15 +87,17 @@ export function LoginForm() {
           <Separator className="flex-1" />
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full"
-          onClick={() => signIn("google", { callbackUrl })}
-        >
-          <GoogleIcon className="size-4" />
-          Continuar con Google
-        </Button>
+        <Magnetic strength={0.15} className="block">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={() => signIn("google", { callbackUrl })}
+          >
+            <GoogleIcon className="size-4" />
+            Continuar con Google
+          </Button>
+        </Magnetic>
 
         <p className="text-center text-sm text-muted-foreground">
           ¿No tienes cuenta?{" "}

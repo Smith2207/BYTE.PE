@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { solicitarResetPasswordAction } from "./actions";
 
 export function OlvideContrasenaForm() {
@@ -33,16 +35,18 @@ export function OlvideContrasenaForm() {
     <Card>
       <CardContent className="pt-6">
         {enviado ? (
-          <div className="flex flex-col items-center gap-3 py-4 text-center">
-            <CheckCircle2 className="size-10 text-emerald-500" />
-            <p className="text-sm text-foreground">
-              Si <strong>{email}</strong> tiene una cuenta con nosotros, te enviamos un correo con
-              instrucciones para crear una contraseña nueva.
-            </p>
-            <Link href="/login" className="text-sm font-medium text-primary hover:underline">
-              Volver a iniciar sesión
-            </Link>
-          </div>
+          <RevealOnScroll y={16}>
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <CheckCircle2 className="size-10 text-emerald-500" />
+              <p className="text-sm text-foreground">
+                Si <strong>{email}</strong> tiene una cuenta con nosotros, te enviamos un correo con
+                instrucciones para crear una contraseña nueva.
+              </p>
+              <Link href="/login" className="text-sm font-medium text-primary hover:underline">
+                Volver a iniciar sesión
+              </Link>
+            </div>
+          </RevealOnScroll>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
@@ -56,9 +60,11 @@ export function OlvideContrasenaForm() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={enviando}>
-              {enviando ? <Loader2 className="size-4 animate-spin" /> : "Enviar enlace"}
-            </Button>
+            <Magnetic strength={0.15} className="block">
+              <Button type="submit" className="w-full" disabled={enviando}>
+                {enviando ? <Loader2 className="size-4 animate-spin" /> : "Enviar enlace"}
+              </Button>
+            </Magnetic>
             <p className="text-center text-sm text-muted-foreground">
               <Link href="/login" className="font-medium text-primary hover:underline">
                 Volver a iniciar sesión
