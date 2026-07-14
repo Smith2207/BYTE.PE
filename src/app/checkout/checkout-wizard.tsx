@@ -36,7 +36,7 @@ const PASOS = ["Envío", "Método de envío", "Cupón", "Pago", "Confirmación"]
 const IGV = 0.18;
 
 type Facturacion = {
-  tipoDocumento: "dni" | "ruc" | "ce";
+  tipoDocumento: "dni" | "ruc";
   numeroDocumento: string;
   nombreComprador: string;
   telefonoComprador: string;
@@ -149,7 +149,6 @@ export function CheckoutWizard() {
   }
 
   async function buscarDocumento() {
-    if (facturacion.tipoDocumento !== "dni" && facturacion.tipoDocumento !== "ruc") return;
     setBuscandoDocumento(true);
     try {
       const resultado = await consultarDocumentoAction(
@@ -392,7 +391,6 @@ export function CheckoutWizard() {
                       <SelectContent>
                         <SelectItem value="dni">DNI</SelectItem>
                         <SelectItem value="ruc">RUC</SelectItem>
-                        <SelectItem value="ce">Carnet de Extranjería</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -406,22 +404,20 @@ export function CheckoutWizard() {
                           setFacturacion((f) => ({ ...f, numeroDocumento: e.target.value }))
                         }
                       />
-                      {(facturacion.tipoDocumento === "dni" || facturacion.tipoDocumento === "ruc") && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="icon"
-                          disabled={buscandoDocumento || !facturacion.numeroDocumento}
-                          onClick={buscarDocumento}
-                          aria-label="Buscar datos del documento"
-                        >
-                          {buscandoDocumento ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Search className="size-4" />
-                          )}
-                        </Button>
-                      )}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        disabled={buscandoDocumento || !facturacion.numeroDocumento}
+                        onClick={buscarDocumento}
+                        aria-label="Buscar datos del documento"
+                      >
+                        {buscandoDocumento ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Search className="size-4" />
+                        )}
+                      </Button>
                     </div>
                     {errores.numeroDocumento && (
                       <p className="mt-1 text-xs text-destructive">{errores.numeroDocumento}</p>

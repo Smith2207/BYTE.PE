@@ -3,8 +3,7 @@
  * AUTOCOMPLETAR datos en el checkout, nunca para bloquear la compra: si
  * falta el token, la API está caída o el documento no aparece, el
  * resultado es simplemente `null` y el usuario completa manualmente
- * (sección 5 del brief). CE no tiene API pública, siempre se llena a
- * mano.
+ * (sección 5 del brief).
  */
 
 type RespuestaDni = {

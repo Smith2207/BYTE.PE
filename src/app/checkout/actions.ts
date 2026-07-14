@@ -36,7 +36,7 @@ export async function consultarDocumentoAction(
     const resultado = await consultarRuc(numeroDocumento);
     return resultado ? { ok: true, tipo: "ruc", razonSocial: resultado.razonSocial } : { ok: false };
   }
-  // CE no tiene API pública — se completa siempre a mano.
+  // Formato inválido (DNI sin 8 dígitos, RUC sin 11): se completa a mano.
   return { ok: false };
 }
 

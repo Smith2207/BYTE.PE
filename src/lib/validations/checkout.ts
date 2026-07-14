@@ -1,11 +1,10 @@
 import { z } from "zod";
 
-// DNI: 8 dígitos. RUC: 11 dígitos, empieza con 10/15/17/20. CE:
-// alfanumérico sin formato estricto (sección 5 del brief). No se acepta
-// Pasaporte como tipo de documento.
+// DNI: 8 dígitos. RUC: 11 dígitos, empieza con 10/15/17/20. Solo estos
+// dos tipos de documento en el checkout (sin CE ni Pasaporte).
 export const documentoSchema = z
   .object({
-    tipoDocumento: z.enum(["dni", "ruc", "ce"]),
+    tipoDocumento: z.enum(["dni", "ruc"]),
     numeroDocumento: z.string().min(1, "Ingresa tu número de documento"),
   })
   .superRefine((data, ctx) => {
@@ -24,13 +23,6 @@ export const documentoSchema = z
         message: "El RUC debe tener 11 dígitos y empezar con 10, 15, 17 o 20",
       });
     }
-    if (tipoDocumento === "ce" && numeroDocumento.length < 6) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["numeroDocumento"],
-        message: "Ingresa un número de documento válido",
-      });
-    }
   });
 
 // No hacemos despacho a domicilio por el momento (el envío es por
@@ -46,7 +38,7 @@ export const direccionSchema = z.object({
 });
 
 export const facturacionSchema = z.object({
-  tipoDocumento: z.enum(["dni", "ruc", "ce"]),
+  tipoDocumento: z.enum(["dni", "ruc"]),
   numeroDocumento: z.string().min(1),
   nombreComprador: z.string().min(2, "Ingresa tu nombre completo"),
   telefonoComprador: z.string().min(6, "Ingresa un teléfono válido"),
