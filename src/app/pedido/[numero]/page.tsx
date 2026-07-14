@@ -41,11 +41,11 @@ export default async function PedidoConfirmacionPage({ params }: { params: { num
           <Separator />
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span>{formatoPEN(pedido.subtotal)}</span>
+              <span className="text-muted-foreground">Op. gravada</span>
+              <span>{formatoPEN(pedido.subtotal - pedido.igv)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">IGV (18%)</span>
+              <span className="text-muted-foreground">IGV (18%, incluido)</span>
               <span>{formatoPEN(pedido.igv)}</span>
             </div>
             <div className="flex justify-between">

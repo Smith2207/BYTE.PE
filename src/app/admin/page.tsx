@@ -29,7 +29,7 @@ export default async function AdminDashboardPage() {
   // vendido. Se aproxima con el costo ACTUAL del producto (promedio
   // ponderado tras cada compra recibida), no un histórico por pedido —
   // suficiente para una vista general de rentabilidad.
-  const ingresosPorProductos = pedidosValidos.reduce((acc, p) => acc + p.subtotal, 0);
+  const ingresosPorProductos = pedidosValidos.reduce((acc, p) => acc + (p.subtotal - p.igv), 0);
   const costoPorProductoId = new Map(productos.map((p) => [p.id, p.costoAdquisicion]));
   let costoVentas = 0;
   let unidadesConCosto = 0;

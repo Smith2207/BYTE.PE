@@ -20,7 +20,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/lib/cart/cart-context";
-import { formatoPEN, formatoDireccion } from "@/lib/format";
+import { formatoPEN, formatoDireccion, desglosarIGV } from "@/lib/format";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
 import { getTarifaEnvioPorDepartamento } from "@/lib/mock/tarifas-envio";
 import { direccionSchema, documentoSchema } from "@/lib/validations/checkout";
@@ -33,7 +33,6 @@ import {
 import type { ResultadoCupon } from "@/lib/cupones/validar";
 
 const PASOS = ["Envío", "Método de envío", "Cupón", "Pago", "Confirmación"] as const;
-const IGV = 0.18;
 
 type Facturacion = {
   tipoDocumento: "dni" | "ruc";
@@ -91,13 +90,15 @@ export function CheckoutWizard() {
     [direccion.departamento, direccion.provincia],
   );
 
-  const igv = Math.round(subtotal * IGV * 100) / 100;
+  // Los precios ya incluyen IGV — se descompone para mostrarlo, nunca se
+  // suma aparte (el total nunca debe subir respecto al precio mostrado).
+  const { igv } = desglosarIGV(subtotal);
   const tarifa = direccion.departamento
     ? getTarifaEnvioPorDepartamento(direccion.departamento)
     : null;
   const costoEnvio = cuponAplicado?.ok && cuponAplicado.envioGratis ? 0 : (tarifa?.costo ?? 0);
   const descuento = cuponAplicado?.ok ? cuponAplicado.descuento : 0;
-  const total = Math.max(0, subtotal + igv + costoEnvio - descuento);
+  const total = Math.max(0, subtotal + costoEnvio - descuento);
 
   if (items.length === 0) {
     return (
@@ -684,11 +685,11 @@ export function CheckoutWizard() {
             <Separator />
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatoPEN(subtotal)}</span>
+                <span className="text-muted-foreground">Op. gravada</span>
+                <span>{formatoPEN(subtotal - igv)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">IGV (18%)</span>
+                <span className="text-muted-foreground">IGV (18%, incluido)</span>
                 <span>{formatoPEN(igv)}</span>
               </div>
               <div className="flex justify-between">
@@ -707,6 +708,9 @@ export function CheckoutWizard() {
               <span>Total</span>
               <span>{formatoPEN(total)}</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Precio final — el IGV ya está incluido, sin cargos ocultos.
+            </p>
           </CardContent>
         </Card>
       </div>

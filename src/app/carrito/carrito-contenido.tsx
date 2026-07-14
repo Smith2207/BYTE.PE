@@ -9,9 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { Magnetic } from "@/components/fx/magnetic";
 import { useCart } from "@/lib/cart/cart-context";
-import { formatoPEN } from "@/lib/format";
-
-const IGV = 0.18;
+import { formatoPEN, desglosarIGV } from "@/lib/format";
 
 export function CarritoContenido() {
   const { items, subtotal, actualizarCantidad, quitarItem } = useCart();
@@ -31,7 +29,7 @@ export function CarritoContenido() {
     );
   }
 
-  const igv = Math.round(subtotal * IGV * 100) / 100;
+  const { igv } = desglosarIGV(subtotal);
 
   return (
     <div className="grid gap-10 lg:grid-cols-3">
@@ -120,8 +118,8 @@ export function CarritoContenido() {
                 <span className="text-muted-foreground">Subtotal</span>
                 <span>{formatoPEN(subtotal)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">IGV (18%)</span>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>IGV (18%, incluido)</span>
                 <span>{formatoPEN(igv)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -132,8 +130,11 @@ export function CarritoContenido() {
             <Separator />
             <div className="flex justify-between text-base font-bold">
               <span>Total estimado</span>
-              <span>{formatoPEN(subtotal + igv)}</span>
+              <span>{formatoPEN(subtotal)}</span>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Precio final — sin cargos ocultos. Solo falta sumar el envío.
+            </p>
             <Magnetic className="block">
               <Button size="lg" className="w-full rounded-full" asChild>
                 <Link href="/checkout">Ir a pagar</Link>

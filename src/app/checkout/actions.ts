@@ -16,8 +16,7 @@ import {
 } from "@/lib/pedidos/store";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validations/checkout";
 import { consultarDni, consultarRuc } from "@/lib/documento/apiperu";
-
-const IGV = 0.18;
+import { desglosarIGV } from "@/lib/format";
 
 type ResultadoConsultaDocumento =
   | { ok: true; tipo: "dni"; nombre: string }
@@ -76,8 +75,10 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
   }
 
   // Recalculamos todo en el servidor: nunca confiar en los totales del cliente.
+  // Los precios del catálogo YA incluyen IGV (así se muestran en toda la
+  // tienda) — acá solo se descompone cuánto de ese precio es IGV para el
+  // comprobante, nunca se suma un 18% adicional al total.
   const subtotal = input.items.reduce((acc, i) => acc + i.precioUnitario * i.cantidad, 0);
-  const igv = Math.round(subtotal * IGV * 100) / 100;
 
   let descuento = 0;
   let envioGratis = false;
@@ -92,7 +93,8 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
   const tarifa = getTarifaEnvioPorDepartamento(checkout.direccion.departamento);
   const costoEnvio = envioGratis ? 0 : tarifa.costo;
 
-  const total = Math.round((subtotal + igv + costoEnvio - descuento) * 100) / 100;
+  const total = Math.round((subtotal + costoEnvio - descuento) * 100) / 100;
+  const { igv } = desglosarIGV(subtotal);
 
   const itemsPedido: PedidoItemMock[] = input.items.map((i) => ({
     productoId: i.productoId,

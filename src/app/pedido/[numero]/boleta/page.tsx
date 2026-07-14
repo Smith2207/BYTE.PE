@@ -115,7 +115,7 @@ export default async function BoletaPage({ params }: { params: { numero: string 
           <div className="w-56 space-y-1.5 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Op. gravada</span>
-              <span>{formatoPEN(pedido.subtotal)}</span>
+              <span>{formatoPEN(pedido.subtotal - pedido.igv)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">IGV ({IGV_PORCENTAJE}%)</span>
