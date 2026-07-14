@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Receipt } from "lucide-react";
 import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { formatoPEN } from "@/lib/format";
 
@@ -38,9 +38,7 @@ export default async function CuentaPedidosPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="capitalize">
-                    {p.estado}
-                  </Badge>
+                  <EstadoPedidoBadge estado={p.estado} />
                   <span className="font-semibold">{formatoPEN(p.total)}</span>
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={`/pedido/${p.numeroPedido}/boleta`}>

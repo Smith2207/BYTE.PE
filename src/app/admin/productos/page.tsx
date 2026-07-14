@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Pencil, Plus } from "lucide-react";
+import { PackageSearch, Pencil, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,13 +10,28 @@ import { EliminarProductoBoton } from "./eliminar-boton";
 
 export const metadata = { title: "Admin — Productos" };
 
-export default async function AdminProductosPage() {
-  const productos = await adminListarProductos();
+export default async function AdminProductosPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const todos = await adminListarProductos();
+  const q = searchParams.q?.trim().toLowerCase();
+  const productos = q
+    ? todos.filter((p) => p.nombre.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
+    : todos;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Productos</h1>
+        <div>
+          <h1 className="font-display text-2xl font-bold">Productos</h1>
+          {q && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {productos.length} resultado(s) para &quot;{q}&quot;
+            </p>
+          )}
+        </div>
         <Button asChild>
           <Link href="/admin/productos/nuevo">
             <Plus className="size-4" /> Nuevo producto
@@ -24,6 +39,16 @@ export default async function AdminProductosPage() {
         </Button>
       </div>
 
+      {productos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
+          <PackageSearch className="size-10 text-muted-foreground" />
+          <p className="mt-4 text-sm font-semibold">Sin resultados para &quot;{q}&quot;</p>
+          <p className="mt-1 text-sm text-muted-foreground">Prueba con otro nombre o SKU.</p>
+          <Link href="/admin/productos" className="mt-4 text-sm text-primary hover:underline">
+            Ver todos los productos
+          </Link>
+        </div>
+      ) : (
       <div className="overflow-hidden rounded-2xl border border-border/60">
         <Table>
           <TableHeader>
@@ -70,6 +95,7 @@ export default async function AdminProductosPage() {
           </TableBody>
         </Table>
       </div>
+      )}
     </div>
   );
 }

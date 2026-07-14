@@ -1,4 +1,4 @@
-import { eq, ilike, sql } from "drizzle-orm";
+import { and, eq, gte, ilike, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { cupones } from "@/db/schema";
 import type { CuponSeed } from "@/data/catalogo-seed";
@@ -27,6 +27,18 @@ export async function getCuponPorCodigo(codigo: string): Promise<CuponAlmacenado
     .where(ilike(cupones.codigo, codigo.trim()))
     .limit(1);
   return fila?.activo ? aCuponAlmacenado(fila) : undefined;
+}
+
+/** El cupón vigente con mayor valor, para mostrarlo en el banner del home. */
+export async function getCuponDestacado(): Promise<CuponAlmacenado | undefined> {
+  const ahora = new Date();
+  const [fila] = await db
+    .select()
+    .from(cupones)
+    .where(and(eq(cupones.activo, true), lte(cupones.fechaInicio, ahora), gte(cupones.fechaFin, ahora)))
+    .orderBy(sql`${cupones.valor}::numeric desc`)
+    .limit(1);
+  return fila ? aCuponAlmacenado(fila) : undefined;
 }
 
 export async function incrementarUso(codigo: string, ejecutor: Pick<typeof db, "update"> = db) {

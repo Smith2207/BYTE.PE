@@ -73,6 +73,7 @@ export type ProductoCatalogo = {
   specsJson: Record<string, string>;
   garantiaMeses: number;
   destacado: boolean;
+  createdAt: string;
 };
 
 export type VarianteCatalogo = {
@@ -149,6 +150,7 @@ function aProductoCatalogo(
     specsJson: p.specsJson ?? {},
     garantiaMeses: p.garantiaMeses,
     destacado: p.destacado,
+    createdAt: p.createdAt.toISOString(),
   };
 }
 
@@ -356,6 +358,16 @@ export async function registrarIngresoPorCompra(
       costoAdquisicion: (Math.round(costoPonderado * 100) / 100).toFixed(2),
     })
     .where(eq(productos.id, productoId));
+}
+
+/** Solo el conteo, para la campana de notificaciones del admin — evita
+ * traer la lista completa de productos en cada navegación. */
+export async function contarAlertasStock() {
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(productos)
+    .where(and(eq(productos.activo, true), lte(productos.stock, 5)));
+  return total;
 }
 
 // ---------- CRUD de administración ----------

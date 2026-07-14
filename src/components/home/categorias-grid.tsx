@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Cpu, Headphones, Laptop, Smartphone, Tablet } from "lucide-react";
 import type { CategoriaConHijas } from "@/lib/mock/repo";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 
 const iconos: Record<string, typeof Laptop> = {
   laptops: Laptop,
@@ -22,14 +23,20 @@ export function CategoriasGrid({ categorias }: { categorias: CategoriaConHijas[]
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <RevealOnScroll
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
+        selector="[data-categoria-card]"
+        stagger={0.08}
+        y={20}
+      >
         {categorias.map((c) => {
           const Icono = iconos[c.slug] ?? Cpu;
           return (
             <Link
               key={c.slug}
+              data-categoria-card
               href={`/productos?categoria=${c.slug}`}
-              className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-8 text-center transition hover:-translate-y-1 hover:border-primary/50"
+              className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border/60 bg-card px-4 py-8 text-center shadow-none transition hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_0_24px_rgba(57,135,229,0.15)]"
             >
               <span className="flex size-14 items-center justify-center rounded-2xl bg-secondary transition group-hover:scale-110">
                 <Icono className="size-7 text-primary" strokeWidth={1.5} />
@@ -38,7 +45,7 @@ export function CategoriasGrid({ categorias }: { categorias: CategoriaConHijas[]
             </Link>
           );
         })}
-      </div>
+      </RevealOnScroll>
     </section>
   );
 }

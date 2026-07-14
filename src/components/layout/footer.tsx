@@ -1,6 +1,13 @@
 import Link from "next/link";
+import { Banknote, CreditCard, Smartphone } from "lucide-react";
 
 import { categoriasNav, footerLegalLinks, siteConfig } from "@/lib/site-config";
+
+const metodosPago = [
+  { nombre: "Yape / Plin", icono: Smartphone },
+  { nombre: "Visa / Mastercard", icono: CreditCard },
+  { nombre: "Contra entrega", icono: Banknote },
+];
 
 export function Footer() {
   return (
@@ -52,6 +59,21 @@ export function Footer() {
             <li>WhatsApp: +{siteConfig.whatsapp}</li>
             <li>Lima, Perú</li>
           </ul>
+        </div>
+      </div>
+
+      <div className="border-t border-border/60">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-5 sm:px-6 lg:px-8">
+          <span className="text-xs font-medium text-muted-foreground">Aceptamos:</span>
+          {metodosPago.map((m) => (
+            <span
+              key={m.nombre}
+              className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-xs text-muted-foreground"
+            >
+              <m.icono className="size-3.5" />
+              {m.nombre}
+            </span>
+          ))}
         </div>
       </div>
 

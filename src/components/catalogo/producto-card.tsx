@@ -6,7 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
 
-export function ProductoCard({ producto }: { producto: ProductoCatalogo }) {
+export function ProductoCard({
+  producto,
+  etiqueta,
+}: {
+  producto: ProductoCatalogo;
+  /** Insignia real (no decorativa): "nuevo" viene de createdAt, "mas-vendido" de unidades vendidas de verdad. */
+  etiqueta?: "nuevo" | "mas-vendido";
+}) {
   return (
     <SpotlightCard className="flex h-full flex-col transition-transform duration-300 hover:-translate-y-1">
       <ProductoLink href={`/productos/${producto.slug}`} className="flex h-full flex-col">
@@ -23,6 +30,10 @@ export function ProductoCard({ producto }: { producto: ProductoCatalogo }) {
                 -{producto.descuentoPorcentaje}%
               </Badge>
             )}
+            {etiqueta === "mas-vendido" && (
+              <Badge className="bg-primary text-primary-foreground">Más vendido</Badge>
+            )}
+            {etiqueta === "nuevo" && <Badge variant="outline">Nuevo</Badge>}
             {!producto.disponible && <Badge variant="secondary">Agotado</Badge>}
           </div>
           <WishlistBoton productoId={producto.id} className="absolute right-3 top-3" />

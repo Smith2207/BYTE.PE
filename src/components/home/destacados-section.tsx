@@ -8,8 +8,18 @@ import { ProductoCard } from "@/components/catalogo/producto-card";
 import { ensureGsapPlugins, gsap, prefersReducedMotion } from "@/lib/gsap";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 
-export function DestacadosSection({ productos }: { productos: ProductoCatalogo[] }) {
+const DIAS_PARA_SER_NUEVO = 30;
+
+export function DestacadosSection({
+  productos,
+  masVendidoIds = [],
+}: {
+  productos: ProductoCatalogo[];
+  masVendidoIds?: string[];
+}) {
   const rootRef = React.useRef<HTMLDivElement>(null);
+  const masVendidoSet = new Set(masVendidoIds);
+  const limiteNuevo = Date.now() - DIAS_PARA_SER_NUEVO * 24 * 60 * 60 * 1000;
 
   React.useEffect(() => {
     if (prefersReducedMotion()) return;
@@ -48,11 +58,18 @@ export function DestacadosSection({ productos }: { productos: ProductoCatalogo[]
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {productos.map((p) => (
-          <div key={p.id} data-destacado-card>
-            <ProductoCard producto={p} />
-          </div>
-        ))}
+        {productos.map((p) => {
+          const etiqueta = masVendidoSet.has(p.id)
+            ? ("mas-vendido" as const)
+            : new Date(p.createdAt).getTime() >= limiteNuevo
+              ? ("nuevo" as const)
+              : undefined;
+          return (
+            <div key={p.id} data-destacado-card>
+              <ProductoCard producto={p} etiqueta={etiqueta} />
+            </div>
+          );
+        })}
       </div>
     </section>
   );

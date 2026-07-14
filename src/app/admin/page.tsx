@@ -1,21 +1,47 @@
 import Link from "next/link";
-import { AlertCircle, DollarSign, Package, ShoppingCart, TrendingUp, Truck } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowDown,
+  ArrowUp,
+  DollarSign,
+  Package,
+  ShoppingCart,
+  TrendingUp,
+  Truck,
+} from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { VentasChart, type VentaPorDia } from "@/components/admin/ventas-chart";
 import { TopProductosChart } from "@/components/admin/top-productos-chart";
 import { adminListarProductos } from "@/lib/mock/repo";
-import { listarPedidos } from "@/lib/pedidos/store";
+import { listarPedidos, getVariacionUltimos30Dias } from "@/lib/pedidos/store";
 import { getResumenCompras } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 
 export const metadata = { title: "Admin — Dashboard" };
 
+function VariacionIndicador({ valor }: { valor: number | null }) {
+  if (valor === null) return null;
+  const positivo = valor >= 0;
+  const Icono = positivo ? ArrowUp : ArrowDown;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 text-xs font-medium ${
+        positivo ? "text-emerald-500" : "text-red-500"
+      }`}
+    >
+      <Icono className="size-3" />
+      {Math.abs(valor)}%
+    </span>
+  );
+}
+
 export default async function AdminDashboardPage() {
   const pedidos = await listarPedidos();
   const productos = await adminListarProductos();
   const resumenCompras = await getResumenCompras();
+  const variacion = await getVariacionUltimos30Dias();
 
   const pedidosValidos = pedidos.filter((p) => p.estado !== "cancelado");
   const ventasTotales = pedidosValidos.reduce((acc, p) => acc + p.total, 0);
@@ -90,7 +116,13 @@ export default async function AdminDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Ventas totales</p>
-              <p className="text-lg font-bold">{formatoPEN(ventasTotales)}</p>
+              <p className="flex items-center gap-2 text-lg font-bold">
+                {formatoPEN(ventasTotales)}
+                <VariacionIndicador valor={variacion.ventas} />
+              </p>
+              {variacion.ventas !== null && (
+                <p className="text-[11px] text-muted-foreground">vs. 30 días anteriores</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -101,12 +133,16 @@ export default async function AdminDashboardPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Pedidos</p>
-              <p className="text-lg font-bold">
+              <p className="flex items-center gap-2 text-lg font-bold">
                 {pedidos.length}{" "}
                 <span className="text-sm font-normal text-muted-foreground">
                   ({pedidosPendientes} pendientes)
                 </span>
+                <VariacionIndicador valor={variacion.pedidos} />
               </p>
+              {variacion.pedidos !== null && (
+                <p className="text-[11px] text-muted-foreground">vs. 30 días anteriores</p>
+              )}
             </div>
           </CardContent>
         </Card>
