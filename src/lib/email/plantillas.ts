@@ -86,3 +86,21 @@ export function plantillaNuevoPedidoAdmin(pedido: PedidoMock) {
     </a>`;
   return envoltorio(contenido);
 }
+
+export function plantillaRecuperarContrasena(nombre: string, token: string) {
+  const resetUrl = `${BASE_URL}/restablecer-contrasena/${token}`;
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">Recupera tu contraseña</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      Hola ${nombre.split(" ")[0]}, recibimos una solicitud para restablecer tu contraseña en ${siteConfig.nombre}.
+      Si no fuiste tú, puedes ignorar este correo — tu contraseña actual sigue funcionando.
+    </p>
+    <a href="${resetUrl}"
+       style="display:inline-block;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
+      Crear nueva contraseña
+    </a>
+    <p style="margin:20px 0 0;font-size:12px;color:#6b6b6b;">
+      Este enlace vence en 1 hora y solo funciona una vez.
+    </p>`;
+  return envoltorio(contenido);
+}

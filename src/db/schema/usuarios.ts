@@ -17,3 +17,17 @@ export const usuarios = pgTable("usuarios", {
 
 export type Usuario = typeof usuarios.$inferSelect;
 export type NuevoUsuario = typeof usuarios.$inferInsert;
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  usuarioId: uuid("usuario_id")
+    .notNull()
+    .references(() => usuarios.id, { onDelete: "cascade" }),
+  // Se guarda el hash SHA-256 del token, no el valor enviado por correo —
+  // igual que una contraseña, para que una fuga de la base de datos no
+  // permita reusar enlaces de recuperación válidos.
+  token: text("token").notNull().unique(),
+  expiraEn: timestamp("expira_en", { withTimezone: true }).notNull(),
+  usadoEn: timestamp("usado_en", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
