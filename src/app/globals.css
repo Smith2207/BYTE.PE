@@ -43,6 +43,14 @@
     --radius: 0.75rem;
     --font-sans: var(--font-inter);
     --font-display: var(--font-inter);
+    /* Solo para titulares "cinematográficos" (hero) — no reemplaza
+       --font-display en el resto del sitio. */
+    --font-heading: var(--font-bebas);
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
   }
 
   .dark {
@@ -112,6 +120,24 @@
   from {
     opacity: 0;
     transform: scale(1.015);
+  }
+}
+
+/* Indicador de scroll del hero — ver hero.tsx. */
+@keyframes scrollIndicator {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .animate-scroll {
+    animation: scrollIndicator 1.5s ease-in-out infinite;
   }
 }
 

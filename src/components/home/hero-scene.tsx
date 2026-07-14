@@ -13,7 +13,12 @@ import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
  * producto).
  */
 
-export function HeroScene({ videoSrc = "/videos/hero-tech.mp4" }: { videoSrc?: string }) {
+export function HeroScene({
+  videoSrc = "/videos/hero-tech",
+}: {
+  /** Sin extensión — se prueban .webm y .mp4 en ese orden (ver <source>). */
+  videoSrc?: string;
+}) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const parallaxRef = React.useRef<HTMLDivElement>(null);
   const [videoReady, setVideoReady] = React.useState(false);
@@ -41,17 +46,15 @@ export function HeroScene({ videoSrc = "/videos/hero-tech.mp4" }: { videoSrc?: s
 
   return (
     <div ref={containerRef} className="absolute inset-0 h-full w-full">
-      <div
-        ref={parallaxRef}
-        className="absolute right-0 top-0 h-full w-full scale-105 lg:w-[75%]"
-      >
+      <div ref={parallaxRef} className="absolute inset-0 h-full w-full scale-105">
         {/* Fallback: escena de glow monocromo, siempre presente detrás del video */}
         <div className="absolute inset-0 overflow-hidden bg-black">
           <GlowOrb />
         </div>
 
-        {/* Video real, opcional — si /videos/hero-tech.mp4 no existe aún,
-            se queda en opacity-0 y no rompe nada visualmente. */}
+        {/* Video real, opcional — si no existe ningún archivo todavía en
+            /public/videos, se queda en opacity-0 y no rompe nada
+            visualmente (queda el glow de fondo). */}
         <video
           autoPlay
           muted
@@ -63,13 +66,15 @@ export function HeroScene({ videoSrc = "/videos/hero-tech.mp4" }: { videoSrc?: s
             videoReady ? "opacity-100" : "opacity-0"
           }`}
         >
-          <source src={videoSrc} type="video/mp4" />
+          <source src={`${videoSrc}.webm`} type="video/webm" />
+          <source src={`${videoSrc}.mp4`} type="video/mp4" />
         </video>
       </div>
 
-      {/* Fade oscuro: sólido a la izquierda para sostener el texto,
-          transparente hacia la derecha donde vive el video/glow. */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-transparent" />
+      {/* Overlays para sostener la legibilidad del texto sobre el video
+          full-bleed: degradado diagonal + wash uniforme + viñeta inferior. */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+      <div className="absolute inset-0 bg-black/10" />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
 
       <AtmosphereLayer glowPosition="70% 45%" />

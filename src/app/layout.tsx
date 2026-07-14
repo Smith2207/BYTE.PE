@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -13,6 +13,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/lib/site-config";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Fuente de impacto para titulares "cinematográficos" (hero) — separada de
+// --font-display (Inter, usada en el resto del sitio) para no convertir
+// cada <h1> del admin/checkout/etc. en texto condensado mayúscula.
+const bebasNeue = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--font-bebas" });
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={inter.variable} suppressHydrationWarning>
+    <html lang="es" className={`${inter.variable} ${bebasNeue.variable}`} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <SessionProvider>

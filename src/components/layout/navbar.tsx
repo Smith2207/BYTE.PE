@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, Search, Heart, ShoppingBag, User, LogOut, Package, Shield } from "lucide-react";
 
@@ -33,6 +34,7 @@ export function Navbar() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const { cantidadTotal } = useCart();
   const { data: session, status } = useSession();
+  const pathname = usePathname();
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -41,13 +43,23 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Sobre el hero cinematográfico del home (video a pantalla completa) el
+  // navbar se vuelve transparente y usa mix-blend-difference: el navegador
+  // invierte el color por píxel contra lo que hay detrás, así que el
+  // contraste queda resuelto solo, sin recolorear cada link a mano. Se
+  // desactiva apenas hay scroll o en cualquier otra página (ahí sí necesita
+  // su fondo sólido normal para no perderse sobre contenido claro).
+  const sobreHeroCinematografico = pathname === "/" && !scrolled;
+
   return (
     <header
       className={cn(
         "sticky top-0 z-50 w-full transition-colors print:hidden",
-        scrolled
-          ? "border-b border-border/60 bg-background-95 backdrop-blur-lg"
-          : "border-b border-transparent bg-background-40 backdrop-blur-sm",
+        sobreHeroCinematografico
+          ? "border-b border-transparent bg-transparent mix-blend-difference"
+          : scrolled
+            ? "border-b border-border/60 bg-background-95 backdrop-blur-lg"
+            : "border-b border-transparent bg-background-40 backdrop-blur-sm",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
