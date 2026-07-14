@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Bell, LogOut, Search, ShieldAlert, User } from "lucide-react";
+import { Bell, FileWarning, LogOut, Search, ShieldAlert, User } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -22,14 +22,16 @@ import { ABRIR_COMMAND_PALETTE_EVENT } from "./admin-command-palette";
 export function AdminTopbar({
   pedidosPendientes,
   alertasStock,
+  reclamosPendientes,
 }: {
   pedidosPendientes: number;
   alertasStock: number;
+  reclamosPendientes: number;
 }) {
   const router = useRouter();
   const { data: session } = useSession();
   const [busqueda, setBusqueda] = React.useState("");
-  const totalNotificaciones = pedidosPendientes + alertasStock;
+  const totalNotificaciones = pedidosPendientes + alertasStock + reclamosPendientes;
 
   function onBuscar(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +97,14 @@ export function AdminTopbar({
                     <Link href="/admin/productos">
                       <ShieldAlert className="size-4 text-red-500" />
                       {alertasStock} producto(s) con stock bajo o agotado
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {reclamosPendientes > 0 && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/reclamos">
+                      <FileWarning className="size-4 text-sky-500" />
+                      {reclamosPendientes} reclamo(s) sin resolver
                     </Link>
                   </DropdownMenuItem>
                 )}

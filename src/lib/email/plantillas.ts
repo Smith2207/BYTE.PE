@@ -1,6 +1,7 @@
 import { formatoPEN, formatoDireccion } from "@/lib/format";
 import { siteConfig } from "@/lib/site-config";
 import type { PedidoMock } from "@/lib/pedidos/store";
+import type { ReclamoAlmacenado } from "@/lib/reclamos/store";
 
 const BASE_URL = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
@@ -84,6 +85,34 @@ export function plantillaNuevoPedidoAdmin(pedido: PedidoMock) {
        style="display:inline-block;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
       Ver en el panel admin
     </a>`;
+  return envoltorio(contenido);
+}
+
+export function plantillaRespuestaReclamo(reclamo: ReclamoAlmacenado) {
+  const esResuelto = reclamo.estado === "resuelto";
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">
+      Actualización de tu ${reclamo.tipo} — ${reclamo.folio}
+    </h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      Hola ${reclamo.nombre.split(" ")[0]}, esto es lo que respondimos a tu
+      ${reclamo.tipo} registrado en nuestro Libro de Reclamaciones.
+    </p>
+    <div style="background:#1f1f1f;border-radius:12px;padding:16px 20px;margin-bottom:16px;">
+      <p style="margin:0 0 4px;font-size:12px;color:#8a8a8a;">Tu reclamo</p>
+      <p style="margin:0;font-size:14px;color:#e5e5e5;">${reclamo.detalleReclamo}</p>
+    </div>
+    <div style="background:#1f1f1f;border-radius:12px;padding:16px 20px;">
+      <p style="margin:0 0 4px;font-size:12px;color:#8a8a8a;">Nuestra respuesta</p>
+      <p style="margin:0;font-size:14px;color:#e5e5e5;">${reclamo.respuesta}</p>
+    </div>
+    <p style="margin:20px 0 0;font-size:13px;color:#a3a3a3;">
+      Estado actual: <strong style="color:#e5e5e5;">${esResuelto ? "Resuelto" : "En proceso"}</strong>
+    </p>
+    <p style="margin:16px 0 0;font-size:12px;color:#6b6b6b;">
+      Si tienes alguna consulta adicional sobre este caso, responde a este correo o
+      escríbenos a ${siteConfig.email}.
+    </p>`;
   return envoltorio(contenido);
 }
 

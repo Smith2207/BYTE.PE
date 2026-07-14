@@ -4,11 +4,13 @@ import { AdminTopbar } from "@/components/admin/admin-topbar";
 import { AdminCommandPalette } from "@/components/admin/admin-command-palette";
 import { contarAlertasStock } from "@/lib/mock/repo";
 import { contarPedidosPendientes } from "@/lib/pedidos/store";
+import { contarReclamosPendientes } from "@/lib/reclamos/store";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [pedidosPendientes, alertasStock] = await Promise.all([
+  const [pedidosPendientes, alertasStock, reclamosPendientes] = await Promise.all([
     contarPedidosPendientes(),
     contarAlertasStock(),
+    contarReclamosPendientes(),
   ]);
 
   return (
@@ -30,7 +32,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </aside>
 
         <div className="min-w-0 flex-1">
-          <AdminTopbar pedidosPendientes={pedidosPendientes} alertasStock={alertasStock} />
+          <AdminTopbar
+            pedidosPendientes={pedidosPendientes}
+            alertasStock={alertasStock}
+            reclamosPendientes={reclamosPendientes}
+          />
           {children}
         </div>
       </div>

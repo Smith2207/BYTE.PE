@@ -56,5 +56,6 @@ export type TipoDocumento = (typeof tipoDocumentoEnum.enumValues)[number];
 export type EstadoPedido = (typeof estadoPedidoEnum.enumValues)[number];
 export type MetodoPago = (typeof metodoPagoEnum.enumValues)[number];
 export type TipoCupon = (typeof tipoCuponEnum.enumValues)[number];
+export type EstadoReclamo = (typeof estadoReclamoEnum.enumValues)[number];
 export type EstadoCompra = (typeof estadoCompraEnum.enumValues)[number];
 export type ProveedorCompra = (typeof proveedorCompraEnum.enumValues)[number];
