@@ -17,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
 import type { DireccionAlmacenada } from "@/lib/direcciones/store";
 import {
@@ -67,9 +69,9 @@ export function DireccionesLista({ direcciones }: { direcciones: DireccionAlmace
   }
 
   return (
-    <div className="space-y-4">
+    <RevealOnScroll className="space-y-4" selector="[data-direccion-card]" stagger={0.08} y={20}>
       {direcciones.map((d) => (
-        <Card key={d.id}>
+        <Card key={d.id} data-direccion-card>
           <CardContent className="flex items-start justify-between gap-3 pt-6">
             <div className="flex gap-3">
               <MapPin className="mt-0.5 size-5 text-primary" />
@@ -218,7 +220,9 @@ export function DireccionesLista({ direcciones }: { direcciones: DireccionAlmace
                 </Label>
               </div>
               <div className="flex gap-3 sm:col-span-2">
-                <Button type="submit">Guardar dirección</Button>
+                <Magnetic strength={0.15} className="inline-block">
+                  <Button type="submit">Guardar dirección</Button>
+                </Magnetic>
                 {direcciones.length > 0 && (
                   <Button type="button" variant="outline" onClick={() => setMostrarForm(false)}>
                     Cancelar
@@ -229,10 +233,12 @@ export function DireccionesLista({ direcciones }: { direcciones: DireccionAlmace
           </CardContent>
         </Card>
       ) : (
-        <Button variant="outline" onClick={() => setMostrarForm(true)}>
-          <Plus className="size-4" /> Agregar dirección
-        </Button>
+        <Magnetic strength={0.15} className="inline-block">
+          <Button variant="outline" onClick={() => setMostrarForm(true)}>
+            <Plus className="size-4" /> Agregar dirección
+          </Button>
+        </Magnetic>
       )}
-    </div>
+    </RevealOnScroll>
   );
 }

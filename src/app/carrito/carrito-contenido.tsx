@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { Magnetic } from "@/components/fx/magnetic";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, desglosarIGV } from "@/lib/format";
 
@@ -16,16 +17,18 @@ export function CarritoContenido() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-24 text-center">
+      <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-24 text-center">
         <ShoppingBag className="size-10 text-muted-foreground" />
         <p className="mt-4 text-lg font-semibold">Tu carrito está vacío</p>
         <p className="mt-2 text-sm text-muted-foreground">
           Explora el catálogo y encuentra tu próximo equipo.
         </p>
-        <Button className="mt-6" asChild>
-          <Link href="/productos">Ver catálogo</Link>
-        </Button>
-      </div>
+        <Magnetic strength={0.15} className="mt-6 inline-block">
+          <Button asChild>
+            <Link href="/productos">Ver catálogo</Link>
+          </Button>
+        </Magnetic>
+      </RevealOnScroll>
     );
   }
 
@@ -33,9 +36,14 @@ export function CarritoContenido() {
 
   return (
     <div className="grid gap-10 lg:grid-cols-3">
-      <div className="space-y-4 lg:col-span-2">
+      <RevealOnScroll
+        className="space-y-4 lg:col-span-2"
+        selector="[data-carrito-item]"
+        stagger={0.06}
+        y={16}
+      >
         {items.map((item) => (
-          <Card key={`${item.productoId}-${item.varianteId}`}>
+          <Card key={`${item.productoId}-${item.varianteId}`} data-carrito-item>
             <CardContent className="flex gap-4 p-4">
               <Link
                 href={`/productos/${item.slug}`}
@@ -107,7 +115,7 @@ export function CarritoContenido() {
             </CardContent>
           </Card>
         ))}
-      </div>
+      </RevealOnScroll>
 
       <div>
         <Card className="sticky top-24">

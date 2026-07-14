@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 
 export const metadata = { title: "Mi cuenta" };
 
@@ -8,7 +9,7 @@ export default async function CuentaPage() {
   const session = await auth();
 
   return (
-    <div>
+    <RevealOnScroll y={20}>
       <h1 className="font-display mb-6 text-2xl font-bold">Mi perfil</h1>
       <Card>
         <CardContent className="space-y-3 pt-6 text-sm">
@@ -28,6 +29,6 @@ export default async function CuentaPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </RevealOnScroll>
   );
 }

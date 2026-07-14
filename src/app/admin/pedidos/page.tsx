@@ -2,6 +2,7 @@ import { PackageSearch } from "lucide-react";
 
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PaginacionAdmin } from "@/components/admin/paginacion-admin";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { listarPedidos, type PedidoMock } from "@/lib/pedidos/store";
 import { PedidoFila } from "./pedido-fila";
 import { PedidosFiltros } from "./pedidos-filtros";
@@ -57,16 +58,16 @@ export default async function AdminPedidosPage({
       {todos.length === 0 ? (
         <p className="text-sm text-muted-foreground">Todavía no hay pedidos registrados.</p>
       ) : pedidos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
+        <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
           <PackageSearch className="size-10 text-muted-foreground" />
           <p className="mt-4 text-sm font-semibold">Sin pedidos para estos filtros</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Prueba con otro término de búsqueda o estado.
           </p>
-        </div>
+        </RevealOnScroll>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-2xl border border-border/60">
+          <RevealOnScroll y={16} className="overflow-x-auto rounded-2xl border border-border/60">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -86,7 +87,7 @@ export default async function AdminPedidosPage({
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </RevealOnScroll>
           <PaginacionAdmin
             paginaActual={paginaActual}
             totalPaginas={totalPaginas}

@@ -12,6 +12,7 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { VentasChart, type VentaPorDia } from "@/components/admin/ventas-chart";
 import { TopProductosChart } from "@/components/admin/top-productos-chart";
 import { adminListarProductos } from "@/lib/mock/repo";
@@ -108,8 +109,13 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <h1 className="font-display text-2xl font-bold">Dashboard</h1>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+      <RevealOnScroll
+        className="grid gap-4 sm:grid-cols-3"
+        selector="[data-kpi-card]"
+        stagger={0.06}
+        y={14}
+      >
+        <Card data-kpi-card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <DollarSign className="size-5" />
@@ -126,7 +132,7 @@ export default async function AdminDashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card data-kpi-card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex size-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
               <ShoppingCart className="size-5" />
@@ -146,7 +152,7 @@ export default async function AdminDashboardPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card data-kpi-card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex size-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
               <AlertCircle className="size-5" />
@@ -159,14 +165,19 @@ export default async function AdminDashboardPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </RevealOnScroll>
 
       <div>
         <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
           Contabilidad (solo admin)
         </h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
+        <RevealOnScroll
+          className="grid gap-4 sm:grid-cols-3"
+          selector="[data-kpi-card]"
+          stagger={0.06}
+          y={14}
+        >
+          <Card data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <TrendingUp className="size-5" />
@@ -187,7 +198,7 @@ export default async function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div className="flex size-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <DollarSign className="size-5" />
@@ -201,7 +212,7 @@ export default async function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div className="flex size-11 items-center justify-center rounded-xl bg-secondary text-foreground">
                 <Truck className="size-5" />
@@ -215,25 +226,32 @@ export default async function AdminDashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </RevealOnScroll>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <h2 className="mb-4 text-sm font-semibold">Ventas — últimos 14 días</h2>
-          <VentasChart datos={ventasPorDia} />
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <RevealOnScroll y={16}>
         <Card>
+          <CardContent className="pt-6">
+            <h2 className="mb-4 text-sm font-semibold">Ventas — últimos 14 días</h2>
+            <VentasChart datos={ventasPorDia} />
+          </CardContent>
+        </Card>
+      </RevealOnScroll>
+
+      <RevealOnScroll
+        className="grid gap-6 lg:grid-cols-2"
+        selector="[data-dashboard-card]"
+        stagger={0.08}
+        y={16}
+      >
+        <Card data-dashboard-card>
           <CardContent className="pt-6">
             <h2 className="mb-4 text-sm font-semibold">Productos más vendidos</h2>
             <TopProductosChart datos={masVendidos} />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-dashboard-card>
           <CardContent className="pt-6">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
               <Package className="size-4" /> Alerta de stock
@@ -256,7 +274,7 @@ export default async function AdminDashboardPage() {
             )}
           </CardContent>
         </Card>
-      </div>
+      </RevealOnScroll>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { PackageSearch, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { adminListarCategorias, adminListarProductos } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
 import { EliminarProductoBoton } from "./eliminar-boton";
@@ -33,27 +35,29 @@ export default async function AdminProductosPage({
             </p>
           )}
         </div>
-        <ProductoSheet
-          categorias={categorias}
-          trigger={
-            <Button>
-              <Plus className="size-4" /> Nuevo producto
-            </Button>
-          }
-        />
+        <Magnetic strength={0.15} className="inline-block">
+          <ProductoSheet
+            categorias={categorias}
+            trigger={
+              <Button>
+                <Plus className="size-4" /> Nuevo producto
+              </Button>
+            }
+          />
+        </Magnetic>
       </div>
 
       {productos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
+        <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
           <PackageSearch className="size-10 text-muted-foreground" />
           <p className="mt-4 text-sm font-semibold">Sin resultados para &quot;{q}&quot;</p>
           <p className="mt-1 text-sm text-muted-foreground">Prueba con otro nombre o SKU.</p>
           <Link href="/admin/productos" className="mt-4 text-sm text-primary hover:underline">
             Ver todos los productos
           </Link>
-        </div>
+        </RevealOnScroll>
       ) : (
-      <div className="overflow-hidden rounded-2xl border border-border/60">
+      <RevealOnScroll y={16} className="overflow-hidden rounded-2xl border border-border/60">
         <Table>
           <TableHeader>
             <TableRow>
@@ -103,7 +107,7 @@ export default async function AdminProductosPage({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </RevealOnScroll>
       )}
     </div>
   );

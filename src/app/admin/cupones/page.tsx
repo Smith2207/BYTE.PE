@@ -2,6 +2,8 @@ import { PackageSearch } from "lucide-react";
 import { adminListarCupones } from "@/lib/cupones/store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { formatoPEN } from "@/lib/format";
 import { CuponDialog } from "./cupon-dialog";
 import { ToggleActivoCupon, EliminarCuponBoton } from "./cupon-acciones";
@@ -35,18 +37,20 @@ export default async function AdminCuponesPage({
             </p>
           )}
         </div>
-        <CuponDialog />
+        <Magnetic strength={0.15} className="inline-block">
+          <CuponDialog />
+        </Magnetic>
       </div>
 
       {todos.length > 1 && <BuscarCuponInput />}
 
       {cupones.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
+        <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
           <PackageSearch className="size-10 text-muted-foreground" />
           <p className="mt-4 text-sm font-semibold">Sin cupones para &quot;{q}&quot;</p>
-        </div>
+        </RevealOnScroll>
       ) : (
-      <div className="overflow-hidden rounded-2xl border border-border/60">
+      <RevealOnScroll y={16} className="overflow-hidden rounded-2xl border border-border/60">
         <Table>
           <TableHeader>
             <TableRow>
@@ -97,7 +101,7 @@ export default async function AdminCuponesPage({
             ))}
           </TableBody>
         </Table>
-      </div>
+      </RevealOnScroll>
       )}
     </div>
   );

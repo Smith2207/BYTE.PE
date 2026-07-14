@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { formatoPEN } from "@/lib/format";
 
@@ -20,9 +21,9 @@ export default async function CuentaPedidosPage() {
       {pedidos.length === 0 ? (
         <p className="text-sm text-muted-foreground">Todavía no tienes pedidos.</p>
       ) : (
-        <div className="space-y-4">
+        <RevealOnScroll className="space-y-4" selector="[data-pedido-card]" stagger={0.08} y={20}>
           {pedidos.map((p) => (
-            <Card key={p.numeroPedido}>
+            <Card key={p.numeroPedido} data-pedido-card>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
                 <div>
                   <Link href={`/pedido/${p.numeroPedido}`} className="font-mono text-sm font-semibold hover:underline">
@@ -49,7 +50,7 @@ export default async function CuentaPedidosPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </RevealOnScroll>
       )}
     </div>
   );

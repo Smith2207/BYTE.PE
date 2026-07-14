@@ -1,5 +1,7 @@
 import { adminListarCategorias } from "@/lib/mock/repo";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { CategoriaDialog } from "./categoria-dialog";
 import { EliminarCategoriaBoton } from "./eliminar-boton";
 
@@ -13,10 +15,12 @@ export default async function AdminCategoriasPage() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Categorías</h1>
-        <CategoriaDialog categoriasPadre={padres} />
+        <Magnetic strength={0.15} className="inline-block">
+          <CategoriaDialog categoriasPadre={padres} />
+        </Magnetic>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border/60">
+      <RevealOnScroll y={16} className="overflow-hidden rounded-2xl border border-border/60">
         <Table>
           <TableHeader>
             <TableRow>
@@ -44,7 +48,7 @@ export default async function AdminCategoriasPage() {
             ))}
           </TableBody>
         </Table>
-      </div>
+      </RevealOnScroll>
     </div>
   );
 }

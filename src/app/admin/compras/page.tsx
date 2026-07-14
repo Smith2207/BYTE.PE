@@ -4,6 +4,8 @@ import { PackageSearch, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PaginacionAdmin } from "@/components/admin/paginacion-admin";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { listarCompras, nombreProveedor, type CompraAlmacenada } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 import { EstadoCompraSelector } from "./estado-selector";
@@ -54,11 +56,13 @@ export default async function AdminComprasPage({
             </p>
           )}
         </div>
-        <Button asChild>
-          <Link href="/admin/compras/nueva">
-            <Plus className="size-4" /> Nueva compra
-          </Link>
-        </Button>
+        <Magnetic strength={0.15} className="inline-block">
+          <Button asChild>
+            <Link href="/admin/compras/nueva">
+              <Plus className="size-4" /> Nueva compra
+            </Link>
+          </Button>
+        </Magnetic>
       </div>
 
       {todas.length > 0 && <ComprasFiltros />}
@@ -68,16 +72,16 @@ export default async function AdminComprasPage({
           Todavía no registraste compras a proveedores.
         </p>
       ) : compras.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
+        <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
           <PackageSearch className="size-10 text-muted-foreground" />
           <p className="mt-4 text-sm font-semibold">Sin compras para estos filtros</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Prueba con otro término de búsqueda o estado.
           </p>
-        </div>
+        </RevealOnScroll>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-2xl border border-border/60">
+          <RevealOnScroll y={16} className="overflow-x-auto rounded-2xl border border-border/60">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -119,7 +123,7 @@ export default async function AdminComprasPage({
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </RevealOnScroll>
           <PaginacionAdmin
             paginaActual={paginaActual}
             totalPaginas={totalPaginas}

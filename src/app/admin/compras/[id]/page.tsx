@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { obtenerCompra, nombreProveedor } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 import { EstadoCompraSelector } from "../estado-selector";
@@ -15,7 +16,7 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
   if (!compra) notFound();
 
   return (
-    <div className="max-w-2xl">
+    <RevealOnScroll className="max-w-2xl" y={16}>
       <h1 className="font-display mb-6 text-2xl font-bold">
         Compra — {nombreProveedor(compra)}
       </h1>
@@ -118,6 +119,6 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
           )}
         </CardContent>
       </Card>
-    </div>
+    </RevealOnScroll>
   );
 }

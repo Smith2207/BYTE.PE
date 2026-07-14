@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, formatoDireccion, desglosarIGV } from "@/lib/format";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
@@ -102,13 +104,13 @@ export function CheckoutWizard() {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-24 text-center">
+      <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-24 text-center">
         <p className="text-lg font-semibold">Tu carrito está vacío</p>
         <p className="mt-2 text-sm text-muted-foreground">Agrega productos antes de continuar.</p>
-        <Button className="mt-6" onClick={() => router.push("/productos")}>
-          Ver catálogo
-        </Button>
-      </div>
+        <Magnetic strength={0.15} className="mt-6 inline-block">
+          <Button onClick={() => router.push("/productos")}>Ver catálogo</Button>
+        </Magnetic>
+      </RevealOnScroll>
     );
   }
 
@@ -259,6 +261,7 @@ export function CheckoutWizard() {
           ))}
         </div>
 
+        <RevealOnScroll key={paso} y={16}>
         {paso === 0 && (
           <Card>
             <CardContent className="space-y-6 pt-6">
@@ -648,12 +651,15 @@ export function CheckoutWizard() {
                         : "Tarjeta"}
                 </p>
               </div>
-              <Button size="lg" className="mt-2 w-full" onClick={confirmarPedido} disabled={enviando}>
-                {enviando ? <Loader2 className="size-4 animate-spin" /> : "Confirmar pedido"}
-              </Button>
+              <Magnetic strength={0.15} className="mt-2 block">
+                <Button size="lg" className="w-full" onClick={confirmarPedido} disabled={enviando}>
+                  {enviando ? <Loader2 className="size-4 animate-spin" /> : "Confirmar pedido"}
+                </Button>
+              </Magnetic>
             </CardContent>
           </Card>
         )}
+        </RevealOnScroll>
 
         <div className="mt-6 flex justify-between">
           <Button
@@ -663,7 +669,11 @@ export function CheckoutWizard() {
           >
             Atrás
           </Button>
-          {paso < PASOS.length - 1 && <Button onClick={siguiente}>Continuar</Button>}
+          {paso < PASOS.length - 1 && (
+            <Magnetic strength={0.15} className="inline-block">
+              <Button onClick={siguiente}>Continuar</Button>
+            </Magnetic>
+          )}
         </div>
       </div>
 
