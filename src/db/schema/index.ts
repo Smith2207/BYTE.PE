@@ -10,4 +10,5 @@ export * from "./resenas";
 export * from "./wishlist";
 export * from "./soporte";
 export * from "./compras";
+export * from "./devoluciones";
 export * from "./relations";

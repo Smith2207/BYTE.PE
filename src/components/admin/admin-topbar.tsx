@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Bell, FileWarning, LogOut, Search, ShieldAlert, User } from "lucide-react";
+import { Bell, FileWarning, LogOut, Search, ShieldAlert, Undo2, User } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -23,15 +23,18 @@ export function AdminTopbar({
   pedidosPendientes,
   alertasStock,
   reclamosPendientes,
+  devolucionesPendientes,
 }: {
   pedidosPendientes: number;
   alertasStock: number;
   reclamosPendientes: number;
+  devolucionesPendientes: number;
 }) {
   const router = useRouter();
   const { data: session } = useSession();
   const [busqueda, setBusqueda] = React.useState("");
-  const totalNotificaciones = pedidosPendientes + alertasStock + reclamosPendientes;
+  const totalNotificaciones =
+    pedidosPendientes + alertasStock + reclamosPendientes + devolucionesPendientes;
 
   function onBuscar(e: React.FormEvent) {
     e.preventDefault();
@@ -105,6 +108,14 @@ export function AdminTopbar({
                     <Link href="/admin/reclamos">
                       <FileWarning className="size-4 text-sky-500" />
                       {reclamosPendientes} reclamo(s) sin resolver
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {devolucionesPendientes > 0 && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/devoluciones">
+                      <Undo2 className="size-4 text-violet-500" />
+                      {devolucionesPendientes} solicitud(es) de devolución
                     </Link>
                   </DropdownMenuItem>
                 )}

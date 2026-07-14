@@ -13,6 +13,7 @@ export const ESTADO_PEDIDO_ESTILO: Record<PedidoMock["estado"], string> = {
   enviado: "border-sky-500/30 bg-sky-500/10 text-sky-500",
   entregado: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
   cancelado: "border-red-500/30 bg-red-500/10 text-red-500",
+  reembolsado: "border-violet-500/30 bg-violet-500/10 text-violet-500",
 };
 
 export const ESTADO_PEDIDO_ETIQUETA: Record<PedidoMock["estado"], string> = {
@@ -22,6 +23,7 @@ export const ESTADO_PEDIDO_ETIQUETA: Record<PedidoMock["estado"], string> = {
   enviado: "Enviado",
   entregado: "Entregado",
   cancelado: "Cancelado",
+  reembolsado: "Reembolsado",
 };
 
 export function EstadoPedidoBadge({ estado }: { estado: PedidoMock["estado"] }) {

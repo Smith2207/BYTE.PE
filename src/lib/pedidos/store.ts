@@ -13,9 +13,17 @@ export type PedidoItemMock = {
 };
 
 export type PedidoMock = {
+  id: string;
   numeroPedido: string;
   usuarioId?: string;
-  estado: "pendiente" | "pagado" | "preparando" | "enviado" | "entregado" | "cancelado";
+  estado:
+    | "pendiente"
+    | "pagado"
+    | "preparando"
+    | "enviado"
+    | "entregado"
+    | "cancelado"
+    | "reembolsado";
   items: PedidoItemMock[];
   subtotal: number;
   igv: number;
@@ -52,7 +60,7 @@ export async function generarNumeroPedido(tx: Ejecutor = db) {
   return `ORD-${new Date().getFullYear()}${correlativo}`;
 }
 
-type GuardarPedidoInput = Omit<PedidoMock, "estado" | "courier" | "numeroTracking"> & {
+type GuardarPedidoInput = Omit<PedidoMock, "id" | "estado" | "courier" | "numeroTracking"> & {
   estado?: PedidoMock["estado"];
 };
 
@@ -136,6 +144,7 @@ async function aPedidoMock(
   const direccionFilaUnica = direccionFila[0];
 
   return {
+    id: fila.id,
     numeroPedido: fila.numeroPedido,
     usuarioId: fila.usuarioId ?? undefined,
     estado: fila.estado as PedidoMock["estado"],

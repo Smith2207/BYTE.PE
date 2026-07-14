@@ -51,6 +51,15 @@ export const estadoCompraEnum = pgEnum("estado_compra", [
 
 export const proveedorCompraEnum = pgEnum("proveedor_compra", ["amazon", "ebay", "otro"]);
 
+// Devoluciones/reembolsos de pedidos ya entregados.
+export const tipoDevolucionEnum = pgEnum("tipo_devolucion", ["reembolso", "cambio"]);
+export const estadoDevolucionEnum = pgEnum("estado_devolucion", [
+  "pendiente",
+  "aprobada",
+  "rechazada",
+  "completada",
+]);
+
 export type RolUsuario = (typeof rolUsuarioEnum.enumValues)[number];
 export type TipoDocumento = (typeof tipoDocumentoEnum.enumValues)[number];
 export type EstadoPedido = (typeof estadoPedidoEnum.enumValues)[number];
@@ -59,3 +68,5 @@ export type TipoCupon = (typeof tipoCuponEnum.enumValues)[number];
 export type EstadoReclamo = (typeof estadoReclamoEnum.enumValues)[number];
 export type EstadoCompra = (typeof estadoCompraEnum.enumValues)[number];
 export type ProveedorCompra = (typeof proveedorCompraEnum.enumValues)[number];
+export type TipoDevolucion = (typeof tipoDevolucionEnum.enumValues)[number];
+export type EstadoDevolucion = (typeof estadoDevolucionEnum.enumValues)[number];

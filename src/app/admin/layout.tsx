@@ -5,13 +5,16 @@ import { AdminCommandPalette } from "@/components/admin/admin-command-palette";
 import { contarAlertasStock } from "@/lib/mock/repo";
 import { contarPedidosPendientes } from "@/lib/pedidos/store";
 import { contarReclamosPendientes } from "@/lib/reclamos/store";
+import { contarSolicitudesPendientes } from "@/lib/devoluciones/store";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [pedidosPendientes, alertasStock, reclamosPendientes] = await Promise.all([
-    contarPedidosPendientes(),
-    contarAlertasStock(),
-    contarReclamosPendientes(),
-  ]);
+  const [pedidosPendientes, alertasStock, reclamosPendientes, devolucionesPendientes] =
+    await Promise.all([
+      contarPedidosPendientes(),
+      contarAlertasStock(),
+      contarReclamosPendientes(),
+      contarSolicitudesPendientes(),
+    ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -36,6 +39,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             pedidosPendientes={pedidosPendientes}
             alertasStock={alertasStock}
             reclamosPendientes={reclamosPendientes}
+            devolucionesPendientes={devolucionesPendientes}
           />
           {children}
         </div>

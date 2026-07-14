@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Package, Tag, Tags, Receipt, Truck, FileWarning } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Tags, Receipt, Truck, FileWarning, Undo2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const ADMIN_NAV_ITEMS = [
@@ -12,6 +12,7 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/compras", label: "Compras", icon: Truck },
   { href: "/admin/cupones", label: "Cupones", icon: Tag },
   { href: "/admin/pedidos", label: "Pedidos", icon: Receipt },
+  { href: "/admin/devoluciones", label: "Devoluciones", icon: Undo2 },
   { href: "/admin/reclamos", label: "Reclamos", icon: FileWarning },
 ];
 

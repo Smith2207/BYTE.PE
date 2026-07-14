@@ -333,6 +333,31 @@ export async function decrementarStock(
 }
 
 /**
+ * Inversa de decrementarStock — al completar un reembolso (ver
+ * src/lib/devoluciones/store.ts) el producto vuelve al inventario. A
+ * diferencia de registrarIngresoPorCompra, NO toca el costo de
+ * adquisición: una devolución de cliente no cambia lo que pagaste al
+ * proveedor por esa unidad.
+ */
+export async function restaurarStock(
+  productoId: string,
+  varianteId: string | null,
+  cantidad: number,
+  tx: Pick<typeof db, "update"> = db,
+) {
+  await tx
+    .update(productos)
+    .set({ stock: sql`${productos.stock} + ${cantidad}` })
+    .where(eq(productos.id, productoId));
+  if (varianteId) {
+    await tx
+      .update(variantesProducto)
+      .set({ stock: sql`${variantesProducto.stock} + ${cantidad}` })
+      .where(eq(variantesProducto.id, varianteId));
+  }
+}
+
+/**
  * Al recibir una compra (ver src/lib/compras/store.ts): suma stock y
  * recalcula el costo de adquisición como promedio ponderado entre el
  * stock que ya había y el que entra, un método de costeo estándar en

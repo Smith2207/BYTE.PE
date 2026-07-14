@@ -116,6 +116,71 @@ export function plantillaRespuestaReclamo(reclamo: ReclamoAlmacenado) {
   return envoltorio(contenido);
 }
 
+export function plantillaSolicitudDevolucionRecibida(input: {
+  nombre: string;
+  pedidoNumero: string;
+  tipo: "reembolso" | "cambio";
+  motivo: string;
+}) {
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">
+      Recibimos tu solicitud de ${input.tipo === "reembolso" ? "reembolso" : "cambio"}
+    </h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      Hola ${input.nombre.split(" ")[0]}, registramos tu solicitud sobre el pedido
+      <strong style="color:#e5e5e5;">${input.pedidoNumero}</strong>. La revisamos y te
+      contactamos apenas tengamos una respuesta.
+    </p>
+    <div style="background:#1f1f1f;border-radius:12px;padding:16px 20px;">
+      <p style="margin:0 0 4px;font-size:12px;color:#8a8a8a;">Motivo indicado</p>
+      <p style="margin:0;font-size:14px;color:#e5e5e5;">${input.motivo}</p>
+    </div>
+    <p style="margin:20px 0 0;font-size:12px;color:#6b6b6b;">
+      Puedes ver el estado de tu pedido en cualquier momento desde tu cuenta.
+    </p>`;
+  return envoltorio(contenido);
+}
+
+export function plantillaSolicitudDevolucionActualizada(input: {
+  nombre: string;
+  pedidoNumero: string;
+  estado: "aprobada" | "rechazada" | "completada";
+  notaAdmin?: string | null;
+  montoReembolsado?: number | null;
+}) {
+  const titulos: Record<typeof input.estado, string> = {
+    aprobada: "Tu solicitud fue aprobada",
+    rechazada: "Tu solicitud fue rechazada",
+    completada: "Tu reembolso fue procesado",
+  };
+  const cuerpos: Record<typeof input.estado, string> = {
+    aprobada:
+      "Aprobamos tu solicitud. Te contactaremos para coordinar la devolución del producto.",
+    rechazada: "Después de revisarla, no pudimos aprobar tu solicitud.",
+    completada: `Procesamos el reembolso de ${
+      input.montoReembolsado != null ? formatoPEN(input.montoReembolsado) : ""
+    } por tu pedido ${input.pedidoNumero}.`,
+  };
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">${titulos[input.estado]}</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      Hola ${input.nombre.split(" ")[0]}, sobre tu solicitud del pedido
+      <strong style="color:#e5e5e5;">${input.pedidoNumero}</strong>: ${cuerpos[input.estado]}
+    </p>
+    ${
+      input.notaAdmin
+        ? `<div style="background:#1f1f1f;border-radius:12px;padding:16px 20px;">
+             <p style="margin:0 0 4px;font-size:12px;color:#8a8a8a;">Detalle</p>
+             <p style="margin:0;font-size:14px;color:#e5e5e5;">${input.notaAdmin}</p>
+           </div>`
+        : ""
+    }
+    <p style="margin:20px 0 0;font-size:12px;color:#6b6b6b;">
+      Cualquier duda, responde a este correo o escríbenos a ${siteConfig.email}.
+    </p>`;
+  return envoltorio(contenido);
+}
+
 export function plantillaRecuperarContrasena(nombre: string, token: string) {
   const resetUrl = `${BASE_URL}/restablecer-contrasena/${token}`;
   const contenido = `
