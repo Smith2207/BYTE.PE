@@ -9,9 +9,11 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { GoogleIcon } from "@/components/icons/google-icon";
 
 export function LoginForm() {
   const router = useRouter();
@@ -55,9 +57,8 @@ export function LoginForm() {
           </div>
           <div>
             <Label htmlFor="password">Contraseña</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               required
               className="mt-1.5"
               value={password}
@@ -76,10 +77,12 @@ export function LoginForm() {
         </div>
 
         <Button
+          type="button"
           variant="outline"
           className="w-full"
           onClick={() => signIn("google", { callbackUrl })}
         >
+          <GoogleIcon className="size-4" />
           Continuar con Google
         </Button>
 

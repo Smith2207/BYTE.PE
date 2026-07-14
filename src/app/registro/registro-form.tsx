@@ -9,8 +9,11 @@ import { Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { GoogleIcon } from "@/components/icons/google-icon";
 import { registrarUsuarioAction } from "./actions";
 
 export function RegistroForm() {
@@ -70,9 +73,8 @@ export function RegistroForm() {
           </div>
           <div>
             <Label htmlFor="password">Contraseña</Label>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               required
               minLength={6}
               className="mt-1.5"
@@ -84,6 +86,22 @@ export function RegistroForm() {
             {enviando ? <Loader2 className="size-4 animate-spin" /> : "Crear cuenta"}
           </Button>
         </form>
+
+        <div className="flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="text-xs text-muted-foreground">o</span>
+          <Separator className="flex-1" />
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => signIn("google", { callbackUrl: "/cuenta" })}
+        >
+          <GoogleIcon className="size-4" />
+          Continuar con Google
+        </Button>
 
         <p className="text-center text-sm text-muted-foreground">
           ¿Ya tienes cuenta?{" "}
