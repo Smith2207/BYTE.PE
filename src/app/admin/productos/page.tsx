@@ -4,18 +4,19 @@ import { PackageSearch, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { adminListarProductos } from "@/lib/mock/repo";
+import { adminListarCategorias, adminListarProductos } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
 import { EliminarProductoBoton } from "./eliminar-boton";
+import { ProductoSheet } from "./producto-sheet";
 
 export const metadata = { title: "Admin — Productos" };
 
 export default async function AdminProductosPage({
   searchParams,
 }: {
-  searchParams: { q?: string };
+  searchParams: { q?: string; editar?: string };
 }) {
-  const todos = await adminListarProductos();
+  const [todos, categorias] = await Promise.all([adminListarProductos(), adminListarCategorias()]);
   const q = searchParams.q?.trim().toLowerCase();
   const productos = q
     ? todos.filter((p) => p.nombre.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
@@ -32,11 +33,14 @@ export default async function AdminProductosPage({
             </p>
           )}
         </div>
-        <Button asChild>
-          <Link href="/admin/productos/nuevo">
-            <Plus className="size-4" /> Nuevo producto
-          </Link>
-        </Button>
+        <ProductoSheet
+          categorias={categorias}
+          trigger={
+            <Button>
+              <Plus className="size-4" /> Nuevo producto
+            </Button>
+          }
+        />
       </div>
 
       {productos.length === 0 ? (
@@ -82,11 +86,16 @@ export default async function AdminProductosPage({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/admin/productos/${p.id}`}>
-                        <Pencil className="size-4" />
-                      </Link>
-                    </Button>
+                    <ProductoSheet
+                      categorias={categorias}
+                      producto={p}
+                      defaultOpen={searchParams.editar === p.id}
+                      trigger={
+                        <Button variant="ghost" size="icon" aria-label="Editar producto">
+                          <Pencil className="size-4" />
+                        </Button>
+                      }
+                    />
                     <EliminarProductoBoton id={p.id} nombre={p.nombre} />
                   </div>
                 </TableCell>

@@ -1,9 +1,11 @@
+import { PackageSearch } from "lucide-react";
 import { adminListarCupones } from "@/lib/cupones/store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatoPEN } from "@/lib/format";
 import { CuponDialog } from "./cupon-dialog";
 import { ToggleActivoCupon, EliminarCuponBoton } from "./cupon-acciones";
+import { BuscarCuponInput } from "./buscar-cupon-input";
 
 export const metadata = { title: "Admin — Cupones" };
 
@@ -13,16 +15,37 @@ const nombreTipo = {
   envio_gratis: "Envío gratis",
 };
 
-export default async function AdminCuponesPage() {
-  const cupones = await adminListarCupones();
+export default async function AdminCuponesPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const todos = await adminListarCupones();
+  const q = searchParams.q?.trim().toLowerCase();
+  const cupones = q ? todos.filter((c) => c.codigo.toLowerCase().includes(q)) : todos;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Cupones</h1>
+        <div>
+          <h1 className="font-display text-2xl font-bold">Cupones</h1>
+          {q && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              {cupones.length} resultado(s) para &quot;{q}&quot;
+            </p>
+          )}
+        </div>
         <CuponDialog />
       </div>
 
+      {todos.length > 1 && <BuscarCuponInput />}
+
+      {cupones.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
+          <PackageSearch className="size-10 text-muted-foreground" />
+          <p className="mt-4 text-sm font-semibold">Sin cupones para &quot;{q}&quot;</p>
+        </div>
+      ) : (
       <div className="overflow-hidden rounded-2xl border border-border/60">
         <Table>
           <TableHeader>
@@ -75,6 +98,7 @@ export default async function AdminCuponesPage() {
           </TableBody>
         </Table>
       </div>
+      )}
     </div>
   );
 }

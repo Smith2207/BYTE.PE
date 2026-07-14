@@ -67,7 +67,7 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
                   {item.cantidad}x {item.descripcion}
                   {item.productoId ? (
                     <Link
-                      href={`/admin/productos/${item.productoId}`}
+                      href={`/admin/productos?editar=${item.productoId}`}
                       className="ml-1.5 text-xs text-primary hover:underline"
                     >
                       (ver en catálogo)

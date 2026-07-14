@@ -244,7 +244,7 @@ export default async function AdminDashboardPage() {
               <ul className="space-y-2">
                 {[...agotados, ...stockBajo].slice(0, 6).map((p) => (
                   <li key={p.id} className="flex items-center justify-between text-sm">
-                    <Link href={`/admin/productos/${p.id}`} className="hover:underline">
+                    <Link href={`/admin/productos?editar=${p.id}`} className="hover:underline">
                       {p.nombre}
                     </Link>
                     <Badge variant={p.stock === 0 ? "destructive" : "secondary"}>
