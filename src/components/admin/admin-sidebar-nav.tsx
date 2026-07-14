@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Package, Tag, Tags, Receipt, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+export const ADMIN_NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/productos", label: "Productos", icon: Package },
   { href: "/admin/categorias", label: "Categorías", icon: Tags },
@@ -22,7 +22,7 @@ export function AdminSidebarNavMobile() {
   const pathname = usePathname();
   return (
     <nav className="mb-6 flex gap-1 overflow-x-auto pb-1 md:hidden">
-      {navItems.map((item) => {
+      {ADMIN_NAV_ITEMS.map((item) => {
         const activo = esActivo(pathname, item.href);
         return (
           <Link
@@ -48,7 +48,7 @@ export function AdminSidebarNav() {
   const pathname = usePathname();
   return (
     <nav className="space-y-1">
-      {navItems.map((item) => {
+      {ADMIN_NAV_ITEMS.map((item) => {
         const activo = esActivo(pathname, item.href);
         return (
           <Link

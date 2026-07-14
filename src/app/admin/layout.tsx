@@ -1,6 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 import { AdminSidebarNav, AdminSidebarNavMobile } from "@/components/admin/admin-sidebar-nav";
 import { AdminTopbar } from "@/components/admin/admin-topbar";
+import { AdminCommandPalette } from "@/components/admin/admin-command-palette";
 import { contarAlertasStock } from "@/lib/mock/repo";
 import { contarPedidosPendientes } from "@/lib/pedidos/store";
 
@@ -17,6 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <span>Acceso restringido al rol &quot;admin&quot; (protegido por middleware).</span>
       </div>
 
+      <AdminCommandPalette />
       <AdminSidebarNavMobile />
 
       <div className="flex gap-8">

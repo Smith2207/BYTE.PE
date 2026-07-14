@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { ABRIR_COMMAND_PALETTE_EVENT } from "./admin-command-palette";
 
 export function AdminTopbar({
   pedidosPendientes,
@@ -46,6 +47,16 @@ export function AdminTopbar({
           className="h-9 rounded-full bg-secondary/60 pl-9"
         />
       </form>
+
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event(ABRIR_COMMAND_PALETTE_EVENT))}
+        className="hidden items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground transition hover:bg-secondary hover:text-foreground sm:flex"
+        aria-label="Abrir navegación rápida"
+      >
+        <kbd className="font-sans">⌘</kbd>
+        <kbd className="font-sans">K</kbd>
+      </button>
 
       <div className="ml-auto flex items-center gap-1.5">
         <DropdownMenu>
