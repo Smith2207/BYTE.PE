@@ -32,12 +32,25 @@ export const compras = pgTable("compras", {
   pagoImpuestos: boolean("pago_impuestos").notNull().default(false),
   montoImpuestos: numeric("monto_impuestos", { precision: 10, scale: 2 }),
   costoTotal: numeric("costo_total", { precision: 10, scale: 2 }).notNull(),
-  comprobanteUrl: text("comprobante_url"),
+  comprobanteUrls: text("comprobante_urls").array().notNull().default([]),
   notas: text("notas"),
   // Tramo internacional (USA→Perú vía forwarder: MyUS, Aerobox, JetBox...)
   // — distinto del courier que reparte localmente al cliente final.
   courierInternacional: text("courier_internacional"),
   trackingInternacional: text("tracking_internacional"),
+  trackingInternacionalEstado: text("tracking_internacional_estado"), // último estado cacheado de la API de tracking
+  trackingInternacionalActualizadoEn: timestamp("tracking_internacional_actualizado_en", {
+    withTimezone: true,
+  }),
+  // Reparto dentro de Perú — el courier urbano que entrega al final, tanto
+  // en compras "directo_peru" (es el único tramo) como en "almacen_usa"
+  // (tramo final después de aduana).
+  courierNacional: text("courier_nacional"),
+  trackingNacional: text("tracking_nacional"),
+  trackingNacionalEstado: text("tracking_nacional_estado"),
+  trackingNacionalActualizadoEn: timestamp("tracking_nacional_actualizado_en", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -57,6 +70,9 @@ export const compraItems = pgTable("compra_items", {
   categoriaId: uuid("categoria_id").references(() => categorias.id),
   marca: text("marca"),
   precioVenta: numeric("precio_venta", { precision: 10, scale: 2 }),
+  // Fotos del producto tomadas al momento de comprar — se pasan tal cual
+  // al catálogo cuando se publica (ver actualizarEstadoCompra).
+  imagenes: text("imagenes").array().notNull().default([]),
   // Peso unitario real — si TODOS los ítems de una compra lo tienen, el
   // costo de envío/aduana se reparte proporcional al peso en vez de en
   // partes iguales por unidad (ver actualizarEstadoCompra).

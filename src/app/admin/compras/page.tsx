@@ -160,7 +160,12 @@ export default async function AdminComprasPage({
                       )}
                     </TableCell>
                     <TableCell>
-                      <EstadoCompraSelector id={c.id} estado={c.estado} tipoEnvio={c.tipoEnvio} />
+                      <EstadoCompraSelector
+                        id={c.id}
+                        estado={c.estado}
+                        tipoEnvio={c.tipoEnvio}
+                        tieneItemsNuevos={c.items.some((it) => it.productoId === null)}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <Link href={`/admin/compras/${c.id}`} className="text-sm text-primary hover:underline">

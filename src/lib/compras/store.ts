@@ -2,6 +2,7 @@ import { and, desc, eq, gte, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { compras, compraItems } from "@/db/schema";
 import { registrarIngresoPorCompra, adminCrearProducto } from "@/lib/mock/repo";
+import { consultarEstadoTracking } from "@/lib/tracking";
 import type {
   ProveedorCompra as ProveedorCompraEnum,
   EstadoCompra,
@@ -17,6 +18,7 @@ import type {
 export type ProveedorCompra = ProveedorCompraEnum;
 
 export type CompraItemAlmacenado = {
+  id?: string;
   productoId: string | null;
   descripcion: string;
   cantidad: number;
@@ -31,6 +33,8 @@ export type CompraItemAlmacenado = {
   // Peso unitario real (kg) — si TODOS los ítems de la compra lo traen, el
   // envío/aduana se reparte por peso en vez de en partes iguales por unidad.
   pesoKg?: number;
+  // Fotos tomadas al comprar — se pasan tal cual al catálogo al publicar.
+  imagenes?: string[];
 };
 
 export type CompraAlmacenada = {
@@ -53,17 +57,26 @@ export type CompraAlmacenada = {
   pagoImpuestos: boolean;
   montoImpuestos?: number;
   costoTotal: number;
-  comprobanteUrl?: string;
+  comprobanteUrls: string[];
   notas?: string;
   // Tramo internacional USA→Perú (forwarder), distinto del courier de
-  // reparto local que se asigna en el pedido al cliente.
+  // reparto local que entrega al destinatario final en Perú.
   courierInternacional?: string;
   trackingInternacional?: string;
+  trackingInternacionalEstado?: string;
+  trackingInternacionalActualizadoEn?: string;
+  // Reparto dentro de Perú — único tramo en "directo_peru", tramo final
+  // después de aduana en "almacen_usa".
+  courierNacional?: string;
+  trackingNacional?: string;
+  trackingNacionalEstado?: string;
+  trackingNacionalActualizadoEn?: string;
   createdAt: string;
 };
 
 function aCompraItemAlmacenado(i: typeof compraItems.$inferSelect): CompraItemAlmacenado {
   return {
+    id: i.id,
     productoId: i.productoId,
     descripcion: i.descripcion,
     cantidad: i.cantidad,
@@ -72,6 +85,7 @@ function aCompraItemAlmacenado(i: typeof compraItems.$inferSelect): CompraItemAl
     marca: i.marca ?? undefined,
     precioVenta: i.precioVenta != null ? Number(i.precioVenta) : undefined,
     pesoKg: i.pesoKg != null ? Number(i.pesoKg) : undefined,
+    imagenes: i.imagenes,
   };
 }
 
@@ -94,10 +108,16 @@ async function aCompraAlmacenada(c: typeof compras.$inferSelect): Promise<Compra
     pagoImpuestos: c.pagoImpuestos,
     montoImpuestos: c.montoImpuestos != null ? Number(c.montoImpuestos) : undefined,
     costoTotal: Number(c.costoTotal),
-    comprobanteUrl: c.comprobanteUrl ?? undefined,
+    comprobanteUrls: c.comprobanteUrls,
     notas: c.notas ?? undefined,
     courierInternacional: c.courierInternacional ?? undefined,
     trackingInternacional: c.trackingInternacional ?? undefined,
+    trackingInternacionalEstado: c.trackingInternacionalEstado ?? undefined,
+    trackingInternacionalActualizadoEn: c.trackingInternacionalActualizadoEn?.toISOString(),
+    courierNacional: c.courierNacional ?? undefined,
+    trackingNacional: c.trackingNacional ?? undefined,
+    trackingNacionalEstado: c.trackingNacionalEstado ?? undefined,
+    trackingNacionalActualizadoEn: c.trackingNacionalActualizadoEn?.toISOString(),
     createdAt: c.createdAt.toISOString(),
   };
 }
@@ -123,10 +143,12 @@ export type CompraFormInput = {
   otrosCostos: number;
   pagoImpuestos?: boolean;
   montoImpuestos?: number;
-  comprobanteUrl?: string;
+  comprobanteUrls?: string[];
   notas?: string;
   courierInternacional?: string;
   trackingInternacional?: string;
+  courierNacional?: string;
+  trackingNacional?: string;
 };
 
 export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacenada> {
@@ -149,10 +171,12 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
       pagoImpuestos: input.pagoImpuestos ?? false,
       montoImpuestos: input.pagoImpuestos ? montoImpuestos.toFixed(2) : null,
       costoTotal: costoTotal.toFixed(2),
-      comprobanteUrl: input.comprobanteUrl,
+      comprobanteUrls: input.comprobanteUrls ?? [],
       notas: input.notas,
       courierInternacional: input.courierInternacional,
       trackingInternacional: input.trackingInternacional,
+      courierNacional: input.courierNacional,
+      trackingNacional: input.trackingNacional,
     })
     .returning();
 
@@ -168,6 +192,7 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
         marca: i.marca,
         precioVenta: i.precioVenta != null ? i.precioVenta.toFixed(2) : null,
         pesoKg: i.pesoKg != null ? i.pesoKg.toFixed(3) : null,
+        imagenes: i.imagenes ?? [],
       })),
     );
   }
@@ -185,6 +210,79 @@ function generarSku(descripcion: string) {
   return `${base}-${sufijo}`;
 }
 
+/** Reparte envío/aduana entre los ítems de una compra: proporcional al peso
+ * real si TODOS los ítems lo traen (más justo — un celular no debería
+ * cargar lo mismo que una laptop en el mismo paquete), o en partes iguales
+ * por unidad si falta el peso de cualquier ítem (siempre calculable). Pura
+ * — no toca la base de datos, para poder previsualizar sin persistir. */
+function calcularCostosFinales(
+  compraFila: typeof compras.$inferSelect,
+  itemsFilas: (typeof compraItems.$inferSelect)[],
+): Map<string, number> {
+  const costoAdicionalTotal =
+    Number(compraFila.costoEnvioImportacion) +
+    Number(compraFila.otrosCostos) +
+    (compraFila.pagoImpuestos ? Number(compraFila.montoImpuestos ?? 0) : 0);
+
+  const pesoTotal = itemsFilas.reduce(
+    (acc, i) => acc + (i.pesoKg != null ? Number(i.pesoKg) * i.cantidad : 0),
+    0,
+  );
+  const repartoPorPeso = pesoTotal > 0 && itemsFilas.every((i) => i.pesoKg != null);
+
+  const unidadesTotales = itemsFilas.reduce((acc, i) => acc + i.cantidad, 0) || 1;
+  const costoAdicionalPorUnidad = costoAdicionalTotal / unidadesTotales;
+
+  const costosPorItem = new Map<string, number>();
+  for (const item of itemsFilas) {
+    const costoAdicionalItem = repartoPorPeso
+      ? (costoAdicionalTotal * ((Number(item.pesoKg) * item.cantidad) / pesoTotal)) / item.cantidad
+      : costoAdicionalPorUnidad;
+    costosPorItem.set(item.id, Number(item.costoUnitario) + costoAdicionalItem);
+  }
+  return costosPorItem;
+}
+
+/** Registra en el catálogo el efecto de recibir la mercadería: suma stock a
+ * productos ya existentes, y publica los productos nuevos que ya tengan
+ * categoría y precio de venta (los que no, quedan sin publicar — se puede
+ * completar después vía confirmarRecepcionCompra). */
+async function aplicarRecepcion(
+  compraFila: typeof compras.$inferSelect,
+  itemsFilas: (typeof compraItems.$inferSelect)[],
+) {
+  const costosPorItem = calcularCostosFinales(compraFila, itemsFilas);
+
+  for (const item of itemsFilas) {
+    const costoFinal = costosPorItem.get(item.id)!;
+
+    if (item.productoId) {
+      // Producto ya existente en el catálogo: suma stock y recalcula costo.
+      await registrarIngresoPorCompra(item.productoId, item.cantidad, costoFinal);
+    } else if (item.categoriaId && item.precioVenta) {
+      // Producto nuevo: recién ahora que "llegó a tu poder" se crea y se
+      // PUBLICA en el catálogo (activo por defecto en adminCrearProducto).
+      const nuevo = await adminCrearProducto({
+        nombre: item.descripcion,
+        descripcion: item.descripcion,
+        precio: Number(item.precioVenta),
+        precioOferta: null,
+        costoAdquisicion: costoFinal,
+        stock: item.cantidad,
+        sku: generarSku(item.descripcion),
+        marca: item.marca || "Sin marca",
+        categoriaId: item.categoriaId,
+        pesoKg: null,
+        imagenes: item.imagenes,
+        specsJson: {},
+        garantiaMeses: 0,
+        destacado: false,
+      });
+      await db.update(compraItems).set({ productoId: nuevo.id }).where(eq(compraItems.id, item.id));
+    }
+  }
+}
+
 export async function actualizarEstadoCompra(id: string, estado: EstadoCompra) {
   const [compraFila] = await db.select().from(compras).where(eq(compras.id, id)).limit(1);
   if (!compraFila) throw new Error("Compra no encontrada");
@@ -198,62 +296,65 @@ export async function actualizarEstadoCompra(id: string, estado: EstadoCompra) {
 
   if (estado === "recibido" && !yaEstabaRecibida) {
     cambios.fechaRecibido = new Date();
-
     const itemsFilas = await db.select().from(compraItems).where(eq(compraItems.compraId, id));
-    const costoAdicionalTotal =
-      Number(compraFila.costoEnvioImportacion) +
-      Number(compraFila.otrosCostos) +
-      (compraFila.pagoImpuestos ? Number(compraFila.montoImpuestos ?? 0) : 0);
-
-    // Si TODOS los ítems traen peso, el envío/aduana se reparte proporcional
-    // al peso real de cada uno (más justo: un celular no debería cargar lo
-    // mismo que una laptop en el mismo paquete) — si falta el peso de
-    // cualquier ítem, se cae al reparto en partes iguales por unidad, que
-    // siempre es calculable.
-    const pesoTotal = itemsFilas.reduce(
-      (acc, i) => acc + (i.pesoKg != null ? Number(i.pesoKg) * i.cantidad : 0),
-      0,
-    );
-    const repartoPorPeso = pesoTotal > 0 && itemsFilas.every((i) => i.pesoKg != null);
-
-    const unidadesTotales = itemsFilas.reduce((acc, i) => acc + i.cantidad, 0) || 1;
-    const costoAdicionalPorUnidad = costoAdicionalTotal / unidadesTotales;
-
-    for (const item of itemsFilas) {
-      const costoAdicionalItem = repartoPorPeso
-        ? (costoAdicionalTotal * ((Number(item.pesoKg) * item.cantidad) / pesoTotal)) / item.cantidad
-        : costoAdicionalPorUnidad;
-      const costoFinal = Number(item.costoUnitario) + costoAdicionalItem;
-
-      if (item.productoId) {
-        // Producto ya existente en el catálogo: suma stock y recalcula costo.
-        await registrarIngresoPorCompra(item.productoId, item.cantidad, costoFinal);
-      } else if (item.categoriaId && item.precioVenta) {
-        // Producto nuevo: recién ahora que "llegó a tu poder" se crea y se
-        // PUBLICA en el catálogo (activo por defecto en adminCrearProducto).
-        const nuevo = await adminCrearProducto({
-          nombre: item.descripcion,
-          descripcion: item.descripcion,
-          precio: Number(item.precioVenta),
-          precioOferta: null,
-          costoAdquisicion: costoFinal,
-          stock: item.cantidad,
-          sku: generarSku(item.descripcion),
-          marca: item.marca || "Sin marca",
-          categoriaId: item.categoriaId,
-          pesoKg: null,
-          imagenes: [],
-          specsJson: {},
-          garantiaMeses: 0,
-          destacado: false,
-        });
-        await db.update(compraItems).set({ productoId: nuevo.id }).where(eq(compraItems.id, item.id));
-      }
-    }
+    await aplicarRecepcion(compraFila, itemsFilas);
   }
 
   const [actualizada] = await db.update(compras).set(cambios).where(eq(compras.id, id)).returning();
   return aCompraAlmacenada(actualizada);
+}
+
+export type CostoFinalItem = {
+  itemId: string;
+  descripcion: string;
+  cantidad: number;
+  productoId: string | null;
+  costoFinal: number;
+  precioSugerido: number;
+  precioVentaActual?: number;
+};
+
+const MARGEN_SUGERIDO = 0.3; // 30% — editable por ítem en el momento de confirmar.
+
+/** Costo final por ítem (ya con envío/aduana repartido) SIN persistir nada
+ * — para mostrarle al admin cuánto le va a costar cada producto de verdad
+ * y sugerirle un precio de venta antes de confirmar la recepción. */
+export async function previsualizarCostosFinales(compraId: string): Promise<CostoFinalItem[]> {
+  const [compraFila] = await db.select().from(compras).where(eq(compras.id, compraId)).limit(1);
+  if (!compraFila) throw new Error("Compra no encontrada");
+
+  const itemsFilas = await db.select().from(compraItems).where(eq(compraItems.compraId, compraId));
+  const costosPorItem = calcularCostosFinales(compraFila, itemsFilas);
+
+  return itemsFilas.map((item) => {
+    const costoFinal = costosPorItem.get(item.id)!;
+    return {
+      itemId: item.id,
+      descripcion: item.descripcion,
+      cantidad: item.cantidad,
+      productoId: item.productoId,
+      costoFinal,
+      precioSugerido: Math.round(costoFinal * (1 + MARGEN_SUGERIDO) * 100) / 100,
+      precioVentaActual: item.precioVenta != null ? Number(item.precioVenta) : undefined,
+    };
+  });
+}
+
+/** Confirma la recepción de una compra aplicando primero los precios de
+ * venta definidos recién ahora (con el costo final ya conocido) a los
+ * ítems nuevos, y luego ejecuta la misma transición que
+ * actualizarEstadoCompra(id, "recibido"). */
+export async function confirmarRecepcionCompra(
+  id: string,
+  precios: { itemId: string; precioVenta: number }[],
+): Promise<CompraAlmacenada> {
+  for (const p of precios) {
+    await db
+      .update(compraItems)
+      .set({ precioVenta: p.precioVenta.toFixed(2) })
+      .where(eq(compraItems.id, p.itemId));
+  }
+  return actualizarEstadoCompra(id, "recibido");
 }
 
 /** Para cargar el resultado de aduana una vez que ya se sabe (a veces se
@@ -313,6 +414,38 @@ export function nombreProveedor(compra: Pick<CompraAlmacenada, "proveedor" | "pr
   if (compra.proveedor === "amazon") return "Amazon";
   if (compra.proveedor === "ebay") return "eBay";
   return compra.proveedorNombre || "Otro";
+}
+
+/** Consulta el estado actual vía la API de tracking configurada y lo
+ * cachea en la compra (trackingInternacional o trackingNacional, según
+ * `tramo`). Lanza si no hay TRACKING_API_KEY configurada — el caller debe
+ * mostrar eso como "no configurado", no como un error roto. */
+export async function actualizarTrackingCompra(
+  id: string,
+  tramo: "internacional" | "nacional",
+): Promise<CompraAlmacenada> {
+  const [compraFila] = await db.select().from(compras).where(eq(compras.id, id)).limit(1);
+  if (!compraFila) throw new Error("Compra no encontrada");
+
+  const numero = tramo === "internacional" ? compraFila.trackingInternacional : compraFila.trackingNacional;
+  const courier = tramo === "internacional" ? compraFila.courierInternacional : compraFila.courierNacional;
+  if (!numero) throw new Error("Esta compra no tiene número de tracking cargado");
+
+  const resultado = await consultarEstadoTracking(numero, courier ?? undefined);
+
+  const cambios =
+    tramo === "internacional"
+      ? {
+          trackingInternacionalEstado: resultado.estado,
+          trackingInternacionalActualizadoEn: new Date(resultado.actualizadoEn),
+        }
+      : {
+          trackingNacionalEstado: resultado.estado,
+          trackingNacionalActualizadoEn: new Date(resultado.actualizadoEn),
+        };
+
+  const [actualizada] = await db.update(compras).set(cambios).where(eq(compras.id, id)).returning();
+  return aCompraAlmacenada(actualizada);
 }
 
 export async function getResumenCompras() {

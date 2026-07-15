@@ -19,6 +19,8 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ImagenUploader } from "@/components/admin/imagen-uploader";
+import { ComprobanteUploader } from "@/components/admin/comprobante-uploader";
 import { formatoPEN } from "@/lib/format";
 import type { ProveedorCompra } from "@/lib/compras/store";
 import type { TipoEnvioCompra } from "@/db/schema/enums";
@@ -33,13 +35,15 @@ type ItemForm = {
   cantidad: string;
   costoUnitario: string;
   // Solo para "producto nuevo": con esto se publica en el catálogo cuando
-  // la compra se marca como recibida.
+  // la compra se marca como recibida. El precio de venta ya NO se pide
+  // acá — se sugiere recién al confirmar la recepción, cuando ya se sabe
+  // el costo final real (con envío/aduana repartidos).
   categoriaId: string;
   marca: string;
-  precioVenta: string;
   // Opcional — si TODOS los ítems lo traen, el envío/aduana se reparte por
   // peso en vez de en partes iguales por unidad.
   pesoKg: string;
+  imagenes: string[];
 };
 
 function itemVacio(): ItemForm {
@@ -50,8 +54,8 @@ function itemVacio(): ItemForm {
     costoUnitario: "",
     categoriaId: "",
     marca: "",
-    precioVenta: "",
     pesoKg: "",
+    imagenes: [],
   };
 }
 
@@ -68,7 +72,8 @@ export function CompraForm({
   const [proveedorNombre, setProveedorNombre] = React.useState("");
   const [numeroOrdenExterno, setNumeroOrdenExterno] = React.useState("");
   // eBay siempre llega vía almacén/courier — Amazon puede ir directo a Perú
-  // (envío gratis) o también por almacén, según el pedido.
+  // (envío gratis), por almacén, o incluso ser una compra local (otro
+  // proveedor comprado dentro de Perú).
   const [tipoEnvio, setTipoEnvio] = React.useState<TipoEnvioCompra>("almacen_usa");
 
   function onProveedorChange(v: ProveedorCompra) {
@@ -82,7 +87,9 @@ export function CompraForm({
   const [montoImpuestos, setMontoImpuestos] = React.useState("0");
   const [courierInternacional, setCourierInternacional] = React.useState("");
   const [trackingInternacional, setTrackingInternacional] = React.useState("");
-  const [comprobanteUrl, setComprobanteUrl] = React.useState("");
+  const [courierNacional, setCourierNacional] = React.useState("");
+  const [trackingNacional, setTrackingNacional] = React.useState("");
+  const [comprobanteUrls, setComprobanteUrls] = React.useState<string[]>([]);
   const [notas, setNotas] = React.useState("");
   const [items, setItems] = React.useState<ItemForm[]>([itemVacio()]);
 
@@ -103,12 +110,12 @@ export function CompraForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const itemNuevoSinDatos = items.some(
-      (i) => i.productoId === SIN_PRODUCTO && (!i.categoriaId || !i.precioVenta),
+    const itemNuevoSinCategoria = items.some(
+      (i) => i.productoId === SIN_PRODUCTO && !i.categoriaId,
     );
-    if (itemNuevoSinDatos) {
+    if (itemNuevoSinCategoria) {
       toast.error(
-        "A los productos nuevos les falta categoría o precio de venta (se necesitan para publicarlos cuando llegue la mercadería).",
+        "A los productos nuevos les falta la categoría (se necesita para publicarlos cuando llegue la mercadería).",
       );
       return;
     }
@@ -128,16 +135,19 @@ export function CompraForm({
           costoUnitario: Number(i.costoUnitario),
           categoriaId: i.productoId === SIN_PRODUCTO ? i.categoriaId : undefined,
           marca: i.productoId === SIN_PRODUCTO ? i.marca || undefined : undefined,
-          precioVenta: i.productoId === SIN_PRODUCTO ? Number(i.precioVenta) : undefined,
           pesoKg: i.pesoKg ? Number(i.pesoKg) : undefined,
+          imagenes: i.productoId === SIN_PRODUCTO ? i.imagenes : undefined,
         })),
         costoEnvioImportacion: Number(costoEnvioImportacion) || 0,
         otrosCostos: Number(otrosCostos) || 0,
         pagoImpuestos,
         montoImpuestos: pagoImpuestos ? Number(montoImpuestos) || 0 : undefined,
-        courierInternacional: courierInternacional || undefined,
-        trackingInternacional: trackingInternacional || undefined,
-        comprobanteUrl: comprobanteUrl || undefined,
+        courierInternacional: tipoEnvio === "almacen_usa" ? courierInternacional || undefined : undefined,
+        trackingInternacional:
+          tipoEnvio === "almacen_usa" ? trackingInternacional || undefined : undefined,
+        courierNacional: tipoEnvio !== "local" ? courierNacional || undefined : undefined,
+        trackingNacional: tipoEnvio !== "local" ? trackingNacional || undefined : undefined,
+        comprobanteUrls: comprobanteUrls.length > 0 ? comprobanteUrls : undefined,
         notas: notas || undefined,
       });
       toast.success("Compra registrada");
@@ -215,6 +225,10 @@ export function CompraForm({
                 <RadioGroupItem value="almacen_usa" />
                 Vía almacén en EE.UU. + courier
               </label>
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="local" disabled={proveedor === "ebay"} />
+                Compra local (ej. Lima) — sin courier ni tracking
+              </label>
             </RadioGroup>
             {proveedor === "ebay" && (
               <p className="mt-1 text-xs text-muted-foreground">
@@ -252,6 +266,40 @@ export function CompraForm({
                 className="mt-1.5"
                 value={trackingInternacional}
                 onChange={(e) => setTrackingInternacional(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {tipoEnvio !== "local" && (
+        <Card>
+          <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <p className="mb-1 text-sm font-semibold">Reparto en Perú</p>
+              <p className="text-xs text-muted-foreground">
+                {tipoEnvio === "directo_peru"
+                  ? "El courier que entrega el paquete dentro de Perú."
+                  : "El courier urbano que reparte el paquete una vez que ya pasó aduana."}
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="courierNacional">Courier nacional (opcional)</Label>
+              <Input
+                id="courierNacional"
+                className="mt-1.5"
+                placeholder="Ej: Olva, Shalom, Urbano..."
+                value={courierNacional}
+                onChange={(e) => setCourierNacional(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="trackingNacional">N° de tracking nacional (opcional)</Label>
+              <Input
+                id="trackingNacional"
+                className="mt-1.5"
+                value={trackingNacional}
+                onChange={(e) => setTrackingNacional(e.target.value)}
               />
             </div>
           </CardContent>
@@ -353,10 +401,10 @@ export function CompraForm({
                     <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
                       <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-primary">
                         <Sparkles className="size-3.5" />
-                        Producto nuevo — se publica solo cuando marques la compra como
-                        &quot;recibido&quot;
+                        Producto nuevo — se publica solo cuando confirmes que la compra llegó (ahí
+                        se sugiere el precio de venta, ya con el costo final real)
                       </p>
-                      <div className="grid gap-2 sm:grid-cols-3">
+                      <div className="grid gap-2 sm:grid-cols-2">
                         <Select
                           value={item.categoriaId}
                           onValueChange={(v) => actualizarItem(i, { categoriaId: v })}
@@ -377,13 +425,12 @@ export function CompraForm({
                           value={item.marca}
                           onChange={(e) => actualizarItem(i, { marca: e.target.value })}
                         />
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="Precio de venta (S/)"
-                          value={item.precioVenta}
-                          onChange={(e) => actualizarItem(i, { precioVenta: e.target.value })}
+                      </div>
+                      <div className="mt-3">
+                        <Label className="mb-1.5 block text-xs">Fotos del producto</Label>
+                        <ImagenUploader
+                          imagenes={item.imagenes}
+                          onChange={(imagenes) => actualizarItem(i, { imagenes })}
                         />
                       </div>
                     </div>
@@ -450,14 +497,8 @@ export function CompraForm({
             </div>
           )}
           <div className="sm:col-span-2">
-            <Label htmlFor="comprobanteUrl">Enlace al comprobante/factura (opcional)</Label>
-            <Input
-              id="comprobanteUrl"
-              className="mt-1.5"
-              placeholder="https://..."
-              value={comprobanteUrl}
-              onChange={(e) => setComprobanteUrl(e.target.value)}
-            />
+            <Label className="mb-1.5 block">Comprobante/factura (opcional)</Label>
+            <ComprobanteUploader urls={comprobanteUrls} onChange={setComprobanteUrls} />
           </div>
           <div className="sm:col-span-2">
             <Label htmlFor="notas">Notas (opcional)</Label>

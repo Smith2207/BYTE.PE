@@ -28,6 +28,7 @@ export const ESTADO_COMPRA_ETIQUETA: Record<CompraAlmacenada["estado"], string> 
 export const TIPO_ENVIO_ETIQUETA: Record<CompraAlmacenada["tipoEnvio"], string> = {
   directo_peru: "Directo a Perú",
   almacen_usa: "Vía almacén USA",
+  local: "Compra local",
 };
 
 export function ComprasFiltros() {

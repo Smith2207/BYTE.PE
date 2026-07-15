@@ -8,15 +8,22 @@ import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Badge } from "@/components/ui/badge";
 import { obtenerCompra, nombreProveedor } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
+import { trackingDisponible } from "@/lib/tracking";
 import { EstadoCompraSelector } from "../estado-selector";
 import { ImpuestosEditor } from "./impuestos-editor";
 import { TIPO_ENVIO_ETIQUETA } from "../compras-filtros";
+import { ActualizarTrackingBoton } from "../actualizar-tracking-boton";
+
+function esPdf(url: string) {
+  return url.toLowerCase().endsWith(".pdf");
+}
 
 export const metadata = { title: "Admin — Detalle de compra" };
 
 export default async function DetalleCompraPage({ params }: { params: { id: string } }) {
   const compra = await obtenerCompra(params.id);
   if (!compra) notFound();
+  const trackingApiDisponible = trackingDisponible();
 
   return (
     <RevealOnScroll className="max-w-2xl" y={16}>
@@ -31,7 +38,12 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
         <CardContent className="space-y-4 pt-6">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Estado</span>
-            <EstadoCompraSelector id={compra.id} estado={compra.estado} tipoEnvio={compra.tipoEnvio} />
+            <EstadoCompraSelector
+              id={compra.id}
+              estado={compra.estado}
+              tipoEnvio={compra.tipoEnvio}
+              tieneItemsNuevos={compra.items.some((it) => it.productoId === null)}
+            />
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
@@ -62,25 +74,70 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
                 <p>{compra.courierInternacional}</p>
               </div>
             )}
-            {compra.trackingInternacional && (
+            {compra.courierNacional && (
               <div>
-                <p className="text-muted-foreground">Tracking internacional</p>
-                <p className="font-mono text-xs">{compra.trackingInternacional}</p>
-              </div>
-            )}
-            {compra.comprobanteUrl && (
-              <div>
-                <p className="text-muted-foreground">Comprobante</p>
-                <Link
-                  href={compra.comprobanteUrl}
-                  target="_blank"
-                  className="flex items-center gap-1 text-primary hover:underline"
-                >
-                  Ver <ExternalLink className="size-3" />
-                </Link>
+                <p className="text-muted-foreground">Courier nacional (Perú)</p>
+                <p>{compra.courierNacional}</p>
               </div>
             )}
           </div>
+
+          {(compra.trackingInternacional || compra.trackingNacional) && (
+            <div className="space-y-3 rounded-xl border border-border/60 p-3 text-sm">
+              {compra.trackingInternacional && (
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-muted-foreground">Tracking internacional</p>
+                    <p className="font-mono text-xs">{compra.trackingInternacional}</p>
+                    {compra.trackingInternacionalEstado && (
+                      <p className="mt-0.5 text-xs text-primary">
+                        {compra.trackingInternacionalEstado}
+                      </p>
+                    )}
+                  </div>
+                  <ActualizarTrackingBoton
+                    compraId={compra.id}
+                    tramo="internacional"
+                    disponible={trackingApiDisponible}
+                  />
+                </div>
+              )}
+              {compra.trackingNacional && (
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-muted-foreground">Tracking nacional</p>
+                    <p className="font-mono text-xs">{compra.trackingNacional}</p>
+                    {compra.trackingNacionalEstado && (
+                      <p className="mt-0.5 text-xs text-primary">{compra.trackingNacionalEstado}</p>
+                    )}
+                  </div>
+                  <ActualizarTrackingBoton
+                    compraId={compra.id}
+                    tramo="nacional"
+                    disponible={trackingApiDisponible}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {compra.comprobanteUrls.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-sm text-muted-foreground">Comprobantes</p>
+              <div className="flex flex-wrap gap-2">
+                {compra.comprobanteUrls.map((url) => (
+                  <Link
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    className="flex items-center gap-1 rounded-lg border border-border/60 px-2.5 py-1.5 text-sm text-primary hover:underline"
+                  >
+                    {esPdf(url) ? "PDF" : "Foto"} <ExternalLink className="size-3" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           <Separator />
 

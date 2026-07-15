@@ -58,7 +58,13 @@ export const proveedorCompraEnum = pgEnum("proveedor_compra", ["amazon", "ebay",
 // por un forwarder — no aplica courier internacional ni "en_almacen_usa".
 // "almacen_usa": pasa por un casillero/almacén en EE.UU. y de ahí un
 // courier lo trae a Perú (siempre el caso en compras de eBay).
-export const tipoEnvioCompraEnum = pgEnum("tipo_envio_compra", ["directo_peru", "almacen_usa"]);
+// "local": comprado dentro de Perú (ej. Lima) — no hay tramo internacional
+// ni courier que trackear, solo compra y recepción.
+export const tipoEnvioCompraEnum = pgEnum("tipo_envio_compra", [
+  "directo_peru",
+  "almacen_usa",
+  "local",
+]);
 
 // Devoluciones/reembolsos de pedidos ya entregados.
 export const tipoDevolucionEnum = pgEnum("tipo_devolucion", ["reembolso", "cambio"]);
