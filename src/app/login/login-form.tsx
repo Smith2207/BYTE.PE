@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn, getSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -21,11 +21,12 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   // Si vino de un redirect explícito (ej. el middleware lo mandó a /login
   // al intentar entrar a /checkout o /admin), respetamos ese destino tal
-  // cual. Si no hay ninguno (entró a /login directo), un admin va derecho
-  // a /admin en vez de /cuenta — no tiene sentido que vea la vista de
-  // cliente primero.
-  const callbackUrlParam = searchParams.get("callbackUrl");
-  const callbackUrl = callbackUrlParam ?? "/cuenta";
+  // cual. Si no hay ninguno, cae en /cuenta — pero el middleware mismo
+  // redirige cualquier /cuenta/* a /admin cuando el usuario es admin (ver
+  // src/middleware.ts), así que un admin siempre termina en /admin sin
+  // depender de leer su rol acá en el cliente justo después del login
+  // (evita una carrera con la sesión recién creada).
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/cuenta";
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -40,9 +41,7 @@ export function LoginForm() {
         toast.error("Correo o contraseña incorrectos");
         return;
       }
-      const session = await getSession();
-      const destino = callbackUrlParam ?? (session?.user?.rol === "admin" ? "/admin" : "/cuenta");
-      router.push(destino);
+      router.push(callbackUrl);
       router.refresh();
     } finally {
       setEnviando(false);
