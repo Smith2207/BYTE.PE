@@ -34,11 +34,18 @@ export const compras = pgTable("compras", {
   costoTotal: numeric("costo_total", { precision: 10, scale: 2 }).notNull(),
   comprobanteUrls: text("comprobante_urls").array().notNull().default([]),
   notas: text("notas"),
-  // Tramo internacional (USA→Perú vía forwarder: MyUS, Aerobox, JetBox...)
-  // — distinto del courier que reparte localmente al cliente final.
+  // Tramo internacional (USA→Perú) — distinto del courier que reparte
+  // localmente al cliente final. courierInternacionalId es el id del
+  // courier según el catálogo del proveedor de tracking (ver
+  // src/lib/tracking/carriers.ts); courierInternacional queda como texto
+  // libre para casos fuera de esa lista (ej. anotar el forwarder: MyUS,
+  // Aerobox...) — sin id no se puede activar el tracking automático.
   courierInternacional: text("courier_internacional"),
+  courierInternacionalId: integer("courier_internacional_id"),
   trackingInternacional: text("tracking_internacional"),
+  trackingInternacionalProviderId: text("tracking_internacional_provider_id"), // id interno que devuelve el proveedor de tracking al registrar
   trackingInternacionalEstado: text("tracking_internacional_estado"), // último estado cacheado de la API de tracking
+  trackingInternacionalEnlace: text("tracking_internacional_enlace"), // link a la página pública de tracking
   trackingInternacionalActualizadoEn: timestamp("tracking_internacional_actualizado_en", {
     withTimezone: true,
   }),
@@ -46,8 +53,11 @@ export const compras = pgTable("compras", {
   // en compras "directo_peru" (es el único tramo) como en "almacen_usa"
   // (tramo final después de aduana).
   courierNacional: text("courier_nacional"),
+  courierNacionalId: integer("courier_nacional_id"),
   trackingNacional: text("tracking_nacional"),
+  trackingNacionalProviderId: text("tracking_nacional_provider_id"),
   trackingNacionalEstado: text("tracking_nacional_estado"),
+  trackingNacionalEnlace: text("tracking_nacional_enlace"),
   trackingNacionalActualizadoEn: timestamp("tracking_nacional_actualizado_en", {
     withTimezone: true,
   }),

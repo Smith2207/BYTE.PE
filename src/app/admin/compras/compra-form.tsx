@@ -21,6 +21,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ImagenUploader } from "@/components/admin/imagen-uploader";
 import { ComprobanteUploader } from "@/components/admin/comprobante-uploader";
+import { COURIERS_INTERNACIONALES, COURIERS_NACIONALES } from "@/lib/tracking/carriers";
 import { formatoPEN } from "@/lib/format";
 import type { ProveedorCompra } from "@/lib/compras/store";
 import type { TipoEnvioCompra } from "@/db/schema/enums";
@@ -85,9 +86,11 @@ export function CompraForm({
   const [otrosCostos, setOtrosCostos] = React.useState("0");
   const [pagoImpuestos, setPagoImpuestos] = React.useState(false);
   const [montoImpuestos, setMontoImpuestos] = React.useState("0");
-  const [courierInternacional, setCourierInternacional] = React.useState("");
+  // Vacío = sin courier seleccionado (no se podrá activar tracking
+  // automático para ese tramo, pero se puede igual anotar el N° a mano).
+  const [courierInternacionalId, setCourierInternacionalId] = React.useState("");
   const [trackingInternacional, setTrackingInternacional] = React.useState("");
-  const [courierNacional, setCourierNacional] = React.useState("");
+  const [courierNacionalId, setCourierNacionalId] = React.useState("");
   const [trackingNacional, setTrackingNacional] = React.useState("");
   const [comprobanteUrls, setComprobanteUrls] = React.useState<string[]>([]);
   const [notas, setNotas] = React.useState("");
@@ -142,10 +145,19 @@ export function CompraForm({
         otrosCostos: Number(otrosCostos) || 0,
         pagoImpuestos,
         montoImpuestos: pagoImpuestos ? Number(montoImpuestos) || 0 : undefined,
-        courierInternacional: tipoEnvio === "almacen_usa" ? courierInternacional || undefined : undefined,
+        courierInternacional:
+          tipoEnvio === "almacen_usa"
+            ? COURIERS_INTERNACIONALES.find((c) => String(c.id) === courierInternacionalId)?.nombre
+            : undefined,
+        courierInternacionalId:
+          tipoEnvio === "almacen_usa" && courierInternacionalId ? Number(courierInternacionalId) : undefined,
         trackingInternacional:
           tipoEnvio === "almacen_usa" ? trackingInternacional || undefined : undefined,
-        courierNacional: tipoEnvio !== "local" ? courierNacional || undefined : undefined,
+        courierNacional:
+          tipoEnvio !== "local"
+            ? COURIERS_NACIONALES.find((c) => String(c.id) === courierNacionalId)?.nombre
+            : undefined,
+        courierNacionalId: tipoEnvio !== "local" && courierNacionalId ? Number(courierNacionalId) : undefined,
         trackingNacional: tipoEnvio !== "local" ? trackingNacional || undefined : undefined,
         comprobanteUrls: comprobanteUrls.length > 0 ? comprobanteUrls : undefined,
         notas: notas || undefined,
@@ -250,14 +262,19 @@ export function CompraForm({
               </p>
             </div>
             <div>
-              <Label htmlFor="courierInternacional">Courier / forwarder (opcional)</Label>
-              <Input
-                id="courierInternacional"
-                className="mt-1.5"
-                placeholder="Ej: MyUS, Aerobox, JetBox..."
-                value={courierInternacional}
-                onChange={(e) => setCourierInternacional(e.target.value)}
-              />
+              <Label htmlFor="courierInternacional">Courier (para tracking automático)</Label>
+              <Select value={courierInternacionalId} onValueChange={setCourierInternacionalId}>
+                <SelectTrigger id="courierInternacional" className="mt-1.5">
+                  <SelectValue placeholder="Selecciona (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COURIERS_INTERNACIONALES.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="trackingInternacional">N° de tracking internacional (opcional)</Label>
@@ -284,14 +301,19 @@ export function CompraForm({
               </p>
             </div>
             <div>
-              <Label htmlFor="courierNacional">Courier nacional (opcional)</Label>
-              <Input
-                id="courierNacional"
-                className="mt-1.5"
-                placeholder="Ej: Olva, Shalom, Urbano..."
-                value={courierNacional}
-                onChange={(e) => setCourierNacional(e.target.value)}
-              />
+              <Label htmlFor="courierNacional">Courier (para tracking automático)</Label>
+              <Select value={courierNacionalId} onValueChange={setCourierNacionalId}>
+                <SelectTrigger id="courierNacional" className="mt-1.5">
+                  <SelectValue placeholder="Selecciona (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COURIERS_NACIONALES.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="trackingNacional">N° de tracking nacional (opcional)</Label>

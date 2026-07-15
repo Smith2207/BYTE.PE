@@ -2,7 +2,7 @@ import { and, desc, eq, gte, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { compras, compraItems } from "@/db/schema";
 import { registrarIngresoPorCompra, adminCrearProducto } from "@/lib/mock/repo";
-import { consultarEstadoTracking } from "@/lib/tracking";
+import { registrarTracking, consultarEstadoTracking } from "@/lib/tracking";
 import type {
   ProveedorCompra as ProveedorCompraEnum,
   EstadoCompra,
@@ -59,17 +59,23 @@ export type CompraAlmacenada = {
   costoTotal: number;
   comprobanteUrls: string[];
   notas?: string;
-  // Tramo internacional USA→Perú (forwarder), distinto del courier de
-  // reparto local que entrega al destinatario final en Perú.
+  // Tramo internacional USA→Perú, distinto del courier de reparto local
+  // que entrega al destinatario final en Perú. courierInternacionalId es
+  // el id del courier en el catálogo del proveedor de tracking — sin él
+  // no se puede activar el tracking automático para este tramo.
   courierInternacional?: string;
+  courierInternacionalId?: number;
   trackingInternacional?: string;
   trackingInternacionalEstado?: string;
+  trackingInternacionalEnlace?: string;
   trackingInternacionalActualizadoEn?: string;
   // Reparto dentro de Perú — único tramo en "directo_peru", tramo final
   // después de aduana en "almacen_usa".
   courierNacional?: string;
+  courierNacionalId?: number;
   trackingNacional?: string;
   trackingNacionalEstado?: string;
+  trackingNacionalEnlace?: string;
   trackingNacionalActualizadoEn?: string;
   createdAt: string;
 };
@@ -111,12 +117,16 @@ async function aCompraAlmacenada(c: typeof compras.$inferSelect): Promise<Compra
     comprobanteUrls: c.comprobanteUrls,
     notas: c.notas ?? undefined,
     courierInternacional: c.courierInternacional ?? undefined,
+    courierInternacionalId: c.courierInternacionalId ?? undefined,
     trackingInternacional: c.trackingInternacional ?? undefined,
     trackingInternacionalEstado: c.trackingInternacionalEstado ?? undefined,
+    trackingInternacionalEnlace: c.trackingInternacionalEnlace ?? undefined,
     trackingInternacionalActualizadoEn: c.trackingInternacionalActualizadoEn?.toISOString(),
     courierNacional: c.courierNacional ?? undefined,
+    courierNacionalId: c.courierNacionalId ?? undefined,
     trackingNacional: c.trackingNacional ?? undefined,
     trackingNacionalEstado: c.trackingNacionalEstado ?? undefined,
+    trackingNacionalEnlace: c.trackingNacionalEnlace ?? undefined,
     trackingNacionalActualizadoEn: c.trackingNacionalActualizadoEn?.toISOString(),
     createdAt: c.createdAt.toISOString(),
   };
@@ -146,8 +156,10 @@ export type CompraFormInput = {
   comprobanteUrls?: string[];
   notas?: string;
   courierInternacional?: string;
+  courierInternacionalId?: number;
   trackingInternacional?: string;
   courierNacional?: string;
+  courierNacionalId?: number;
   trackingNacional?: string;
 };
 
@@ -174,8 +186,10 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
       comprobanteUrls: input.comprobanteUrls ?? [],
       notas: input.notas,
       courierInternacional: input.courierInternacional,
+      courierInternacionalId: input.courierInternacionalId,
       trackingInternacional: input.trackingInternacional,
       courierNacional: input.courierNacional,
+      courierNacionalId: input.courierNacionalId,
       trackingNacional: input.trackingNacional,
     })
     .returning();
@@ -418,8 +432,10 @@ export function nombreProveedor(compra: Pick<CompraAlmacenada, "proveedor" | "pr
 
 /** Consulta el estado actual vía la API de tracking configurada y lo
  * cachea en la compra (trackingInternacional o trackingNacional, según
- * `tramo`). Lanza si no hay TRACKING_API_KEY configurada — el caller debe
- * mostrar eso como "no configurado", no como un error roto. */
+ * `tramo`). Si todavía no se había registrado ese tracking en el
+ * proveedor, lo registra primero (necesita el id del courier — sin eso no
+ * se puede activar). Lanza si no hay POSTAL_NINJA_API_KEY configurada — el
+ * caller debe mostrar eso como "no configurado", no como un error roto. */
 export async function actualizarTrackingCompra(
   id: string,
   tramo: "internacional" | "nacional",
@@ -428,19 +444,40 @@ export async function actualizarTrackingCompra(
   if (!compraFila) throw new Error("Compra no encontrada");
 
   const numero = tramo === "internacional" ? compraFila.trackingInternacional : compraFila.trackingNacional;
-  const courier = tramo === "internacional" ? compraFila.courierInternacional : compraFila.courierNacional;
+  const carrierId = tramo === "internacional" ? compraFila.courierInternacionalId : compraFila.courierNacionalId;
+  let providerId =
+    tramo === "internacional" ? compraFila.trackingInternacionalProviderId : compraFila.trackingNacionalProviderId;
+
   if (!numero) throw new Error("Esta compra no tiene número de tracking cargado");
 
-  const resultado = await consultarEstadoTracking(numero, courier ?? undefined);
+  if (!providerId) {
+    if (!carrierId) {
+      throw new Error("Selecciona el courier de la lista para poder activar el tracking automático");
+    }
+    const registro = await registrarTracking(numero, carrierId);
+    providerId = registro.providerId;
+    await db
+      .update(compras)
+      .set(
+        tramo === "internacional"
+          ? { trackingInternacionalProviderId: providerId }
+          : { trackingNacionalProviderId: providerId },
+      )
+      .where(eq(compras.id, id));
+  }
+
+  const resultado = await consultarEstadoTracking(providerId);
 
   const cambios =
     tramo === "internacional"
       ? {
           trackingInternacionalEstado: resultado.estado,
+          trackingInternacionalEnlace: resultado.enlace,
           trackingInternacionalActualizadoEn: new Date(resultado.actualizadoEn),
         }
       : {
           trackingNacionalEstado: resultado.estado,
+          trackingNacionalEnlace: resultado.enlace,
           trackingNacionalActualizadoEn: new Date(resultado.actualizadoEn),
         };
 

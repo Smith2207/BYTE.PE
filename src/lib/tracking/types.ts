@@ -1,16 +1,20 @@
-/** Adaptador genérico para servicios de tracking de paquetes (17TRACK,
- * AfterShip, Trackingmore...) — permite cambiar de proveedor sin tocar el
- * resto del código. Ver seventeen-track.ts para la implementación activa. */
+/** Adaptador para el proveedor de tracking (Postal Ninja) — aísla el resto
+ * del código de la forma exacta de su API, por si algún día se cambia de
+ * proveedor. Ver postal-ninja.ts para la implementación activa (verificada
+ * con llamadas reales, no adivinada). */
 export type EstadoTracking = {
-  estado: string; // texto legible, ej. "En tránsito — Miami, FL"
+  estado: string; // texto legible del último evento o estado
+  enlace?: string; // link a la página pública de tracking del proveedor
   actualizadoEn: string; // ISO
 };
 
 export interface TrackingProvider {
-  /** Da de alta un número de tracking en el proveedor (algunos requieren
-   * "registrar" antes de poder consultar estado). Es seguro llamarlo aunque
-   * el número ya esté registrado. */
-  registrar(numero: string, courier?: string): Promise<void>;
-  /** Consulta el estado actual de un número ya registrado. */
-  consultarEstado(numero: string, courier?: string): Promise<EstadoTracking>;
+  /** Da de alta un número de tracking en el proveedor. Devuelve el id
+   * interno que el proveedor asigna — hay que guardarlo para poder
+   * consultar el estado después (Postal Ninja identifica cada tracking
+   * por ese id, no por el número en sí). */
+  registrar(numero: string, carrierId: number): Promise<{ providerId: string }>;
+  /** Consulta el estado actual de un tracking ya registrado, por su id
+   * interno (el que devolvió registrar()). */
+  consultarEstado(providerId: string): Promise<EstadoTracking>;
 }

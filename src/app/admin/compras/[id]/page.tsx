@@ -94,6 +94,15 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
                         {compra.trackingInternacionalEstado}
                       </p>
                     )}
+                    {compra.trackingInternacionalEnlace && (
+                      <Link
+                        href={compra.trackingInternacionalEnlace}
+                        target="_blank"
+                        className="mt-0.5 flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        Ver detalle <ExternalLink className="size-3" />
+                      </Link>
+                    )}
                   </div>
                   <ActualizarTrackingBoton
                     compraId={compra.id}
@@ -109,6 +118,15 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
                     <p className="font-mono text-xs">{compra.trackingNacional}</p>
                     {compra.trackingNacionalEstado && (
                       <p className="mt-0.5 text-xs text-primary">{compra.trackingNacionalEstado}</p>
+                    )}
+                    {compra.trackingNacionalEnlace && (
+                      <Link
+                        href={compra.trackingNacionalEnlace}
+                        target="_blank"
+                        className="mt-0.5 flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        Ver detalle <ExternalLink className="size-3" />
+                      </Link>
                     )}
                   </div>
                   <ActualizarTrackingBoton
