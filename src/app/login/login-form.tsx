@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
@@ -19,7 +19,13 @@ import { Magnetic } from "@/components/fx/magnetic";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/cuenta";
+  // Si vino de un redirect explícito (ej. el middleware lo mandó a /login
+  // al intentar entrar a /checkout o /admin), respetamos ese destino tal
+  // cual. Si no hay ninguno (entró a /login directo), un admin va derecho
+  // a /admin en vez de /cuenta — no tiene sentido que vea la vista de
+  // cliente primero.
+  const callbackUrlParam = searchParams.get("callbackUrl");
+  const callbackUrl = callbackUrlParam ?? "/cuenta";
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -34,7 +40,9 @@ export function LoginForm() {
         toast.error("Correo o contraseña incorrectos");
         return;
       }
-      router.push(callbackUrl);
+      const session = await getSession();
+      const destino = callbackUrlParam ?? (session?.user?.rol === "admin" ? "/admin" : "/cuenta");
+      router.push(destino);
       router.refresh();
     } finally {
       setEnviando(false);

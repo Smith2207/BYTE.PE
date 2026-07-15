@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <AdminSidebarNav />
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <header className="shrink-0 border-b border-border/60 bg-card/60 px-4 py-3 backdrop-blur-md sm:px-6">
           <AdminSidebarNavMobile />
           <AdminTopbar
@@ -44,7 +44,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           />
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        {/* min-h-0 es necesario: sin él, un hijo flex-1 con overflow-y-auto
+            no scrollea — crece para caber su contenido y todo lo que
+            sobra queda recortado por el overflow-hidden del contenedor
+            padre (bug clásico de flexbox, no de contenido). */}
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );
