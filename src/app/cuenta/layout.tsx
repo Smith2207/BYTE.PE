@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { User, Package, MapPin, Heart } from "lucide-react";
+import { ScrollCinematicBackdrop } from "@/components/fx/scroll-cinematic-backdrop";
 
 const navItems = [
   { href: "/cuenta", label: "Mi perfil", icon: User },
@@ -10,8 +11,9 @@ const navItems = [
 
 export default function CuentaLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <nav className="mb-6 flex gap-1 overflow-x-auto pb-1 md:hidden">
+    <div className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <ScrollCinematicBackdrop />
+      <nav className="relative z-10 mb-6 flex gap-1 overflow-x-auto pb-1 md:hidden">
         {navItems.map((item) => (
           <Link
             key={item.href}
@@ -24,7 +26,7 @@ export default function CuentaLayout({ children }: { children: React.ReactNode }
         ))}
       </nav>
 
-      <div className="flex gap-8">
+      <div className="relative z-10 flex gap-8">
         <aside className="hidden w-56 shrink-0 md:block">
           <nav className="space-y-1">
             {navItems.map((item) => (

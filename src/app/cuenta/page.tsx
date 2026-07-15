@@ -5,7 +5,6 @@ import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
-import { ScrollCinematicBackdrop } from "@/components/fx/scroll-cinematic-backdrop";
 import { getUsuarioPorId } from "@/lib/usuarios/store";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
@@ -39,8 +38,7 @@ export default async function CuentaPage() {
   });
 
   return (
-    <RevealOnScroll y={20} className="relative z-10 space-y-6">
-      <ScrollCinematicBackdrop />
+    <RevealOnScroll y={20} className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
 
       <Card className="border-border bg-card/80 backdrop-blur-lg">

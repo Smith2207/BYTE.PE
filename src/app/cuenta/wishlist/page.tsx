@@ -3,6 +3,7 @@ import { listarWishlistPorUsuario } from "@/lib/wishlist/store";
 import { getProductoPorId } from "@/lib/mock/repo";
 import { ProductoCard } from "@/components/catalogo/producto-card";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 
 export const metadata = { title: "Lista de deseos" };
 
@@ -25,7 +26,8 @@ export default async function CuentaWishlistPage() {
         <RevealOnScroll
           className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
           selector="[data-wishlist-card]"
-          stagger={0.06}
+          stagger={STAGGER_MAX}
+          ease={ELASTIC_EASE}
           y={20}
         >
           {productos.map((p) => (

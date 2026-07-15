@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
 import { EstadoDevolucionBadge } from "@/components/devoluciones/estado-devolucion-badge";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarSolicitudesPorUsuario } from "@/lib/devoluciones/store";
 import { formatoPEN } from "@/lib/format";
@@ -32,11 +33,21 @@ export default async function CuentaPedidosPage() {
       {pedidos.length === 0 ? (
         <p className="text-sm text-muted-foreground">Todavía no tienes pedidos.</p>
       ) : (
-        <RevealOnScroll className="space-y-4" selector="[data-pedido-card]" stagger={0.08} y={20}>
+        <RevealOnScroll
+          className="space-y-4"
+          selector="[data-pedido-card]"
+          stagger={STAGGER_MAX}
+          ease={ELASTIC_EASE}
+          y={20}
+        >
           {pedidos.map((p) => {
             const solicitud = solicitudPorPedidoId.get(p.id);
             return (
-              <Card key={p.numeroPedido} data-pedido-card>
+              <Card
+                key={p.numeroPedido}
+                data-pedido-card
+                className="border-border bg-card/80 backdrop-blur-lg"
+              >
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
                   <div>
                     <Link href={`/pedido/${p.numeroPedido}`} className="font-mono text-sm font-semibold hover:underline">
@@ -53,7 +64,7 @@ export default async function CuentaPedidosPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <EstadoPedidoBadge estado={p.estado} />
-                    <span className="font-semibold">{formatoPEN(p.total)}</span>
+                    <span className="font-mono font-semibold">{formatoPEN(p.total)}</span>
                     <Button variant="ghost" size="sm" asChild>
                       <Link href={`/pedido/${p.numeroPedido}/boleta`}>
                         <Receipt className="size-4" /> Boleta
