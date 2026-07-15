@@ -6,7 +6,7 @@ import { SpotlightCard } from "@/components/fx/spotlight-card";
 import { PaginacionAdmin } from "@/components/admin/paginacion-admin";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
-import { GastosChart, type GastoPorMes } from "@/components/admin/gastos-chart";
+import { TrendAreaChart, type PuntoTendencia } from "@/components/admin/trend-area-chart";
 import { listarGastos } from "@/lib/gastos/store";
 import { formatoPEN } from "@/lib/format";
 import type { CategoriaGasto } from "@/db/schema/enums";
@@ -50,14 +50,13 @@ export default async function AdminGastosPage({
     const clave = g.fecha.slice(0, 7); // "YYYY-MM"
     gastosPorMesMap.set(clave, (gastosPorMesMap.get(clave) ?? 0) + g.monto);
   }
-  const gastosPorMes: GastoPorMes[] = Array.from({ length: 6 }, (_, i) => {
+  const gastosPorMes: PuntoTendencia[] = Array.from({ length: 6 }, (_, i) => {
     const fecha = new Date();
     fecha.setMonth(fecha.getMonth() - (5 - i));
     const clave = fecha.toISOString().slice(0, 7);
     return {
-      mes: clave,
       etiqueta: fecha.toLocaleDateString("es-PE", { month: "short", year: "2-digit" }),
-      total: gastosPorMesMap.get(clave) ?? 0,
+      valor: gastosPorMesMap.get(clave) ?? 0,
     };
   });
 
@@ -83,7 +82,12 @@ export default async function AdminGastosPage({
             <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
               Gasto mensual (últimos 6 meses)
             </h2>
-            <GastosChart datos={gastosPorMes} />
+            <TrendAreaChart
+              datos={gastosPorMes}
+              gradientId="gastosGradiente"
+              tooltipLabel="Gastos"
+              mensajeVacio="Todavía no hay gastos en este período."
+            />
           </CardContent>
         </SpotlightCard>
       )}

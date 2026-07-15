@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SpotlightCard } from "@/components/fx/spotlight-card";
 import { Badge } from "@/components/ui/badge";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
-import { VentasChart, type VentaPorDia } from "@/components/admin/ventas-chart";
+import { TrendAreaChart, type PuntoTendencia } from "@/components/admin/trend-area-chart";
 import { TopProductosChart } from "@/components/admin/top-productos-chart";
 import { adminListarProductos } from "@/lib/mock/repo";
 import { listarPedidos, getVariacionUltimos30Dias } from "@/lib/pedidos/store";
@@ -104,14 +104,13 @@ export default async function AdminDashboardPage() {
     const fecha = pedido.createdAt.slice(0, 10);
     ventasPorFecha.set(fecha, (ventasPorFecha.get(fecha) ?? 0) + pedido.total);
   }
-  const ventasPorDia: VentaPorDia[] = Array.from({ length: 14 }, (_, i) => {
+  const ventasPorDia: PuntoTendencia[] = Array.from({ length: 14 }, (_, i) => {
     const fecha = new Date();
     fecha.setDate(fecha.getDate() - (13 - i));
     const iso = fecha.toISOString().slice(0, 10);
     return {
-      fecha: iso,
       etiqueta: fecha.toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }),
-      ventas: ventasPorFecha.get(iso) ?? 0,
+      valor: ventasPorFecha.get(iso) ?? 0,
     };
   });
 
@@ -262,7 +261,13 @@ export default async function AdminDashboardPage() {
         <Card>
           <CardContent className="pt-6">
             <h2 className="mb-4 text-sm font-semibold">Ventas — últimos 14 días</h2>
-            <VentasChart datos={ventasPorDia} />
+            <TrendAreaChart
+              datos={ventasPorDia}
+              gradientId="ventasGradiente"
+              tooltipLabel="Ventas"
+              mensajeVacio="Todavía no hay ventas en este período."
+              compactarEjeX
+            />
           </CardContent>
         </Card>
       </RevealOnScroll>
