@@ -11,6 +11,12 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     const lenis = new Lenis({
       duration: 1.1,
       smoothWheel: true,
+      // Sin esto, Lenis captura la rueda del mouse a nivel de toda la
+      // página y no deja scrollear paneles con su propio overflow (Sheets,
+      // Dialogs, el <main> de /admin) — quedan "trabados" apenas su
+      // contenido no entra en la pantalla. Con allowNestedScroll, Lenis
+      // detecta esos contenedores solo y les deja el scroll nativo.
+      allowNestedScroll: true,
     });
 
     lenis.on("scroll", ScrollTrigger.update);

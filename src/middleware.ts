@@ -19,6 +19,13 @@ export default auth((req) => {
   if (esAdmin && req.auth?.user.rol !== "admin") {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
+
+  // Un admin nunca debe terminar viendo la vista de cliente (/cuenta) —
+  // sea que haya entrado ahí por el destino por defecto del login, un
+  // link viejo o escribiendo la URL a mano. Siempre va directo al panel.
+  if (esCuenta && req.auth?.user.rol === "admin") {
+    return NextResponse.redirect(new URL("/admin", req.nextUrl.origin));
+  }
 });
 
 export const config = {
