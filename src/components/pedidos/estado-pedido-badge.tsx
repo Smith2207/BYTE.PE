@@ -1,5 +1,4 @@
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { crearBadgeDeEstado } from "@/components/ui/estado-badge-factory";
 import type { PedidoMock } from "@/lib/pedidos/store";
 
 /**
@@ -17,9 +16,8 @@ export const ESTADO_PEDIDO_ESTILO: Record<PedidoMock["estado"], string> = {
   reembolsado: "border-violet-500/30 bg-violet-500/10 text-violet-500",
 };
 
-// Mismo color que ESTADO_PEDIDO_ESTILO, solo como sombra — para el efecto
-// "neon" de la consola admin (ver /admin/pedidos). No se usa en
-// /cuenta/pedidos: ahí el badge se queda plano, sin glow.
+// Mismo color que ESTADO_PEDIDO_ESTILO, solo como sombra — para el
+// efecto "neon" de la consola admin (ver /admin/pedidos).
 export const ESTADO_PEDIDO_GLOW: Record<PedidoMock["estado"], string> = {
   pendiente: "shadow-[0_0_14px_rgba(245,158,11,0.35)]",
   pagado: "shadow-[0_0_14px_rgba(16,185,129,0.35)]",
@@ -40,20 +38,8 @@ export const ESTADO_PEDIDO_ETIQUETA: Record<PedidoMock["estado"], string> = {
   reembolsado: "Reembolsado",
 };
 
-export function EstadoPedidoBadge({
-  estado,
-  neon = false,
-}: {
-  estado: PedidoMock["estado"];
-  /** Glow del mismo color del estado — solo para la consola admin. */
-  neon?: boolean;
-}) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(ESTADO_PEDIDO_ESTILO[estado], neon && ESTADO_PEDIDO_GLOW[estado])}
-    >
-      {ESTADO_PEDIDO_ETIQUETA[estado]}
-    </Badge>
-  );
-}
+export const EstadoPedidoBadge = crearBadgeDeEstado({
+  estilos: ESTADO_PEDIDO_ESTILO,
+  glows: ESTADO_PEDIDO_GLOW,
+  etiquetas: ESTADO_PEDIDO_ETIQUETA,
+});
