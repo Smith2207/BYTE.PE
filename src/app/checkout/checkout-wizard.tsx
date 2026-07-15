@@ -35,7 +35,11 @@ import {
   consultarDocumentoAction,
   validarCuponAction,
 } from "./actions";
+import { crearDireccionAction } from "@/app/cuenta/direcciones/actions";
+import { actualizarPerfilAction } from "@/app/cuenta/actions";
 import type { ResultadoCupon } from "@/lib/cupones/validar";
+import type { UsuarioAlmacenado } from "@/lib/usuarios/store";
+import type { DireccionAlmacenada } from "@/lib/direcciones/store";
 
 const PASOS = ["Envío", "Método de envío", "Cupón", "Pago", "Confirmación"] as const;
 
@@ -50,30 +54,40 @@ type Facturacion = {
   razonSocial: string;
 };
 
-export function CheckoutWizard() {
+export function CheckoutWizard({
+  usuario,
+  direccionPrincipal,
+}: {
+  usuario: UsuarioAlmacenado | null;
+  direccionPrincipal: DireccionAlmacenada | null;
+}) {
   const router = useRouter();
   const { items, subtotal, vaciarCarrito } = useCart();
   const [paso, setPaso] = React.useState(0);
   const [enviando, setEnviando] = React.useState(false);
   const pasosRef = React.useRef<HTMLDivElement>(null);
 
+  // Autocompletado desde el perfil — el usuario puede editar libremente
+  // acá sin que se toque su perfil real hasta que confirme "guardar en
+  // mi perfil" más abajo (son useState locales, no hay mutación previa).
   const [direccion, setDireccion] = React.useState({
-    departamento: "",
-    provincia: "",
-    distrito: "",
-    direccionExacta: "",
-    referencia: "",
+    departamento: direccionPrincipal?.departamento ?? "",
+    provincia: direccionPrincipal?.provincia ?? "",
+    distrito: direccionPrincipal?.distrito ?? "",
+    direccionExacta: direccionPrincipal?.direccionExacta ?? "",
+    referencia: direccionPrincipal?.referencia ?? "",
   });
   const [facturacion, setFacturacion] = React.useState<Facturacion>({
     tipoDocumento: "dni",
-    numeroDocumento: "",
-    nombreComprador: "",
-    telefonoComprador: "",
-    emailComprador: "",
+    numeroDocumento: usuario?.dni ?? "",
+    nombreComprador: usuario?.nombre ?? "",
+    telefonoComprador: usuario?.telefono ?? "",
+    emailComprador: usuario?.email ?? "",
     requiereFactura: false,
     ruc: "",
     razonSocial: "",
   });
+  const [guardarEnPerfil, setGuardarEnPerfil] = React.useState(false);
   const [metodoPago, setMetodoPago] =
     React.useState<"tarjeta" | "yape" | "plin" | "transferencia" | "contra_entrega">(
       "yape",
@@ -200,6 +214,24 @@ export function CheckoutWizard() {
     }
   }
 
+  /** Guarda los datos de ESTA orden en el perfil real del usuario — solo
+   * se llama si tildó "guardar permanentemente". Si falla, no debe tumbar
+   * la compra (ya se confirmó el pedido en ese punto): solo se avisa. */
+  async function guardarDatosEnPerfil() {
+    try {
+      await Promise.all([
+        crearDireccionAction({ ...direccion, esPrincipal: true }),
+        actualizarPerfilAction({
+          nombre: facturacion.nombreComprador,
+          telefono: facturacion.telefonoComprador,
+          dni: facturacion.tipoDocumento === "dni" ? facturacion.numeroDocumento : usuario?.dni ?? "",
+        }),
+      ]);
+    } catch {
+      toast.error("El pedido se confirmó, pero no pudimos guardar estos datos en tu perfil");
+    }
+  }
+
   async function confirmarPedido() {
     setEnviando(true);
     try {
@@ -224,6 +256,8 @@ export function CheckoutWizard() {
         })),
         cuponCodigo: cuponAplicado?.ok ? cuponInput : undefined,
       };
+
+      if (guardarEnPerfil) await guardarDatosEnPerfil();
 
       if (metodoPago === "tarjeta") {
         // Checkout Pro: se crea el pedido "pendiente" y se redirige a
@@ -525,6 +559,20 @@ export function CheckoutWizard() {
                   </div>
                 )}
               </div>
+
+              {usuario && (
+                <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-secondary/40 p-3">
+                  <Checkbox
+                    id="guardarEnPerfil"
+                    checked={guardarEnPerfil}
+                    onCheckedChange={(v) => setGuardarEnPerfil(Boolean(v))}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="guardarEnPerfil" className="text-sm font-normal leading-snug">
+                    Guardar estos datos de entrega permanentemente en mi perfil
+                  </Label>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

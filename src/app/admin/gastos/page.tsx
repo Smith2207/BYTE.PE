@@ -1,9 +1,12 @@
 import { Wallet } from "lucide-react";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CardContent } from "@/components/ui/card";
+import { SpotlightCard } from "@/components/fx/spotlight-card";
 import { PaginacionAdmin } from "@/components/admin/paginacion-admin";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
+import { GastosChart, type GastoPorMes } from "@/components/admin/gastos-chart";
 import { listarGastos } from "@/lib/gastos/store";
 import { formatoPEN } from "@/lib/format";
 import type { CategoriaGasto } from "@/db/schema/enums";
@@ -40,6 +43,24 @@ export default async function AdminGastosPage({
   const totalFiltrado = gastos.reduce((acc, g) => acc + g.monto, 0);
   const hayFiltros = Boolean(q || categoria);
 
+  // Gasto total por mes, últimos 6 meses — sobre TODOS los gastos (no
+  // filtrados), es la tendencia general del negocio, no de la búsqueda.
+  const gastosPorMesMap = new Map<string, number>();
+  for (const g of todos) {
+    const clave = g.fecha.slice(0, 7); // "YYYY-MM"
+    gastosPorMesMap.set(clave, (gastosPorMesMap.get(clave) ?? 0) + g.monto);
+  }
+  const gastosPorMes: GastoPorMes[] = Array.from({ length: 6 }, (_, i) => {
+    const fecha = new Date();
+    fecha.setMonth(fecha.getMonth() - (5 - i));
+    const clave = fecha.toISOString().slice(0, 7);
+    return {
+      mes: clave,
+      etiqueta: fecha.toLocaleDateString("es-PE", { month: "short", year: "2-digit" }),
+      total: gastosPorMesMap.get(clave) ?? 0,
+    };
+  });
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -55,6 +76,17 @@ export default async function AdminGastosPage({
           <GastoDialog />
         </Magnetic>
       </div>
+
+      {todos.length > 0 && (
+        <SpotlightCard className="mb-6">
+          <CardContent className="pt-6">
+            <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+              Gasto mensual (últimos 6 meses)
+            </h2>
+            <GastosChart datos={gastosPorMes} />
+          </CardContent>
+        </SpotlightCard>
+      )}
 
       {todos.length > 0 && <GastosFiltros />}
 

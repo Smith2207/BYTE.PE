@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { SpotlightCard } from "@/components/fx/spotlight-card";
 import { Badge } from "@/components/ui/badge";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { VentasChart, type VentaPorDia } from "@/components/admin/ventas-chart";
@@ -124,7 +125,7 @@ export default async function AdminDashboardPage() {
         stagger={0.06}
         y={14}
       >
-        <Card data-kpi-card>
+        <SpotlightCard data-kpi-card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <DollarSign className="size-5" />
@@ -140,8 +141,8 @@ export default async function AdminDashboardPage() {
               )}
             </div>
           </CardContent>
-        </Card>
-        <Card data-kpi-card>
+        </SpotlightCard>
+        <SpotlightCard data-kpi-card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex size-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
               <ShoppingCart className="size-5" />
@@ -160,8 +161,8 @@ export default async function AdminDashboardPage() {
               )}
             </div>
           </CardContent>
-        </Card>
-        <Card data-kpi-card>
+        </SpotlightCard>
+        <SpotlightCard data-kpi-card>
           <CardContent className="flex items-center gap-4 pt-6">
             <div className="flex size-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
               <AlertCircle className="size-5" />
@@ -173,7 +174,7 @@ export default async function AdminDashboardPage() {
               </p>
             </div>
           </CardContent>
-        </Card>
+        </SpotlightCard>
       </RevealOnScroll>
 
       <div>
@@ -186,7 +187,7 @@ export default async function AdminDashboardPage() {
           stagger={0.06}
           y={14}
         >
-          <Card data-kpi-card>
+          <SpotlightCard data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <TrendingUp className="size-5" />
@@ -206,8 +207,8 @@ export default async function AdminDashboardPage() {
                 )}
               </div>
             </CardContent>
-          </Card>
-          <Card data-kpi-card>
+          </SpotlightCard>
+          <SpotlightCard data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div className="flex size-11 items-center justify-center rounded-xl bg-accent/10 text-accent">
                 <DollarSign className="size-5" />
@@ -220,8 +221,8 @@ export default async function AdminDashboardPage() {
                 </p>
               </div>
             </CardContent>
-          </Card>
-          <Card data-kpi-card>
+          </SpotlightCard>
+          <SpotlightCard data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div className="flex size-11 items-center justify-center rounded-xl bg-secondary text-foreground">
                 <Truck className="size-5" />
@@ -234,8 +235,8 @@ export default async function AdminDashboardPage() {
                 </Link>
               </div>
             </CardContent>
-          </Card>
-          <Card data-kpi-card>
+          </SpotlightCard>
+          <SpotlightCard data-kpi-card>
             <CardContent className="flex items-center gap-4 pt-6">
               <div
                 className={`flex size-11 items-center justify-center rounded-xl ${utilidadNeta >= 0 ? "bg-emerald-500/10 text-emerald-500" : "bg-destructive/10 text-destructive"}`}
@@ -253,7 +254,7 @@ export default async function AdminDashboardPage() {
                 </p>
               </div>
             </CardContent>
-          </Card>
+          </SpotlightCard>
         </RevealOnScroll>
       </div>
 
@@ -272,14 +273,14 @@ export default async function AdminDashboardPage() {
         stagger={0.08}
         y={16}
       >
-        <Card data-dashboard-card>
+        <SpotlightCard data-dashboard-card>
           <CardContent className="pt-6">
             <h2 className="mb-4 text-sm font-semibold">Productos más vendidos</h2>
             <TopProductosChart datos={masVendidos} />
           </CardContent>
-        </Card>
+        </SpotlightCard>
 
-        <Card data-dashboard-card>
+        <SpotlightCard data-dashboard-card>
           <CardContent className="pt-6">
             <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold">
               <Package className="size-4" /> Alerta de stock
@@ -301,7 +302,7 @@ export default async function AdminDashboardPage() {
               </ul>
             )}
           </CardContent>
-        </Card>
+        </SpotlightCard>
       </RevealOnScroll>
     </div>
   );

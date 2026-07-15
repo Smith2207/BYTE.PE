@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { ScrollCinematicBackdrop } from "@/components/fx/scroll-cinematic-backdrop";
 import { getUsuarioPorId } from "@/lib/usuarios/store";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
@@ -38,10 +39,11 @@ export default async function CuentaPage() {
   });
 
   return (
-    <RevealOnScroll y={20} className="space-y-6">
+    <RevealOnScroll y={20} className="relative z-10 space-y-6">
+      <ScrollCinematicBackdrop />
       <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
 
-      <Card>
+      <Card className="border-border bg-card/80 backdrop-blur-lg">
         <CardContent className="flex flex-col items-center gap-4 pt-6 text-center sm:flex-row sm:text-left">
           <Avatar className="size-16">
             {usuario.imagen && <AvatarImage src={usuario.imagen} alt={usuario.nombre} />}
@@ -61,7 +63,7 @@ export default async function CuentaPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Link href="/cuenta/pedidos">
-          <Card className="transition hover:border-primary/40">
+          <Card className="border-border bg-card/80 backdrop-blur-lg transition hover:border-primary/40">
             <CardContent className="flex items-center gap-3 pt-6">
               <Package className="size-5 text-primary" />
               <div>
@@ -72,7 +74,7 @@ export default async function CuentaPage() {
           </Card>
         </Link>
         <Link href="/cuenta/direcciones">
-          <Card className="transition hover:border-primary/40">
+          <Card className="border-border bg-card/80 backdrop-blur-lg transition hover:border-primary/40">
             <CardContent className="flex items-center gap-3 pt-6">
               <MapPin className="size-5 text-primary" />
               <div>
@@ -84,7 +86,7 @@ export default async function CuentaPage() {
         </Link>
       </div>
 
-      <Card>
+      <Card className="border-border bg-card/80 backdrop-blur-lg">
         <CardContent className="pt-6">
           <h2 className="mb-4 text-sm font-semibold">Datos personales</h2>
           <PerfilForm nombre={usuario.nombre} telefono={usuario.telefono} dni={usuario.dni} />

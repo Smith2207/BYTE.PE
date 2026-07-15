@@ -19,7 +19,11 @@ import {
 } from "@/components/ui/select";
 import { formatoPEN } from "@/lib/format";
 import type { PedidoMock } from "@/lib/pedidos/store";
-import { ESTADO_PEDIDO_ESTILO, ESTADO_PEDIDO_ETIQUETA } from "@/components/pedidos/estado-pedido-badge";
+import {
+  ESTADO_PEDIDO_ESTILO,
+  ESTADO_PEDIDO_ETIQUETA,
+  ESTADO_PEDIDO_GLOW,
+} from "@/components/pedidos/estado-pedido-badge";
 import { actualizarEstadoPedidoAction } from "./actions";
 
 const estados: PedidoMock["estado"][] = [
@@ -69,7 +73,9 @@ export function PedidoFila({ pedido }: { pedido: PedidoMock }) {
       <TableCell className="font-medium">{formatoPEN(pedido.total)}</TableCell>
       <TableCell>
         <Select value={pedido.estado} onValueChange={onEstadoChange}>
-          <SelectTrigger className={`h-8 w-36 ${ESTADO_PEDIDO_ESTILO[pedido.estado]}`}>
+          <SelectTrigger
+            className={`h-8 w-36 ${ESTADO_PEDIDO_ESTILO[pedido.estado]} ${ESTADO_PEDIDO_GLOW[pedido.estado]}`}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

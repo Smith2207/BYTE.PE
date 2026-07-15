@@ -48,7 +48,7 @@ export function RegistroForm() {
   }
 
   return (
-    <Card>
+    <Card className="border-border bg-card/80 backdrop-blur-lg">
       <CardContent className="space-y-4 pt-6">
         <form onSubmit={onSubmit} className="space-y-4">
           <div>

@@ -22,6 +22,12 @@ export function TopProductosChart({ datos }: { datos: ProductoVendido[] }) {
           layout="vertical"
           margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
         >
+          <defs>
+            <linearGradient id="topProductosGradiente" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor={CHART_SERIE_PRINCIPAL} stopOpacity={0.55} />
+              <stop offset="100%" stopColor={CHART_SERIE_PRINCIPAL} stopOpacity={1} />
+            </linearGradient>
+          </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
           <XAxis type="number" hide />
           <YAxis
@@ -47,7 +53,7 @@ export function TopProductosChart({ datos }: { datos: ProductoVendido[] }) {
           />
           <Bar
             dataKey="cantidad"
-            fill={CHART_SERIE_PRINCIPAL}
+            fill="url(#topProductosGradiente)"
             radius={[0, 4, 4, 0]}
             maxBarSize={22}
             isAnimationActive={false}
