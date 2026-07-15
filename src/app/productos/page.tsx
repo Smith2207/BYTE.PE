@@ -3,6 +3,8 @@ import { FiltrosMobile } from "@/components/catalogo/filtros-mobile";
 import { OrdenSelect } from "@/components/catalogo/orden-select";
 import { ProductoCard } from "@/components/catalogo/producto-card";
 import { ProductosPaginacion } from "@/components/catalogo/productos-paginacion";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 import { getCategorias, getMarcas, getProductos, type FiltrosProductos } from "@/lib/mock/repo";
 
 export const metadata = { title: "Catálogo de productos" };
@@ -81,11 +83,19 @@ export default async function ProductosPage({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+            <RevealOnScroll
+              className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4"
+              selector="[data-producto-card]"
+              stagger={STAGGER_MAX}
+              ease={ELASTIC_EASE}
+              y={20}
+            >
               {items.map((p) => (
-                <ProductoCard key={p.id} producto={p} />
+                <div key={p.id} data-producto-card>
+                  <ProductoCard producto={p} />
+                </div>
               ))}
-            </div>
+            </RevealOnScroll>
           )}
 
           <div className="mt-10 flex justify-center">
