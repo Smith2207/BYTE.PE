@@ -7,8 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SmoothScrollProvider } from "@/components/smooth-scroll-provider";
 import { SessionProvider } from "@/components/session-provider";
 import { CartProvider } from "@/lib/cart/cart-context";
-import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { SiteChrome } from "@/components/site-chrome";
 import { WhatsappButton } from "@/components/layout/whatsapp-button";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/lib/site-config";
@@ -63,9 +62,7 @@ export default function RootLayout({
             <CartProvider>
               <SmoothScrollProvider>
                 <div className="relative flex min-h-screen flex-col">
-                  <Navbar />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
+                  <SiteChrome>{children}</SiteChrome>
                 </div>
                 <WhatsappButton />
                 <Toaster />
