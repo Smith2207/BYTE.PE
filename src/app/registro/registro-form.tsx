@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GoogleIcon } from "@/components/icons/google-icon";
 import { Magnetic } from "@/components/fx/magnetic";
+import { GLASS_CARD } from "@/lib/motion";
 import { registrarUsuarioAction } from "./actions";
 
 export function RegistroForm() {
@@ -48,7 +49,7 @@ export function RegistroForm() {
   }
 
   return (
-    <Card className="border-border bg-card/80 backdrop-blur-lg">
+    <Card className={GLASS_CARD}>
       <CardContent className="space-y-4 pt-6">
         <form onSubmit={onSubmit} className="space-y-4">
           <div>

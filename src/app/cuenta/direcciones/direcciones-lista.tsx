@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
-import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
+import { ELASTIC_EASE, STAGGER_MAX, GLASS_CARD } from "@/lib/motion";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
 import type { DireccionAlmacenada } from "@/lib/direcciones/store";
 import {
@@ -78,7 +78,7 @@ export function DireccionesLista({ direcciones }: { direcciones: DireccionAlmace
       y={20}
     >
       {direcciones.map((d) => (
-        <Card key={d.id} data-direccion-card className="border-border bg-card/80 backdrop-blur-lg">
+        <Card key={d.id} data-direccion-card className={GLASS_CARD}>
           <CardContent className="flex items-start justify-between gap-3 pt-6">
             <div className="flex gap-3">
               <MapPin className="mt-0.5 size-5 text-primary" />
@@ -128,7 +128,7 @@ export function DireccionesLista({ direcciones }: { direcciones: DireccionAlmace
       ))}
 
       {mostrarForm ? (
-        <Card className="border-border bg-card/80 backdrop-blur-lg">
+        <Card className={GLASS_CARD}>
           <CardContent className="pt-6">
             <p className="mb-1 text-xs text-muted-foreground sm:col-span-2">
               Por ahora no hacemos despacho a domicilio: el envío es por agencia a la oficina más

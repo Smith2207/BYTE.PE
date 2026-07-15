@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
 import { EstadoDevolucionBadge } from "@/components/devoluciones/estado-devolucion-badge";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
-import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
+import { ELASTIC_EASE, STAGGER_MAX, GLASS_CARD } from "@/lib/motion";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarSolicitudesPorUsuario } from "@/lib/devoluciones/store";
 import { formatoPEN } from "@/lib/format";
@@ -43,11 +43,7 @@ export default async function CuentaPedidosPage() {
           {pedidos.map((p) => {
             const solicitud = solicitudPorPedidoId.get(p.id);
             return (
-              <Card
-                key={p.numeroPedido}
-                data-pedido-card
-                className="border-border bg-card/80 backdrop-blur-lg"
-              >
+              <Card key={p.numeroPedido} data-pedido-card className={GLASS_CARD}>
                 <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
                   <div>
                     <Link href={`/pedido/${p.numeroPedido}`} className="font-mono text-sm font-semibold hover:underline">
