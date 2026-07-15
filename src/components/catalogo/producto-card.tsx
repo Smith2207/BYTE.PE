@@ -3,6 +3,7 @@ import { SpotlightCard } from "@/components/fx/spotlight-card";
 import { TextScramble } from "@/components/fx/text-scramble";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { WishlistBoton } from "@/components/catalogo/wishlist-boton";
+import { AgregarCarritoRapido } from "@/components/catalogo/agregar-carrito-rapido";
 import { Badge } from "@/components/ui/badge";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
@@ -46,15 +47,20 @@ export function ProductoCard({
           </span>
           <h3 className="line-clamp-2 text-sm font-semibold text-foreground">{producto.nombre}</h3>
 
-          <div className="mt-auto flex items-baseline gap-2 pt-2">
-            <TextScramble
-              value={formatoPEN(producto.precioFinal)}
-              className="text-lg font-bold text-foreground"
-            />
-            {producto.precioOferta && (
-              <span className="font-mono text-xs text-muted-foreground line-through">
-                {formatoPEN(producto.precio)}
-              </span>
+          <div className="mt-auto flex items-center gap-2 pt-2">
+            <div className="flex flex-1 items-baseline gap-2">
+              <TextScramble
+                value={formatoPEN(producto.precioFinal)}
+                className="text-lg font-bold text-foreground"
+              />
+              {producto.precioOferta && (
+                <span className="font-mono text-xs text-muted-foreground line-through">
+                  {formatoPEN(producto.precio)}
+                </span>
+              )}
+            </div>
+            {producto.disponible && !producto.tieneVariantes && (
+              <AgregarCarritoRapido producto={producto} />
             )}
           </div>
           {producto.disponible && producto.stock <= 5 && (

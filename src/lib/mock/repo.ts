@@ -74,6 +74,10 @@ export type ProductoCatalogo = {
   garantiaMeses: number;
   destacado: boolean;
   createdAt: string;
+  // Si tiene variantes (talla, color...), no se puede "agregar al carrito"
+  // sin elegir una primero — la card del listado usa esto para decidir si
+  // muestra el botón rápido de agregar o manda al detalle a elegir.
+  tieneVariantes: boolean;
 };
 
 export type VarianteCatalogo = {
@@ -126,6 +130,7 @@ function aProductoAlmacenado(p: typeof productos.$inferSelect): ProductoAlmacena
 function aProductoCatalogo(
   p: typeof productos.$inferSelect,
   categoria: { id: string; nombre: string; slug: string } | undefined,
+  tieneVariantes: boolean,
 ): ProductoCatalogo {
   const precio = num(p.precio);
   const precioOferta = numNullable(p.precioOferta);
@@ -151,7 +156,20 @@ function aProductoCatalogo(
     garantiaMeses: p.garantiaMeses,
     destacado: p.destacado,
     createdAt: p.createdAt.toISOString(),
+    tieneVariantes,
   };
+}
+
+/** Qué productos (de esta lista de ids) tienen al menos una variante — una
+ * sola consulta extra por listado, mismo patrón que mapaCategorias(), en
+ * vez de N+1 consultas por producto. */
+async function mapaTieneVariantes(productoIds: string[]): Promise<Set<string>> {
+  if (productoIds.length === 0) return new Set();
+  const filas = await db
+    .selectDistinct({ productoId: variantesProducto.productoId })
+    .from(variantesProducto)
+    .where(inArray(variantesProducto.productoId, productoIds));
+  return new Set(filas.map((f) => f.productoId));
 }
 
 async function mapaCategorias() {
@@ -199,7 +217,10 @@ export async function getProductosDestacados(limit = 4): Promise<ProductoCatalog
     .from(productos)
     .where(and(eq(productos.activo, true), eq(productos.destacado, true)))
     .limit(limit);
-  return filas.map((p) => aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? "")));
+  const conVariantes = await mapaTieneVariantes(filas.map((p) => p.id));
+  return filas.map((p) =>
+    aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? ""), conVariantes.has(p.id)),
+  );
 }
 
 export type FiltrosProductos = {
@@ -267,7 +288,10 @@ export async function getProductos(filtros: FiltrosProductos = {}) {
     .offset((page - 1) * pageSize);
 
   const categoriasPorId = await mapaCategorias();
-  const items = filas.map((p) => aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? "")));
+  const conVariantes = await mapaTieneVariantes(filas.map((p) => p.id));
+  const items = filas.map((p) =>
+    aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? ""), conVariantes.has(p.id)),
+  );
 
   return { items, total, page, pageSize };
 }
@@ -281,12 +305,10 @@ export async function getProductoBySlug(slug: string) {
     .limit(1);
   if (!productoFila) return null;
 
-  const producto = aProductoCatalogo(productoFila, categoriasPorId.get(productoFila.categoriaId ?? ""));
-
   const variantesFilas = await db
     .select()
     .from(variantesProducto)
-    .where(eq(variantesProducto.productoId, producto.id));
+    .where(eq(variantesProducto.productoId, productoFila.id));
   const variantes: VarianteCatalogo[] = variantesFilas.map((v) => ({
     id: v.id,
     atributo: v.atributo,
@@ -294,6 +316,12 @@ export async function getProductoBySlug(slug: string) {
     precioExtra: num(v.precioExtra),
     stock: v.stock,
   }));
+
+  const producto = aProductoCatalogo(
+    productoFila,
+    categoriasPorId.get(productoFila.categoriaId ?? ""),
+    variantesFilas.length > 0,
+  );
 
   const relacionadosFilas = productoFila.categoriaId
     ? await db
@@ -308,7 +336,10 @@ export async function getProductoBySlug(slug: string) {
         )
         .limit(4)
     : [];
-  const relacionados = relacionadosFilas.map((p) => aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? "")));
+  const conVariantesRelacionados = await mapaTieneVariantes(relacionadosFilas.map((p) => p.id));
+  const relacionados = relacionadosFilas.map((p) =>
+    aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? ""), conVariantesRelacionados.has(p.id)),
+  );
 
   return { producto, variantes, relacionados };
 }
@@ -316,7 +347,9 @@ export async function getProductoBySlug(slug: string) {
 export async function getProductoPorId(productoId: string): Promise<ProductoCatalogo | null> {
   const categoriasPorId = await mapaCategorias();
   const [p] = await db.select().from(productos).where(eq(productos.id, productoId)).limit(1);
-  return p ? aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? "")) : null;
+  if (!p) return null;
+  const conVariantes = await mapaTieneVariantes([p.id]);
+  return aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? ""), conVariantes.has(p.id));
 }
 
 /**
