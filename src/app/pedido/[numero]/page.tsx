@@ -5,6 +5,10 @@ import { CheckCircle2, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
+import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
+import { ELASTIC_EASE, GLASS_CARD } from "@/lib/motion";
 import { getPedido } from "@/lib/pedidos/store";
 import { formatoPEN, formatoDireccion } from "@/lib/format";
 
@@ -13,19 +17,22 @@ export default async function PedidoConfirmacionPage({ params }: { params: { num
   if (!pedido) notFound();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+    <RevealOnScroll y={20} ease={ELASTIC_EASE} className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center text-center">
-        <CheckCircle2 className="size-14 text-primary" />
+        <div className="relative">
+          <div className="absolute inset-0 -z-10 rounded-full bg-primary/25 blur-2xl" />
+          <CheckCircle2 className="size-14 text-primary" />
+        </div>
         <h1 className="font-display mt-4 text-2xl font-bold sm:text-3xl">
           ¡Gracias por tu compra!
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Pedido <span className="font-mono font-semibold text-foreground">{pedido.numeroPedido}</span>{" "}
-          registrado como <span className="font-medium text-foreground">{pedido.estado}</span>.
+        <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+          Pedido <span className="font-mono font-semibold text-foreground">{pedido.numeroPedido}</span>
+          <EstadoPedidoBadge estado={pedido.estado} />
         </p>
       </div>
 
-      <Card className="mt-8">
+      <Card className={`mt-8 ${GLASS_CARD}`}>
         <CardContent className="space-y-4 pt-6">
           <div className="space-y-2">
             {pedido.items.map((item, i) => (
@@ -34,7 +41,7 @@ export default async function PedidoConfirmacionPage({ params }: { params: { num
                   {item.cantidad}x {item.nombreProducto}
                   {item.varianteLabel ? ` (${item.varianteLabel})` : ""}
                 </span>
-                <span>{formatoPEN(item.precioUnitario * item.cantidad)}</span>
+                <span className="font-mono">{formatoPEN(item.precioUnitario * item.cantidad)}</span>
               </div>
             ))}
           </div>
@@ -42,27 +49,27 @@ export default async function PedidoConfirmacionPage({ params }: { params: { num
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Op. gravada</span>
-              <span>{formatoPEN(pedido.subtotal - pedido.igv)}</span>
+              <span className="font-mono">{formatoPEN(pedido.subtotal - pedido.igv)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">IGV (18%, incluido)</span>
-              <span>{formatoPEN(pedido.igv)}</span>
+              <span className="font-mono">{formatoPEN(pedido.igv)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Envío</span>
-              <span>{formatoPEN(pedido.costoEnvio)}</span>
+              <span className="font-mono">{formatoPEN(pedido.costoEnvio)}</span>
             </div>
             {pedido.descuento > 0 && (
               <div className="flex justify-between text-primary">
                 <span>Descuento{pedido.cuponCodigo ? ` (${pedido.cuponCodigo})` : ""}</span>
-                <span>-{formatoPEN(pedido.descuento)}</span>
+                <span className="font-mono">-{formatoPEN(pedido.descuento)}</span>
               </div>
             )}
           </div>
           <Separator />
           <div className="flex justify-between text-base font-bold">
             <span>Total pagado</span>
-            <span>{formatoPEN(pedido.total)}</span>
+            <span className="font-mono">{formatoPEN(pedido.total)}</span>
           </div>
 
           <Separator />
@@ -97,10 +104,12 @@ export default async function PedidoConfirmacionPage({ params }: { params: { num
         <Button variant="outline" asChild>
           <Link href="/productos">Seguir comprando</Link>
         </Button>
-        <Button asChild>
-          <Link href="/">Volver al inicio</Link>
-        </Button>
+        <Magnetic strength={0.15} className="inline-block">
+          <Button asChild>
+            <Link href="/">Volver al inicio</Link>
+          </Button>
+        </Magnetic>
       </div>
-    </div>
+    </RevealOnScroll>
   );
 }
