@@ -5,10 +5,12 @@ import { ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Badge } from "@/components/ui/badge";
 import { obtenerCompra, nombreProveedor } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 import { EstadoCompraSelector } from "../estado-selector";
 import { ImpuestosEditor } from "./impuestos-editor";
+import { TIPO_ENVIO_ETIQUETA } from "../compras-filtros";
 
 export const metadata = { title: "Admin — Detalle de compra" };
 
@@ -18,15 +20,18 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
 
   return (
     <RevealOnScroll className="max-w-2xl" y={16}>
-      <h1 className="font-display mb-6 text-2xl font-bold">
-        Compra — {nombreProveedor(compra)}
-      </h1>
+      <div className="mb-6 flex items-center gap-2">
+        <h1 className="font-display text-2xl font-bold">
+          Compra — {nombreProveedor(compra)}
+        </h1>
+        <Badge variant="outline">{TIPO_ENVIO_ETIQUETA[compra.tipoEnvio]}</Badge>
+      </div>
 
       <Card>
         <CardContent className="space-y-4 pt-6">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Estado</span>
-            <EstadoCompraSelector id={compra.id} estado={compra.estado} />
+            <EstadoCompraSelector id={compra.id} estado={compra.estado} tipoEnvio={compra.tipoEnvio} />
           </div>
           <div className="grid grid-cols-2 gap-2 text-sm">
             <div>

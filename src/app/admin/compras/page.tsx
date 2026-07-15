@@ -15,7 +15,7 @@ import {
 } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 import { EstadoCompraSelector } from "./estado-selector";
-import { ComprasFiltros } from "./compras-filtros";
+import { ComprasFiltros, TIPO_ENVIO_ETIQUETA } from "./compras-filtros";
 
 export const metadata = { title: "Admin — Compras" };
 
@@ -138,11 +138,10 @@ export default async function AdminComprasPage({
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">
                       {nombreProveedor(c)}
-                      {c.numeroOrdenExterno && (
-                        <p className="text-xs font-normal text-muted-foreground">
-                          {c.numeroOrdenExterno}
-                        </p>
-                      )}
+                      <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+                        {TIPO_ENVIO_ETIQUETA[c.tipoEnvio]}
+                        {c.numeroOrdenExterno && ` · ${c.numeroOrdenExterno}`}
+                      </p>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(c.fechaCompra).toLocaleDateString("es-PE")}
@@ -161,7 +160,7 @@ export default async function AdminComprasPage({
                       )}
                     </TableCell>
                     <TableCell>
-                      <EstadoCompraSelector id={c.id} estado={c.estado} />
+                      <EstadoCompraSelector id={c.id} estado={c.estado} tipoEnvio={c.tipoEnvio} />
                     </TableCell>
                     <TableCell className="text-right">
                       <Link href={`/admin/compras/${c.id}`} className="text-sm text-primary hover:underline">

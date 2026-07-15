@@ -25,6 +25,11 @@ export const ESTADO_COMPRA_ETIQUETA: Record<CompraAlmacenada["estado"], string> 
   cancelado: "Cancelado",
 };
 
+export const TIPO_ENVIO_ETIQUETA: Record<CompraAlmacenada["tipoEnvio"], string> = {
+  directo_peru: "Directo a Perú",
+  almacen_usa: "Vía almacén USA",
+};
+
 export function ComprasFiltros() {
   const router = useRouter();
   const searchParams = useSearchParams();

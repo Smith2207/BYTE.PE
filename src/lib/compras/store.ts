@@ -2,7 +2,11 @@ import { and, desc, eq, gte, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { compras, compraItems } from "@/db/schema";
 import { registrarIngresoPorCompra, adminCrearProducto } from "@/lib/mock/repo";
-import type { ProveedorCompra as ProveedorCompraEnum, EstadoCompra } from "@/db/schema/enums";
+import type {
+  ProveedorCompra as ProveedorCompraEnum,
+  EstadoCompra,
+  TipoEnvioCompra,
+} from "@/db/schema/enums";
 
 /**
  * Compras a proveedores (Amazon, eBay u otros) para importar/reabastecer
@@ -34,6 +38,7 @@ export type CompraAlmacenada = {
   proveedor: ProveedorCompra;
   proveedorNombre?: string;
   numeroOrdenExterno?: string;
+  tipoEnvio: TipoEnvioCompra;
   estado: EstadoCompra;
   fechaCompra: string;
   // Cuándo llegó al casillero/almacén de EE.UU. (antes de venir a Perú).
@@ -77,6 +82,7 @@ async function aCompraAlmacenada(c: typeof compras.$inferSelect): Promise<Compra
     proveedor: c.proveedor,
     proveedorNombre: c.proveedorNombre ?? undefined,
     numeroOrdenExterno: c.numeroOrdenExterno ?? undefined,
+    tipoEnvio: c.tipoEnvio,
     estado: c.estado,
     fechaCompra: c.fechaCompra.toISOString(),
     fechaLlegadaAlmacen: c.fechaLlegadaAlmacen?.toISOString(),
@@ -110,6 +116,7 @@ export type CompraFormInput = {
   proveedor: ProveedorCompra;
   proveedorNombre?: string;
   numeroOrdenExterno?: string;
+  tipoEnvio: TipoEnvioCompra;
   fechaCompra: string;
   items: CompraItemAlmacenado[];
   costoEnvioImportacion: number;
@@ -133,6 +140,7 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
       proveedor: input.proveedor,
       proveedorNombre: input.proveedorNombre,
       numeroOrdenExterno: input.numeroOrdenExterno,
+      tipoEnvio: input.tipoEnvio,
       estado: "pedido",
       fechaCompra: new Date(input.fechaCompra),
       subtotal: subtotal.toFixed(2),

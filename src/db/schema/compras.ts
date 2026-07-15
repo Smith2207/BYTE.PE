@@ -1,5 +1,5 @@
 import { boolean, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { estadoCompraEnum, proveedorCompraEnum } from "./enums";
+import { estadoCompraEnum, proveedorCompraEnum, tipoEnvioCompraEnum } from "./enums";
 import { categorias, productos } from "./catalogo";
 
 /**
@@ -12,6 +12,9 @@ export const compras = pgTable("compras", {
   proveedor: proveedorCompraEnum("proveedor").notNull(),
   proveedorNombre: text("proveedor_nombre"), // libre cuando proveedor = "otro"
   numeroOrdenExterno: text("numero_orden_externo"), // ej: número de orden de Amazon
+  // "directo_peru": Amazon con envío gratis directo, sin forwarder.
+  // "almacen_usa": pasa por casillero en EE.UU. y courier (siempre en eBay).
+  tipoEnvio: tipoEnvioCompraEnum("tipo_envio").notNull().default("almacen_usa"),
   estado: estadoCompraEnum("estado").notNull().default("pedido"),
   fechaCompra: timestamp("fecha_compra", { withTimezone: true }).notNull().defaultNow(),
   // Cuándo llegó al casillero/almacén de EE.UU. — puede pasar buen tiempo

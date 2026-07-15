@@ -54,6 +54,12 @@ export const estadoCompraEnum = pgEnum("estado_compra", [
 
 export const proveedorCompraEnum = pgEnum("proveedor_compra", ["amazon", "ebay", "otro"]);
 
+// "directo_peru": Amazon envía directo a Perú (ej. envío gratis), sin pasar
+// por un forwarder — no aplica courier internacional ni "en_almacen_usa".
+// "almacen_usa": pasa por un casillero/almacén en EE.UU. y de ahí un
+// courier lo trae a Perú (siempre el caso en compras de eBay).
+export const tipoEnvioCompraEnum = pgEnum("tipo_envio_compra", ["directo_peru", "almacen_usa"]);
+
 // Devoluciones/reembolsos de pedidos ya entregados.
 export const tipoDevolucionEnum = pgEnum("tipo_devolucion", ["reembolso", "cambio"]);
 export const estadoDevolucionEnum = pgEnum("estado_devolucion", [
@@ -81,6 +87,7 @@ export type TipoCupon = (typeof tipoCuponEnum.enumValues)[number];
 export type EstadoReclamo = (typeof estadoReclamoEnum.enumValues)[number];
 export type EstadoCompra = (typeof estadoCompraEnum.enumValues)[number];
 export type ProveedorCompra = (typeof proveedorCompraEnum.enumValues)[number];
+export type TipoEnvioCompra = (typeof tipoEnvioCompraEnum.enumValues)[number];
 export type TipoDevolucion = (typeof tipoDevolucionEnum.enumValues)[number];
 export type EstadoDevolucion = (typeof estadoDevolucionEnum.enumValues)[number];
 export type CategoriaGasto = (typeof categoriaGastoEnum.enumValues)[number];

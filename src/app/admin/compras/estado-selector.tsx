@@ -23,8 +23,21 @@ const estados: CompraAlmacenada["estado"][] = [
   "cancelado",
 ];
 
-export function EstadoCompraSelector({ id, estado }: { id: string; estado: CompraAlmacenada["estado"] }) {
+export function EstadoCompraSelector({
+  id,
+  estado,
+  tipoEnvio,
+}: {
+  id: string;
+  estado: CompraAlmacenada["estado"];
+  tipoEnvio: CompraAlmacenada["tipoEnvio"];
+}) {
   const router = useRouter();
+  // "En almacén USA" no aplica a compras que van directo a Perú (sin
+  // forwarder) — se oculta esa opción en vez de mostrar un paso que nunca
+  // pasa para ese tipo de envío.
+  const estadosDisponibles =
+    tipoEnvio === "directo_peru" ? estados.filter((e) => e !== "en_almacen_usa") : estados;
 
   async function onChange(nuevoEstado: string) {
     try {
@@ -46,7 +59,7 @@ export function EstadoCompraSelector({ id, estado }: { id: string; estado: Compr
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {estados.map((e) => (
+        {estadosDisponibles.map((e) => (
           <SelectItem key={e} value={e}>
             {ESTADO_COMPRA_ETIQUETA[e]}
           </SelectItem>

@@ -18,8 +18,10 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatoPEN } from "@/lib/format";
 import type { ProveedorCompra } from "@/lib/compras/store";
+import type { TipoEnvioCompra } from "@/db/schema/enums";
 import type { CategoriaAlmacenada } from "@/lib/mock/repo";
 import { crearCompraAction } from "./actions";
 
@@ -65,6 +67,14 @@ export function CompraForm({
   const [proveedor, setProveedor] = React.useState<ProveedorCompra>("amazon");
   const [proveedorNombre, setProveedorNombre] = React.useState("");
   const [numeroOrdenExterno, setNumeroOrdenExterno] = React.useState("");
+  // eBay siempre llega vía almacén/courier — Amazon puede ir directo a Perú
+  // (envío gratis) o también por almacén, según el pedido.
+  const [tipoEnvio, setTipoEnvio] = React.useState<TipoEnvioCompra>("almacen_usa");
+
+  function onProveedorChange(v: ProveedorCompra) {
+    setProveedor(v);
+    if (v === "ebay") setTipoEnvio("almacen_usa");
+  }
   const [fechaCompra, setFechaCompra] = React.useState(new Date().toISOString().slice(0, 10));
   const [costoEnvioImportacion, setCostoEnvioImportacion] = React.useState("0");
   const [otrosCostos, setOtrosCostos] = React.useState("0");
@@ -109,6 +119,7 @@ export function CompraForm({
         proveedor,
         proveedorNombre: proveedor === "otro" ? proveedorNombre : undefined,
         numeroOrdenExterno: numeroOrdenExterno || undefined,
+        tipoEnvio,
         fechaCompra: new Date(fechaCompra).toISOString(),
         items: items.map((i) => ({
           productoId: i.productoId === SIN_PRODUCTO ? null : i.productoId,
@@ -145,7 +156,7 @@ export function CompraForm({
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
           <div>
             <Label htmlFor="proveedor">Proveedor</Label>
-            <Select value={proveedor} onValueChange={(v) => setProveedor(v as ProveedorCompra)}>
+            <Select value={proveedor} onValueChange={(v) => onProveedorChange(v as ProveedorCompra)}>
               <SelectTrigger id="proveedor" className="mt-1.5">
                 <SelectValue />
               </SelectTrigger>
@@ -189,39 +200,63 @@ export function CompraForm({
               onChange={(e) => setFechaCompra(e.target.value)}
             />
           </div>
+          <div className="sm:col-span-2">
+            <Label>¿Cómo llega esta compra?</Label>
+            <RadioGroup
+              value={tipoEnvio}
+              onValueChange={(v) => setTipoEnvio(v as TipoEnvioCompra)}
+              className="mt-2"
+            >
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="directo_peru" disabled={proveedor === "ebay"} />
+                Directo a Perú (ej. Amazon con envío gratis, sin forwarder)
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <RadioGroupItem value="almacen_usa" />
+                Vía almacén en EE.UU. + courier
+              </label>
+            </RadioGroup>
+            {proveedor === "ebay" && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Las compras de eBay siempre pasan por almacén/courier.
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <p className="mb-1 text-sm font-semibold">Tramo internacional (USA → Perú)</p>
-            <p className="text-xs text-muted-foreground">
-              El forwarder que trae el paquete hasta Perú — distinto del courier que reparte al
-              cliente final.
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="courierInternacional">Courier / forwarder (opcional)</Label>
-            <Input
-              id="courierInternacional"
-              className="mt-1.5"
-              placeholder="Ej: MyUS, Aerobox, JetBox..."
-              value={courierInternacional}
-              onChange={(e) => setCourierInternacional(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="trackingInternacional">N° de tracking internacional (opcional)</Label>
-            <Input
-              id="trackingInternacional"
-              className="mt-1.5"
-              value={trackingInternacional}
-              onChange={(e) => setTrackingInternacional(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {tipoEnvio === "almacen_usa" && (
+        <Card>
+          <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <p className="mb-1 text-sm font-semibold">Tramo internacional (USA → Perú)</p>
+              <p className="text-xs text-muted-foreground">
+                El forwarder que trae el paquete hasta Perú — distinto del courier que reparte al
+                cliente final.
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="courierInternacional">Courier / forwarder (opcional)</Label>
+              <Input
+                id="courierInternacional"
+                className="mt-1.5"
+                placeholder="Ej: MyUS, Aerobox, JetBox..."
+                value={courierInternacional}
+                onChange={(e) => setCourierInternacional(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="trackingInternacional">N° de tracking internacional (opcional)</Label>
+              <Input
+                id="trackingInternacional"
+                className="mt-1.5"
+                value={trackingInternacional}
+                onChange={(e) => setTrackingInternacional(e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="pt-6">
