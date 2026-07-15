@@ -93,7 +93,7 @@ export default async function AdminDevolucionesPage({
                       {new Date(s.createdAt).toLocaleDateString("es-PE")}
                     </TableCell>
                     <TableCell>
-                      <EstadoDevolucionBadge estado={s.estado} />
+                      <EstadoDevolucionBadge estado={s.estado} neon />
                     </TableCell>
                     <TableCell className="text-right">
                       <DevolucionSheet

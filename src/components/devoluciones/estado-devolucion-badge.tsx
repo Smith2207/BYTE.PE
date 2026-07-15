@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { EstadoDevolucion } from "@/db/schema/enums";
 
 /** Compartido entre /admin/devoluciones y /cuenta/pedidos — mismo color
@@ -10,6 +11,15 @@ export const ESTADO_DEVOLUCION_ESTILO: Record<EstadoDevolucion, string> = {
   completada: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
 };
 
+// Mismo color que ESTADO_DEVOLUCION_ESTILO, solo como sombra — glow
+// "neon" exclusivo de la consola admin, no se usa en /cuenta/pedidos.
+const ESTADO_DEVOLUCION_GLOW: Record<EstadoDevolucion, string> = {
+  pendiente: "shadow-[0_0_14px_rgba(245,158,11,0.35)]",
+  aprobada: "shadow-[0_0_14px_rgba(14,165,233,0.35)]",
+  rechazada: "shadow-[0_0_14px_rgba(239,68,68,0.35)]",
+  completada: "shadow-[0_0_14px_rgba(16,185,129,0.35)]",
+};
+
 export const ESTADO_DEVOLUCION_ETIQUETA: Record<EstadoDevolucion, string> = {
   pendiente: "En revisión",
   aprobada: "Aprobada",
@@ -17,9 +27,19 @@ export const ESTADO_DEVOLUCION_ETIQUETA: Record<EstadoDevolucion, string> = {
   completada: "Completada",
 };
 
-export function EstadoDevolucionBadge({ estado }: { estado: EstadoDevolucion }) {
+export function EstadoDevolucionBadge({
+  estado,
+  neon = false,
+}: {
+  estado: EstadoDevolucion;
+  /** Glow del mismo color del estado — solo para la consola admin. */
+  neon?: boolean;
+}) {
   return (
-    <Badge variant="outline" className={ESTADO_DEVOLUCION_ESTILO[estado]}>
+    <Badge
+      variant="outline"
+      className={cn(ESTADO_DEVOLUCION_ESTILO[estado], neon && ESTADO_DEVOLUCION_GLOW[estado])}
+    >
       {ESTADO_DEVOLUCION_ETIQUETA[estado]}
     </Badge>
   );

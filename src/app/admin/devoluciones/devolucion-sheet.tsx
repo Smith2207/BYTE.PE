@@ -95,7 +95,7 @@ export function DevolucionSheet({
         <div className="mt-6 space-y-4 text-sm">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Estado</span>
-            <EstadoDevolucionBadge estado={solicitud.estado} />
+            <EstadoDevolucionBadge estado={solicitud.estado} neon />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

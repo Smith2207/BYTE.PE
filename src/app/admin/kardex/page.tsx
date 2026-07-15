@@ -15,10 +15,14 @@ const ETIQUETA_TIPO: Record<string, string> = {
   devolucion: "Devolución",
 };
 
+// Glow "neon" del mismo color — consola admin, este badge no se comparte
+// con ninguna vista de cliente.
 const ESTILO_TIPO: Record<string, string> = {
-  compra: "border-emerald-500/30 bg-emerald-500/10 text-emerald-500",
-  venta: "border-sky-500/30 bg-sky-500/10 text-sky-500",
-  devolucion: "border-violet-500/30 bg-violet-500/10 text-violet-500",
+  compra:
+    "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 shadow-[0_0_14px_rgba(16,185,129,0.35)]",
+  venta: "border-sky-500/30 bg-sky-500/10 text-sky-500 shadow-[0_0_14px_rgba(14,165,233,0.35)]",
+  devolucion:
+    "border-violet-500/30 bg-violet-500/10 text-violet-500 shadow-[0_0_14px_rgba(139,92,246,0.35)]",
 };
 
 export default async function AdminKardexPage({

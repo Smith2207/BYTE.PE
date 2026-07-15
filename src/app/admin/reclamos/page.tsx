@@ -100,7 +100,7 @@ export default async function AdminReclamosPage({
                       {new Date(r.createdAt).toLocaleDateString("es-PE")}
                     </TableCell>
                     <TableCell>
-                      <EstadoReclamoBadge estado={r.estado} />
+                      <EstadoReclamoBadge estado={r.estado} neon />
                     </TableCell>
                     <TableCell className="text-right">
                       <ReclamoSheet
