@@ -28,10 +28,13 @@ import { categoriasNav, siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart/cart-context";
 import { ModeToggle } from "@/components/mode-toggle";
+import { FloatingIndicator } from "@/components/fx/floating-indicator";
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [hoverSlug, setHoverSlug] = React.useState<string | null>(null);
+  const navRef = React.useRef<HTMLElement>(null);
   const { cantidadTotal } = useCart();
   const { data: session, status } = useSession();
   const pathname = usePathname();
@@ -58,8 +61,8 @@ export function Navbar() {
         sobreHeroCinematografico
           ? "border-b border-transparent bg-transparent mix-blend-difference"
           : scrolled
-            ? "border-b border-border/60 bg-background-95 backdrop-blur-lg"
-            : "border-b border-transparent bg-background-40 backdrop-blur-sm",
+            ? "border-b border-border/60 bg-background-95 backdrop-blur-md"
+            : "border-b border-white/[0.06] bg-background-40 backdrop-blur-md",
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
@@ -103,12 +106,20 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex">
+        <nav
+          ref={navRef}
+          onMouseLeave={() => setHoverSlug(null)}
+          className="relative hidden items-center gap-1 lg:flex"
+        >
+          <FloatingIndicator containerRef={navRef} activeKey={hoverSlug ?? ""} />
           {categoriasNav.map((c) => (
             <Link
               key={c.slug}
               href={`/productos?categoria=${c.slug}`}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-foreground/75 transition hover:bg-secondary hover:text-foreground"
+              data-indicator-item
+              data-active={hoverSlug === c.slug}
+              onMouseEnter={() => setHoverSlug(c.slug)}
+              className="relative rounded-full px-3.5 py-2 text-sm font-medium text-foreground/75 transition hover:text-foreground"
             >
               {c.nombre}
             </Link>

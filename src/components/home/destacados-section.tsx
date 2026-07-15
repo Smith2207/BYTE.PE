@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 
 import { ProductoCard } from "@/components/catalogo/producto-card";
 import { ensureGsapPlugins, gsap, prefersReducedMotion } from "@/lib/gsap";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 
 const DIAS_PARA_SER_NUEVO = 30;
@@ -28,9 +29,9 @@ export function DestacadosSection({
       gsap.from("[data-destacado-card]", {
         y: 40,
         opacity: 0,
-        duration: 0.6,
-        stagger: 0.12,
-        ease: "power2.out",
+        duration: 0.7,
+        stagger: STAGGER_MAX,
+        ease: ELASTIC_EASE,
         scrollTrigger: {
           trigger: rootRef.current,
           start: "top 80%",

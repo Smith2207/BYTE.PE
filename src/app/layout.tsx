@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Bebas_Neue } from "next/font/google";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/theme-provider";
@@ -46,7 +47,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${inter.variable} ${bebasNeue.variable}`} suppressHydrationWarning>
+    <html
+      lang="es"
+      className={`${inter.variable} ${bebasNeue.variable} ${GeistMono.variable}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen font-sans antialiased">
         <script
           type="application/ld+json"

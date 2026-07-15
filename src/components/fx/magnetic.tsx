@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { gsap } from "@/lib/gsap";
+import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { ELASTIC_EASE } from "@/lib/motion";
 
 /**
  * Envoltorio "botón magnético": el hijo se desplaza levemente hacia el
  * cursor mientras esté dentro de sus límites, y vuelve a su posición con
- * un ease elástico al salir. Pensado para CTAs principales (sección 7).
+ * un ease elástico al salir. Al hacer click, además se "deforma"
+ * (0.95 → 1.05 → 1.0) con la misma física elástica — pensado para CTAs
+ * principales.
  */
 export function Magnetic({
   children,
@@ -43,11 +46,29 @@ export function Magnetic({
     quickY.current?.(0);
   }
 
+  function handlePointerDown() {
+    const el = ref.current;
+    if (!el || prefersReducedMotion()) return;
+    gsap.to(el, { scale: 0.95, duration: 0.15, ease: "power2.out" });
+  }
+
+  function handlePointerUp() {
+    const el = ref.current;
+    if (!el || prefersReducedMotion()) return;
+    gsap
+      .timeline()
+      .to(el, { scale: 1.05, duration: 0.2, ease: ELASTIC_EASE })
+      .to(el, { scale: 1, duration: 0.25, ease: ELASTIC_EASE });
+  }
+
   return (
     <div
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className={className}
     >
       {children}

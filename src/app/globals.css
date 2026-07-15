@@ -46,6 +46,13 @@
     /* Solo para titulares "cinematográficos" (hero) — no reemplaza
        --font-display en el resto del sitio. */
     --font-heading: var(--font-bebas);
+    /* Precios, specs técnicas y estados del sistema — dirección "High-End
+       Cyberpunk Minimalist" (ver docs/brief-diseno-stitch.md). */
+    --font-mono: var(--font-geist-mono);
+    /* Easing con leve overshoot ("spring") para transiciones CSS puras
+       (hover de botones, etc.) — la contraparte GSAP es
+       elastic.out(1.2, 0.4), ver src/lib/motion.ts. */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   ::selection {

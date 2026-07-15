@@ -15,6 +15,7 @@ export function RevealOnScroll({
   y = 40,
   stagger,
   selector,
+  ease = "power3.out",
 }: {
   children: React.ReactNode;
   className?: string;
@@ -23,6 +24,8 @@ export function RevealOnScroll({
   /** Si se define, anima los hijos que matcheen este selector con stagger, en vez del contenedor completo. */
   stagger?: number;
   selector?: string;
+  /** GSAP ease — por defecto "power3.out"; pasa ELASTIC_EASE (src/lib/motion.ts) para la dirección "High-End Cyberpunk Minimalist". */
+  ease?: string;
 }) {
   const ref = React.useRef<HTMLDivElement>(null);
 
@@ -43,7 +46,7 @@ export function RevealOnScroll({
           y: 0,
           filter: "blur(0px)",
           duration: 0.9,
-          ease: "power3.out",
+          ease,
           stagger: stagger ?? 0,
           scrollTrigger: {
             trigger: el,
@@ -55,7 +58,7 @@ export function RevealOnScroll({
     }, el);
 
     return () => ctx.revert();
-  }, [y, stagger, selector]);
+  }, [y, stagger, selector, ease]);
 
   return (
     <div ref={ref} className={className}>

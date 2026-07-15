@@ -1,5 +1,6 @@
 import { ProductoLink } from "@/components/catalogo/producto-link";
 import { SpotlightCard } from "@/components/fx/spotlight-card";
+import { TextScramble } from "@/components/fx/text-scramble";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { WishlistBoton } from "@/components/catalogo/wishlist-boton";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ export function ProductoCard({
   etiqueta?: "nuevo" | "mas-vendido";
 }) {
   return (
-    <SpotlightCard className="flex h-full flex-col transition-transform duration-300 hover:-translate-y-1">
+    <SpotlightCard className="flex h-full flex-col">
       <ProductoLink href={`/productos/${producto.slug}`} className="flex h-full flex-col">
         <div className="relative">
           <ProductoMedia
@@ -46,11 +47,12 @@ export function ProductoCard({
           <h3 className="line-clamp-2 text-sm font-semibold text-foreground">{producto.nombre}</h3>
 
           <div className="mt-auto flex items-baseline gap-2 pt-2">
-            <span className="font-display text-lg font-bold text-foreground">
-              {formatoPEN(producto.precioFinal)}
-            </span>
+            <TextScramble
+              value={formatoPEN(producto.precioFinal)}
+              className="text-lg font-bold text-foreground"
+            />
             {producto.precioOferta && (
-              <span className="text-xs text-muted-foreground line-through">
+              <span className="font-mono text-xs text-muted-foreground line-through">
                 {formatoPEN(producto.precio)}
               </span>
             )}

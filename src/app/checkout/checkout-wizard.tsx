@@ -21,6 +21,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
+import { FloatingIndicator } from "@/components/fx/floating-indicator";
+import { TextScramble } from "@/components/fx/text-scramble";
+import { ELASTIC_EASE } from "@/lib/motion";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, formatoDireccion, desglosarIGV } from "@/lib/format";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
@@ -52,6 +55,7 @@ export function CheckoutWizard() {
   const { items, subtotal, vaciarCarrito } = useCart();
   const [paso, setPaso] = React.useState(0);
   const [enviando, setEnviando] = React.useState(false);
+  const pasosRef = React.useRef<HTMLDivElement>(null);
 
   const [direccion, setDireccion] = React.useState({
     departamento: "",
@@ -243,16 +247,23 @@ export function CheckoutWizard() {
   return (
     <div className="grid gap-10 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <div className="mb-8 flex flex-wrap gap-2">
+        <div ref={pasosRef} className="relative mb-8 flex flex-wrap gap-2">
+          <FloatingIndicator
+            containerRef={pasosRef}
+            activeKey={paso}
+            className="border border-primary/40 bg-primary/10"
+          />
           {PASOS.map((nombre, i) => (
             <div
               key={nombre}
-              className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium ${
+              data-indicator-item
+              data-active={i === paso}
+              className={`relative flex items-center gap-2 rounded-full border border-transparent px-3 py-1.5 text-xs font-medium ${
                 i === paso
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "text-primary"
                   : i < paso
-                    ? "border-primary/40 text-primary/80"
-                    : "border-border/60 text-muted-foreground"
+                    ? "text-primary/80"
+                    : "text-muted-foreground"
               }`}
             >
               {i < paso ? <Check className="size-3.5" /> : <span>{i + 1}</span>}
@@ -261,7 +272,7 @@ export function CheckoutWizard() {
           ))}
         </div>
 
-        <RevealOnScroll key={paso} y={16}>
+        <RevealOnScroll key={paso} y={16} ease={ELASTIC_EASE}>
         {paso === 0 && (
           <Card>
             <CardContent className="space-y-6 pt-6">
@@ -688,7 +699,7 @@ export function CheckoutWizard() {
                     {i.cantidad}x {i.nombre}
                     {i.varianteLabel ? ` (${i.varianteLabel})` : ""}
                   </span>
-                  <span>{formatoPEN(i.precioUnitario * i.cantidad)}</span>
+                  <span className="font-mono">{formatoPEN(i.precioUnitario * i.cantidad)}</span>
                 </div>
               ))}
             </div>
@@ -696,27 +707,27 @@ export function CheckoutWizard() {
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Op. gravada</span>
-                <span>{formatoPEN(subtotal - igv)}</span>
+                <span className="font-mono">{formatoPEN(subtotal - igv)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">IGV (18%, incluido)</span>
-                <span>{formatoPEN(igv)}</span>
+                <span className="font-mono">{formatoPEN(igv)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Envío</span>
-                <span>{tarifa ? formatoPEN(costoEnvio) : "Por calcular"}</span>
+                <span className="font-mono">{tarifa ? formatoPEN(costoEnvio) : "Por calcular"}</span>
               </div>
               {descuento > 0 && (
                 <div className="flex justify-between text-primary">
                   <span>Descuento</span>
-                  <span>-{formatoPEN(descuento)}</span>
+                  <span className="font-mono">-{formatoPEN(descuento)}</span>
                 </div>
               )}
             </div>
             <Separator />
             <div className="flex justify-between text-base font-bold">
               <span>Total</span>
-              <span>{formatoPEN(total)}</span>
+              <TextScramble value={formatoPEN(total)} />
             </div>
             <p className="text-xs text-muted-foreground">
               Precio final — el IGV ya está incluido, sin cargos ocultos.

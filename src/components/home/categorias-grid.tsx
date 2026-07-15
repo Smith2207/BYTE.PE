@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Cpu, Headphones, Laptop, Smartphone, Tablet } from "lucide-react";
 import type { CategoriaConHijas } from "@/lib/mock/repo";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 
 const iconos: Record<string, typeof Laptop> = {
   laptops: Laptop,
@@ -26,7 +27,8 @@ export function CategoriasGrid({ categorias }: { categorias: CategoriaConHijas[]
       <RevealOnScroll
         className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5"
         selector="[data-categoria-card]"
-        stagger={0.08}
+        stagger={STAGGER_MAX}
+        ease={ELASTIC_EASE}
         y={20}
       >
         {categorias.map((c) => {

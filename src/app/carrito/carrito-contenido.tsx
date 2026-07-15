@@ -9,8 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { Magnetic } from "@/components/fx/magnetic";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { TextScramble } from "@/components/fx/text-scramble";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, desglosarIGV } from "@/lib/format";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 
 export function CarritoContenido() {
   const { items, subtotal, actualizarCantidad, quitarItem } = useCart();
@@ -39,7 +41,8 @@ export function CarritoContenido() {
       <RevealOnScroll
         className="space-y-4 lg:col-span-2"
         selector="[data-carrito-item]"
-        stagger={0.06}
+        stagger={STAGGER_MAX}
+        ease={ELASTIC_EASE}
         y={16}
       >
         {items.map((item) => (
@@ -107,7 +110,7 @@ export function CarritoContenido() {
                       <Plus className="size-3.5" />
                     </button>
                   </div>
-                  <span className="font-display font-semibold">
+                  <span className="font-mono font-semibold">
                     {formatoPEN(item.precioUnitario * item.cantidad)}
                   </span>
                 </div>
@@ -124,11 +127,11 @@ export function CarritoContenido() {
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatoPEN(subtotal)}</span>
+                <span className="font-mono">{formatoPEN(subtotal)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>IGV (18%, incluido)</span>
-                <span>{formatoPEN(igv)}</span>
+                <span className="font-mono">{formatoPEN(igv)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Envío</span>
@@ -138,7 +141,7 @@ export function CarritoContenido() {
             <Separator />
             <div className="flex justify-between text-base font-bold">
               <span>Total estimado</span>
-              <span>{formatoPEN(subtotal)}</span>
+              <TextScramble value={formatoPEN(subtotal)} />
             </div>
             <p className="text-xs text-muted-foreground">
               Precio final — sin cargos ocultos. Solo falta sumar el envío.

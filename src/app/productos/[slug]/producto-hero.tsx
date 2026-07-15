@@ -6,6 +6,7 @@ import { ShieldCheck, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { WishlistBoton } from "@/components/catalogo/wishlist-boton";
 import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
+import { TextScramble } from "@/components/fx/text-scramble";
 import { GaleriaProducto } from "./galeria-producto";
 import { AgregarCarrito } from "./agregar-carrito";
 import { AvisoStockForm } from "./aviso-stock-form";
@@ -109,11 +110,9 @@ export function ProductoHero({
           </h1>
 
           <div data-ph-price className="mt-6 flex items-center gap-3">
-            <span className="font-display text-3xl font-bold">
-              {formatoPEN(producto.precioFinal)}
-            </span>
+            <TextScramble value={formatoPEN(producto.precioFinal)} className="text-3xl font-bold" />
             {producto.precioOferta && (
-              <span className="text-base text-white/40 line-through">
+              <span className="font-mono text-base text-white/40 line-through">
                 {formatoPEN(producto.precio)}
               </span>
             )}
@@ -132,7 +131,8 @@ export function ProductoHero({
                 data-ph-meta
                 className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70"
               >
-                <span className="text-white/40">{clave}:</span> {valor}
+                <span className="text-white/40">{clave}:</span>{" "}
+                <span className="font-mono">{valor}</span>
               </span>
             ))}
           </div>
@@ -151,7 +151,7 @@ export function ProductoHero({
               Envío calculado en el checkout
             </span>
             <span data-ph-meta className="flex items-center gap-1.5">
-              SKU: {producto.sku}
+              SKU: <span className="font-mono">{producto.sku}</span>
             </span>
           </div>
 

@@ -1,4 +1,5 @@
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 
 export function EspecificacionesCards({ specs }: { specs: Record<string, string> }) {
   const entradas = Object.entries(specs);
@@ -10,7 +11,8 @@ export function EspecificacionesCards({ specs }: { specs: Record<string, string>
       <RevealOnScroll
         className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4"
         selector="[data-spec-card]"
-        stagger={0.06}
+        stagger={STAGGER_MAX}
+        ease={ELASTIC_EASE}
         y={24}
       >
         {entradas.map(([clave, valor]) => (
@@ -22,7 +24,7 @@ export function EspecificacionesCards({ specs }: { specs: Record<string, string>
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {clave}
             </p>
-            <p className="mt-1.5 text-sm font-semibold text-foreground">{valor}</p>
+            <p className="mt-1.5 font-mono text-sm font-semibold text-foreground">{valor}</p>
           </div>
         ))}
       </RevealOnScroll>
