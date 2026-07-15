@@ -33,3 +33,12 @@ export async function actualizarPerfilAction(input: {
   revalidatePath("/cuenta");
   return usuario;
 }
+
+export async function actualizarAvatarAction(imagenUrl: string) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Debes iniciar sesión");
+
+  const usuario = await actualizarUsuario(session.user.id, { imagen: imagenUrl });
+  revalidatePath("/cuenta");
+  return usuario;
+}

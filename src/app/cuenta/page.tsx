@@ -3,12 +3,14 @@ import { Package, MapPin } from "lucide-react";
 
 import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { GLASS_CARD } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 import { getUsuarioPorId } from "@/lib/usuarios/store";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
 import { PerfilForm } from "./perfil-form";
+import { AvatarUploader } from "./avatar-uploader";
 
 export const metadata = { title: "Mi cuenta" };
 
@@ -41,14 +43,13 @@ export default async function CuentaPage() {
     <RevealOnScroll y={20} className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
 
-      <Card className="border-border bg-card/80 backdrop-blur-lg">
+      <Card className={GLASS_CARD}>
         <CardContent className="flex flex-col items-center gap-4 pt-6 text-center sm:flex-row sm:text-left">
-          <Avatar className="size-16">
-            {usuario.imagen && <AvatarImage src={usuario.imagen} alt={usuario.nombre} />}
-            <AvatarFallback className="text-lg font-semibold">
-              {iniciales(usuario.nombre)}
-            </AvatarFallback>
-          </Avatar>
+          <AvatarUploader
+            imagen={usuario.imagen}
+            iniciales={iniciales(usuario.nombre)}
+            nombre={usuario.nombre}
+          />
           <div>
             <p className="text-lg font-semibold">{usuario.nombre}</p>
             <p className="text-sm text-muted-foreground">{usuario.email}</p>
@@ -61,7 +62,7 @@ export default async function CuentaPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Link href="/cuenta/pedidos">
-          <Card className="border-border bg-card/80 backdrop-blur-lg transition hover:border-primary/40">
+          <Card className={cn(GLASS_CARD, "transition hover:border-primary/40")}>
             <CardContent className="flex items-center gap-3 pt-6">
               <Package className="size-5 text-primary" />
               <div>
@@ -72,7 +73,7 @@ export default async function CuentaPage() {
           </Card>
         </Link>
         <Link href="/cuenta/direcciones">
-          <Card className="border-border bg-card/80 backdrop-blur-lg transition hover:border-primary/40">
+          <Card className={cn(GLASS_CARD, "transition hover:border-primary/40")}>
             <CardContent className="flex items-center gap-3 pt-6">
               <MapPin className="size-5 text-primary" />
               <div>
@@ -84,7 +85,7 @@ export default async function CuentaPage() {
         </Link>
       </div>
 
-      <Card className="border-border bg-card/80 backdrop-blur-lg">
+      <Card className={GLASS_CARD}>
         <CardContent className="pt-6">
           <h2 className="mb-4 text-sm font-semibold">Datos personales</h2>
           <PerfilForm nombre={usuario.nombre} telefono={usuario.telefono} dni={usuario.dni} />

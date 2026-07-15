@@ -157,7 +157,7 @@ export async function restablecerPasswordConToken(token: string, nuevaPassword: 
 
 export async function actualizarUsuario(
   id: string,
-  input: Partial<Pick<UsuarioAlmacenado, "nombre" | "dni" | "telefono">>,
+  input: Partial<Pick<UsuarioAlmacenado, "nombre" | "dni" | "telefono" | "imagen">>,
 ) {
   const [fila] = await db.update(usuarios).set(input).where(eq(usuarios.id, id)).returning();
   if (!fila) throw new Error("Usuario no encontrado");
