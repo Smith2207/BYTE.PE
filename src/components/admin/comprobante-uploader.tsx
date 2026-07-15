@@ -15,12 +15,16 @@ function esPdf(url: string) {
 export function ComprobanteUploader({
   urls,
   onChange,
+  max,
 }: {
   urls: string[];
   onChange: (urls: string[]) => void;
+  /** Si se define, oculta el botón de subir cuando ya se llegó al límite (ej. max={1} para un solo comprobante). */
+  max?: number;
 }) {
   const [subiendo, setSubiendo] = React.useState(false);
   const [arrastrando, setArrastrando] = React.useState(false);
+  const alcanzoElMaximo = max != null && urls.length >= max;
 
   async function subirArchivos(archivos: FileList | File[]) {
     setSubiendo(true);
@@ -38,7 +42,10 @@ export function ComprobanteUploader({
         }
         nuevas.push(data.url);
       }
-      if (nuevas.length > 0) onChange([...urls, ...nuevas]);
+      if (nuevas.length > 0) {
+        const combinadas = [...urls, ...nuevas];
+        onChange(max != null ? combinadas.slice(-max) : combinadas);
+      }
     } finally {
       setSubiendo(false);
     }
@@ -79,42 +86,44 @@ export function ComprobanteUploader({
           </div>
         ))}
 
-        <label
-          onDragOver={(e) => {
-            e.preventDefault();
-            setArrastrando(true);
-          }}
-          onDragLeave={() => setArrastrando(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setArrastrando(false);
-            if (e.dataTransfer.files.length) void subirArchivos(e.dataTransfer.files);
-          }}
-          className={cn(
-            "flex size-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition hover:border-primary/50 hover:text-foreground",
-            arrastrando && "border-primary/60 bg-secondary",
-          )}
-        >
-          {subiendo ? (
-            <Loader2 className="size-5 animate-spin" />
-          ) : (
-            <>
-              <Paperclip className="size-5" />
-              <span className="text-[10px]">Subir</span>
-            </>
-          )}
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
-            multiple
-            className="hidden"
-            disabled={subiendo}
-            onChange={(e) => {
-              if (e.target.files?.length) void subirArchivos(e.target.files);
-              e.target.value = "";
+        {!alcanzoElMaximo && (
+          <label
+            onDragOver={(e) => {
+              e.preventDefault();
+              setArrastrando(true);
             }}
-          />
-        </label>
+            onDragLeave={() => setArrastrando(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setArrastrando(false);
+              if (e.dataTransfer.files.length) void subirArchivos(e.dataTransfer.files);
+            }}
+            className={cn(
+              "flex size-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-muted-foreground transition hover:border-primary/50 hover:text-foreground",
+              arrastrando && "border-primary/60 bg-secondary",
+            )}
+          >
+            {subiendo ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <>
+                <Paperclip className="size-5" />
+                <span className="text-[10px]">Subir</span>
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/gif,image/webp,application/pdf"
+              multiple={max !== 1}
+              className="hidden"
+              disabled={subiendo}
+              onChange={(e) => {
+                if (e.target.files?.length) void subirArchivos(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        )}
       </div>
       <p className="text-xs text-muted-foreground">
         Fotos o PDF de la factura/voucher — máx. 10MB por archivo.

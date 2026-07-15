@@ -119,160 +119,176 @@ export function ProductoSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle>{producto ? "Editar producto" : "Nuevo producto"}</SheetTitle>
         </SheetHeader>
-        <form onSubmit={onSubmit} className="mt-6 space-y-6">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input
-                id="nombre"
-                className="mt-1.5"
-                required
-                value={form.nombre}
-                onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="descripcion">Descripción</Label>
-              <Textarea
-                id="descripcion"
-                className="mt-1.5"
-                rows={3}
-                value={form.descripcion}
-                onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="marca">Marca</Label>
-              <Input
-                id="marca"
-                className="mt-1.5"
-                required
-                value={form.marca}
-                onChange={(e) => setForm((f) => ({ ...f, marca: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="sku">SKU</Label>
-              <Input
-                id="sku"
-                className="mt-1.5"
-                required
-                value={form.sku}
-                onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="categoria">Categoría</Label>
-              <Select
-                value={form.categoriaId}
-                onValueChange={(v) => setForm((f) => ({ ...f, categoriaId: v }))}
-              >
-                <SelectTrigger id="categoria" className="mt-1.5">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {categorias.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="garantia">Garantía (meses)</Label>
-              <Input
-                id="garantia"
-                type="number"
-                min="0"
-                className="mt-1.5"
-                value={form.garantiaMeses}
-                onChange={(e) => setForm((f) => ({ ...f, garantiaMeses: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="precio">Precio (S/)</Label>
-              <Input
-                id="precio"
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                className="mt-1.5"
-                value={form.precio}
-                onChange={(e) => setForm((f) => ({ ...f, precio: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="precioOferta">Precio de oferta (opcional)</Label>
-              <Input
-                id="precioOferta"
-                type="number"
-                step="0.01"
-                min="0"
-                className="mt-1.5"
-                value={form.precioOferta}
-                onChange={(e) => setForm((f) => ({ ...f, precioOferta: e.target.value }))}
-              />
-            </div>
-            <div>
-              <Label htmlFor="costoAdquisicion">Costo de compra/importación (S/)</Label>
-              <Input
-                id="costoAdquisicion"
-                type="number"
-                step="0.01"
-                min="0"
-                className="mt-1.5"
-                placeholder="Lo que te costó a ti (Amazon, etc.)"
-                value={form.costoAdquisicion}
-                onChange={(e) => setForm((f) => ({ ...f, costoAdquisicion: e.target.value }))}
-              />
-              {margen && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Margen: {formatoPEN(margen.monto)} ({margen.porcentaje}%)
-                </p>
-              )}
-              <p className="mt-1 text-xs text-muted-foreground">
-                Solo lo ve el admin, nunca se muestra en la tienda.
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="stock">Stock</Label>
-              <Input
-                id="stock"
-                type="number"
-                min="0"
-                required
-                className="mt-1.5"
-                value={form.stock}
-                onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
-              />
-            </div>
-            <div className="flex items-center gap-2 pt-6">
-              <Checkbox
-                id="destacado"
-                checked={form.destacado}
-                onCheckedChange={(v) => setForm((f) => ({ ...f, destacado: Boolean(v) }))}
-              />
-              <Label htmlFor="destacado" className="font-normal">
-                Mostrar en destacados de la home
-              </Label>
-            </div>
-            <div className="sm:col-span-2">
-              <Label>Imágenes</Label>
-              <div className="mt-1.5">
-                <ImagenUploader imagenes={imagenes} onChange={setImagenes} />
+        <form onSubmit={onSubmit} className="mt-6 space-y-5">
+          <section className="space-y-4 rounded-xl border border-border/60 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Información general
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label htmlFor="nombre">Nombre</Label>
+                <Input
+                  id="nombre"
+                  className="mt-1.5"
+                  required
+                  value={form.nombre}
+                  onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label htmlFor="descripcion">Descripción</Label>
+                <Textarea
+                  id="descripcion"
+                  className="mt-1.5"
+                  rows={3}
+                  value={form.descripcion}
+                  onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="marca">Marca</Label>
+                <Input
+                  id="marca"
+                  className="mt-1.5"
+                  required
+                  value={form.marca}
+                  onChange={(e) => setForm((f) => ({ ...f, marca: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="sku">SKU</Label>
+                <Input
+                  id="sku"
+                  className="mt-1.5"
+                  required
+                  value={form.sku}
+                  onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="categoria">Categoría</Label>
+                <Select
+                  value={form.categoriaId}
+                  onValueChange={(v) => setForm((f) => ({ ...f, categoriaId: v }))}
+                >
+                  <SelectTrigger id="categoria" className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categorias.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="garantia">Garantía (meses)</Label>
+                <Input
+                  id="garantia"
+                  type="number"
+                  min="0"
+                  className="mt-1.5"
+                  value={form.garantiaMeses}
+                  onChange={(e) => setForm((f) => ({ ...f, garantiaMeses: e.target.value }))}
+                />
               </div>
             </div>
-          </div>
+          </section>
 
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Ficha técnica</h3>
+          <section className="space-y-4 rounded-xl border border-border/60 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Precio y stock
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="precio">Precio (S/)</Label>
+                <Input
+                  id="precio"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required
+                  className="mt-1.5"
+                  value={form.precio}
+                  onChange={(e) => setForm((f) => ({ ...f, precio: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="precioOferta">Precio de oferta (opcional)</Label>
+                <Input
+                  id="precioOferta"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="mt-1.5"
+                  value={form.precioOferta}
+                  onChange={(e) => setForm((f) => ({ ...f, precioOferta: e.target.value }))}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label htmlFor="costoAdquisicion">Costo de compra/importación (S/)</Label>
+                <Input
+                  id="costoAdquisicion"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  className="mt-1.5"
+                  placeholder="Lo que te costó a ti (Amazon, etc.)"
+                  value={form.costoAdquisicion}
+                  onChange={(e) => setForm((f) => ({ ...f, costoAdquisicion: e.target.value }))}
+                />
+                {margen && (
+                  <p className="mt-1 font-mono text-xs text-muted-foreground">
+                    Margen: {formatoPEN(margen.monto)} ({margen.porcentaje}%)
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Solo lo ve el admin, nunca se muestra en la tienda.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="stock">Stock</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  min="0"
+                  required
+                  className="mt-1.5"
+                  value={form.stock}
+                  onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <Checkbox
+                  id="destacado"
+                  checked={form.destacado}
+                  onCheckedChange={(v) => setForm((f) => ({ ...f, destacado: Boolean(v) }))}
+                />
+                <Label htmlFor="destacado" className="font-normal">
+                  Mostrar en destacados de la home
+                </Label>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-3 rounded-xl border border-border/60 p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Imágenes
+            </h3>
+            <ImagenUploader imagenes={imagenes} onChange={setImagenes} />
+          </section>
+
+          <section className="space-y-3 rounded-xl border border-border/60 p-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Ficha técnica
+              </h3>
               <Button
                 type="button"
                 variant="outline"
@@ -310,7 +326,7 @@ export function ProductoSheet({
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
           <SheetFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

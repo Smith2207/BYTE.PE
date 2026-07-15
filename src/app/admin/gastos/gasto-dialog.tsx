@@ -24,6 +24,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ComprobanteUploader } from "@/components/admin/comprobante-uploader";
 import type { GastoAlmacenado } from "@/lib/gastos/store";
 import { CATEGORIA_GASTO_ETIQUETA } from "./categoria-gasto";
 import { crearGastoAction, actualizarGastoAction } from "./actions";
@@ -143,15 +144,15 @@ export function GastoDialog({ gasto }: { gasto?: GastoAlmacenado }) {
                 onChange={(e) => setForm((f) => ({ ...f, monto: e.target.value }))}
               />
             </div>
-            <div>
-              <Label htmlFor="comprobanteUrl">Enlace al comprobante (opcional)</Label>
-              <Input
-                id="comprobanteUrl"
-                className="mt-1.5"
-                placeholder="https://..."
-                value={form.comprobanteUrl}
-                onChange={(e) => setForm((f) => ({ ...f, comprobanteUrl: e.target.value }))}
-              />
+            <div className="sm:col-span-2">
+              <Label>Comprobante (opcional)</Label>
+              <div className="mt-1.5">
+                <ComprobanteUploader
+                  urls={form.comprobanteUrl ? [form.comprobanteUrl] : []}
+                  onChange={(urls) => setForm((f) => ({ ...f, comprobanteUrl: urls[0] ?? "" }))}
+                  max={1}
+                />
+              </div>
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="notas">Notas (opcional)</Label>
