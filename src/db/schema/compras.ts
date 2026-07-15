@@ -1,4 +1,4 @@
-import { integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, numeric, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { estadoCompraEnum, proveedorCompraEnum } from "./enums";
 import { categorias, productos } from "./catalogo";
 
@@ -14,12 +14,20 @@ export const compras = pgTable("compras", {
   numeroOrdenExterno: text("numero_orden_externo"), // ej: número de orden de Amazon
   estado: estadoCompraEnum("estado").notNull().default("pedido"),
   fechaCompra: timestamp("fecha_compra", { withTimezone: true }).notNull().defaultNow(),
+  // Cuándo llegó al casillero/almacén de EE.UU. — puede pasar buen tiempo
+  // ahí (consolidación) antes de que el forwarder lo despache a Perú.
+  fechaLlegadaAlmacen: timestamp("fecha_llegada_almacen", { withTimezone: true }),
   fechaRecibido: timestamp("fecha_recibido", { withTimezone: true }),
   subtotal: numeric("subtotal", { precision: 10, scale: 2 }).notNull(),
   costoEnvioImportacion: numeric("costo_envio_importacion", { precision: 10, scale: 2 })
     .notNull()
     .default("0"),
   otrosCostos: numeric("otros_costos", { precision: 10, scale: 2 }).notNull().default("0"),
+  // No todas las compras pagan impuestos de aduana — depende del valor
+  // declarado y de cuántas importaciones sin impuestos ya usaste este año
+  // (SUNAT permite un número limitado por persona, ver contarComprasDelAnio).
+  pagoImpuestos: boolean("pago_impuestos").notNull().default(false),
+  montoImpuestos: numeric("monto_impuestos", { precision: 10, scale: 2 }),
   costoTotal: numeric("costo_total", { precision: 10, scale: 2 }).notNull(),
   comprobanteUrl: text("comprobante_url"),
   notas: text("notas"),

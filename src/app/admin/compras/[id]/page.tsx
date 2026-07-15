@@ -8,6 +8,7 @@ import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { obtenerCompra, nombreProveedor } from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 import { EstadoCompraSelector } from "../estado-selector";
+import { ImpuestosEditor } from "./impuestos-editor";
 
 export const metadata = { title: "Admin — Detalle de compra" };
 
@@ -32,6 +33,12 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
               <p className="text-muted-foreground">Fecha de compra</p>
               <p>{new Date(compra.fechaCompra).toLocaleDateString("es-PE")}</p>
             </div>
+            {compra.fechaLlegadaAlmacen && (
+              <div>
+                <p className="text-muted-foreground">Llegó al almacén USA</p>
+                <p>{new Date(compra.fechaLlegadaAlmacen).toLocaleDateString("es-PE")}</p>
+              </div>
+            )}
             {compra.fechaRecibido && (
               <div>
                 <p className="text-muted-foreground">Fecha recibido</p>
@@ -115,6 +122,14 @@ export default async function DetalleCompraPage({ params }: { params: { id: stri
               <span>{formatoPEN(compra.otrosCostos)}</span>
             </div>
           </div>
+
+          <Separator />
+
+          <ImpuestosEditor
+            compraId={compra.id}
+            pagoImpuestos={compra.pagoImpuestos}
+            montoImpuestos={compra.montoImpuestos}
+          />
 
           <Separator />
 

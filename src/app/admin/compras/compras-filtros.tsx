@@ -18,6 +18,7 @@ const TODOS = "__todos__";
 
 export const ESTADO_COMPRA_ETIQUETA: Record<CompraAlmacenada["estado"], string> = {
   pedido: "Pedido",
+  en_almacen_usa: "En almacén USA",
   en_transito: "En tránsito",
   aduana: "Aduana",
   recibido: "Recibido",

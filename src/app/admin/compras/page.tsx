@@ -1,12 +1,18 @@
 import Link from "next/link";
-import { PackageSearch, Plus } from "lucide-react";
+import { AlertTriangle, PackageSearch, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PaginacionAdmin } from "@/components/admin/paginacion-admin";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
-import { listarCompras, nombreProveedor, type CompraAlmacenada } from "@/lib/compras/store";
+import {
+  listarCompras,
+  nombreProveedor,
+  contarComprasDelAnioSinImpuestos,
+  type CompraAlmacenada,
+} from "@/lib/compras/store";
 import { formatoPEN } from "@/lib/format";
 import { EstadoCompraSelector } from "./estado-selector";
 import { ComprasFiltros } from "./compras-filtros";
@@ -14,13 +20,20 @@ import { ComprasFiltros } from "./compras-filtros";
 export const metadata = { title: "Admin — Compras" };
 
 const POR_PAGINA = 15;
+// Envíos de entrega rápida sin impuestos permitidos por persona al año —
+// ajusta este número si la normativa de SUNAT cambia; esto solo te avisa,
+// no bloquea nada.
+const LIMITE_IMPORTACIONES_SIN_IMPUESTOS = 3;
 
 export default async function AdminComprasPage({
   searchParams,
 }: {
   searchParams: { q?: string; estado?: string; pagina?: string };
 }) {
-  const todas = await listarCompras();
+  const [todas, importacionesDelAnio] = await Promise.all([
+    listarCompras(),
+    contarComprasDelAnioSinImpuestos(),
+  ]);
   const q = searchParams.q?.trim().toLowerCase();
   const estado = searchParams.estado as CompraAlmacenada["estado"] | undefined;
 
@@ -65,6 +78,32 @@ export default async function AdminComprasPage({
         </Magnetic>
       </div>
 
+      {todas.length > 0 && (
+        <div
+          className={`mb-4 flex items-start gap-2.5 rounded-xl border p-3 text-xs ${
+            importacionesDelAnio >= LIMITE_IMPORTACIONES_SIN_IMPUESTOS
+              ? "border-amber-500/30 bg-amber-500/5 text-foreground/70"
+              : "border-border/60 bg-secondary/40 text-foreground/70"
+          }`}
+        >
+          <AlertTriangle
+            className={`mt-0.5 size-4 shrink-0 ${
+              importacionesDelAnio >= LIMITE_IMPORTACIONES_SIN_IMPUESTOS
+                ? "text-amber-500"
+                : "text-muted-foreground"
+            }`}
+          />
+          <span>
+            Llevas <strong>{importacionesDelAnio}</strong> de{" "}
+            <strong>{LIMITE_IMPORTACIONES_SIN_IMPUESTOS}</strong> importaciones sin impuestos
+            este año.{" "}
+            {importacionesDelAnio >= LIMITE_IMPORTACIONES_SIN_IMPUESTOS
+              ? "Las siguientes probablemente paguen impuestos o convenga espaciarlas para no llamar la atención de aduanas."
+              : "Es una referencia según lo que nos contaste — confirma el límite vigente con tu agente de aduana."}
+          </span>
+        </div>
+      )}
+
       {todas.length > 0 && <ComprasFiltros />}
 
       {todas.length === 0 ? (
@@ -89,6 +128,7 @@ export default async function AdminComprasPage({
                   <TableHead>Fecha</TableHead>
                   <TableHead>Productos</TableHead>
                   <TableHead>Costo total</TableHead>
+                  <TableHead>Impuestos</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Detalle</TableHead>
                 </TableRow>
@@ -111,6 +151,15 @@ export default async function AdminComprasPage({
                       {c.items.reduce((acc, i) => acc + i.cantidad, 0)} unid. ({c.items.length} línea/s)
                     </TableCell>
                     <TableCell className="font-semibold">{formatoPEN(c.costoTotal)}</TableCell>
+                    <TableCell>
+                      {c.pagoImpuestos ? (
+                        <Badge variant="outline" className="border-amber-500/30 bg-amber-500/10 text-amber-500">
+                          {formatoPEN(c.montoImpuestos ?? 0)}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <EstadoCompraSelector id={c.id} estado={c.estado} />
                     </TableCell>

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { compras, compraItems } from "@/db/schema";
 import { registrarIngresoPorCompra, adminCrearProducto } from "@/lib/mock/repo";
@@ -36,11 +36,17 @@ export type CompraAlmacenada = {
   numeroOrdenExterno?: string;
   estado: EstadoCompra;
   fechaCompra: string;
+  // Cuándo llegó al casillero/almacén de EE.UU. (antes de venir a Perú).
+  fechaLlegadaAlmacen?: string;
   fechaRecibido?: string;
   items: CompraItemAlmacenado[];
   subtotal: number;
   costoEnvioImportacion: number;
   otrosCostos: number;
+  // No todas las importaciones pagan impuestos de aduana — ver
+  // contarComprasDelAnioSinImpuestos (SUNAT limita cuántas van sin pagar).
+  pagoImpuestos: boolean;
+  montoImpuestos?: number;
   costoTotal: number;
   comprobanteUrl?: string;
   notas?: string;
@@ -73,11 +79,14 @@ async function aCompraAlmacenada(c: typeof compras.$inferSelect): Promise<Compra
     numeroOrdenExterno: c.numeroOrdenExterno ?? undefined,
     estado: c.estado,
     fechaCompra: c.fechaCompra.toISOString(),
+    fechaLlegadaAlmacen: c.fechaLlegadaAlmacen?.toISOString(),
     fechaRecibido: c.fechaRecibido?.toISOString(),
     items: itemsFilas.map(aCompraItemAlmacenado),
     subtotal: Number(c.subtotal),
     costoEnvioImportacion: Number(c.costoEnvioImportacion),
     otrosCostos: Number(c.otrosCostos),
+    pagoImpuestos: c.pagoImpuestos,
+    montoImpuestos: c.montoImpuestos != null ? Number(c.montoImpuestos) : undefined,
     costoTotal: Number(c.costoTotal),
     comprobanteUrl: c.comprobanteUrl ?? undefined,
     notas: c.notas ?? undefined,
@@ -105,6 +114,8 @@ export type CompraFormInput = {
   items: CompraItemAlmacenado[];
   costoEnvioImportacion: number;
   otrosCostos: number;
+  pagoImpuestos?: boolean;
+  montoImpuestos?: number;
   comprobanteUrl?: string;
   notas?: string;
   courierInternacional?: string;
@@ -113,7 +124,8 @@ export type CompraFormInput = {
 
 export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacenada> {
   const subtotal = input.items.reduce((acc, i) => acc + i.cantidad * i.costoUnitario, 0);
-  const costoTotal = subtotal + input.costoEnvioImportacion + input.otrosCostos;
+  const montoImpuestos = input.pagoImpuestos ? input.montoImpuestos ?? 0 : 0;
+  const costoTotal = subtotal + input.costoEnvioImportacion + input.otrosCostos + montoImpuestos;
 
   const [fila] = await db
     .insert(compras)
@@ -126,6 +138,8 @@ export async function crearCompra(input: CompraFormInput): Promise<CompraAlmacen
       subtotal: subtotal.toFixed(2),
       costoEnvioImportacion: input.costoEnvioImportacion.toFixed(2),
       otrosCostos: input.otrosCostos.toFixed(2),
+      pagoImpuestos: input.pagoImpuestos ?? false,
+      montoImpuestos: input.pagoImpuestos ? montoImpuestos.toFixed(2) : null,
       costoTotal: costoTotal.toFixed(2),
       comprobanteUrl: input.comprobanteUrl,
       notas: input.notas,
@@ -170,11 +184,18 @@ export async function actualizarEstadoCompra(id: string, estado: EstadoCompra) {
   const yaEstabaRecibida = compraFila.estado === "recibido";
   const cambios: Partial<typeof compras.$inferInsert> = { estado };
 
+  if (estado === "en_almacen_usa" && !compraFila.fechaLlegadaAlmacen) {
+    cambios.fechaLlegadaAlmacen = new Date();
+  }
+
   if (estado === "recibido" && !yaEstabaRecibida) {
     cambios.fechaRecibido = new Date();
 
     const itemsFilas = await db.select().from(compraItems).where(eq(compraItems.compraId, id));
-    const costoAdicionalTotal = Number(compraFila.costoEnvioImportacion) + Number(compraFila.otrosCostos);
+    const costoAdicionalTotal =
+      Number(compraFila.costoEnvioImportacion) +
+      Number(compraFila.otrosCostos) +
+      (compraFila.pagoImpuestos ? Number(compraFila.montoImpuestos ?? 0) : 0);
 
     // Si TODOS los ítems traen peso, el envío/aduana se reparte proporcional
     // al peso real de cada uno (más justo: un celular no debería cargar lo
@@ -225,6 +246,59 @@ export async function actualizarEstadoCompra(id: string, estado: EstadoCompra) {
 
   const [actualizada] = await db.update(compras).set(cambios).where(eq(compras.id, id)).returning();
   return aCompraAlmacenada(actualizada);
+}
+
+/** Para cargar el resultado de aduana una vez que ya se sabe (a veces se
+ * conoce recién cuando el forwarder despacha, no al momento de comprar).
+ * Si la compra ya estaba "recibida", esto NO recalcula retroactivamente el
+ * costoAdquisicion ya aplicado a los productos — mismo criterio que el
+ * resto del sistema, que usa el costo ACTUAL como aproximación y no lleva
+ * un histórico perfecto por compra. */
+export async function actualizarImpuestosCompra(
+  id: string,
+  input: { pagoImpuestos: boolean; montoImpuestos?: number },
+): Promise<CompraAlmacenada> {
+  const [compraFila] = await db.select().from(compras).where(eq(compras.id, id)).limit(1);
+  if (!compraFila) throw new Error("Compra no encontrada");
+
+  const montoImpuestos = input.pagoImpuestos ? input.montoImpuestos ?? 0 : 0;
+  const costoTotal =
+    Number(compraFila.subtotal) +
+    Number(compraFila.costoEnvioImportacion) +
+    Number(compraFila.otrosCostos) +
+    montoImpuestos;
+
+  const [actualizada] = await db
+    .update(compras)
+    .set({
+      pagoImpuestos: input.pagoImpuestos,
+      montoImpuestos: input.pagoImpuestos ? montoImpuestos.toFixed(2) : null,
+      costoTotal: costoTotal.toFixed(2),
+    })
+    .where(eq(compras.id, id))
+    .returning();
+  return aCompraAlmacenada(actualizada);
+}
+
+/** Cuántas compras (no canceladas) sin pago de impuestos llevas en el año
+ * — SUNAT solo permite un número limitado de envíos de entrega rápida sin
+ * impuestos por persona al año (el admin puede ajustar el límite de
+ * referencia en la UI; esto solo cuenta, no bloquea nada). */
+export async function contarComprasDelAnioSinImpuestos(anio = new Date().getFullYear()) {
+  const desde = new Date(anio, 0, 1);
+  const hasta = new Date(anio + 1, 0, 1);
+  const filas = await db
+    .select({ id: compras.id })
+    .from(compras)
+    .where(
+      and(
+        ne(compras.estado, "cancelado"),
+        eq(compras.pagoImpuestos, false),
+        gte(compras.fechaCompra, desde),
+        lt(compras.fechaCompra, hasta),
+      ),
+    );
+  return filas.length;
 }
 
 export function nombreProveedor(compra: Pick<CompraAlmacenada, "proveedor" | "proveedorNombre">) {

@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/select";
 import type { CompraAlmacenada } from "@/lib/compras/store";
 import { actualizarEstadoCompraAction } from "./actions";
+import { ESTADO_COMPRA_ETIQUETA } from "./compras-filtros";
 
 const estados: CompraAlmacenada["estado"][] = [
   "pedido",
+  "en_almacen_usa",
   "en_transito",
   "aduana",
   "recibido",
@@ -46,7 +48,7 @@ export function EstadoCompraSelector({ id, estado }: { id: string; estado: Compr
       <SelectContent>
         {estados.map((e) => (
           <SelectItem key={e} value={e}>
-            {e.replace("_", " ")}
+            {ESTADO_COMPRA_ETIQUETA[e]}
           </SelectItem>
         ))}
       </SelectContent>

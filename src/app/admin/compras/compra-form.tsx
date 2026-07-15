@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { formatoPEN } from "@/lib/format";
 import type { ProveedorCompra } from "@/lib/compras/store";
 import type { CategoriaAlmacenada } from "@/lib/mock/repo";
@@ -67,6 +68,8 @@ export function CompraForm({
   const [fechaCompra, setFechaCompra] = React.useState(new Date().toISOString().slice(0, 10));
   const [costoEnvioImportacion, setCostoEnvioImportacion] = React.useState("0");
   const [otrosCostos, setOtrosCostos] = React.useState("0");
+  const [pagoImpuestos, setPagoImpuestos] = React.useState(false);
+  const [montoImpuestos, setMontoImpuestos] = React.useState("0");
   const [courierInternacional, setCourierInternacional] = React.useState("");
   const [trackingInternacional, setTrackingInternacional] = React.useState("");
   const [comprobanteUrl, setComprobanteUrl] = React.useState("");
@@ -77,7 +80,11 @@ export function CompraForm({
     (acc, i) => acc + (Number(i.cantidad) || 0) * (Number(i.costoUnitario) || 0),
     0,
   );
-  const total = subtotal + (Number(costoEnvioImportacion) || 0) + (Number(otrosCostos) || 0);
+  const total =
+    subtotal +
+    (Number(costoEnvioImportacion) || 0) +
+    (Number(otrosCostos) || 0) +
+    (pagoImpuestos ? Number(montoImpuestos) || 0 : 0);
 
   function actualizarItem(index: number, cambios: Partial<ItemForm>) {
     setItems((prev) => prev.map((it, i) => (i === index ? { ...it, ...cambios } : it)));
@@ -115,6 +122,8 @@ export function CompraForm({
         })),
         costoEnvioImportacion: Number(costoEnvioImportacion) || 0,
         otrosCostos: Number(otrosCostos) || 0,
+        pagoImpuestos,
+        montoImpuestos: pagoImpuestos ? Number(montoImpuestos) || 0 : undefined,
         courierInternacional: courierInternacional || undefined,
         trackingInternacional: trackingInternacional || undefined,
         comprobanteUrl: comprobanteUrl || undefined,
@@ -366,7 +375,7 @@ export function CompraForm({
             />
           </div>
           <div>
-            <Label htmlFor="otrosCostos">Otros costos (aduana, comisiones...)</Label>
+            <Label htmlFor="otrosCostos">Otros costos (desaduanaje, comisiones...)</Label>
             <Input
               id="otrosCostos"
               type="number"
@@ -377,6 +386,34 @@ export function CompraForm({
               onChange={(e) => setOtrosCostos(e.target.value)}
             />
           </div>
+          <div className="sm:col-span-2 flex items-center gap-2">
+            <Checkbox
+              id="pagoImpuestos"
+              checked={pagoImpuestos}
+              onCheckedChange={(v) => setPagoImpuestos(Boolean(v))}
+            />
+            <Label htmlFor="pagoImpuestos" className="font-normal">
+              Esta importación pagó impuestos de aduana
+            </Label>
+          </div>
+          {pagoImpuestos && (
+            <div>
+              <Label htmlFor="montoImpuestos">Monto de impuestos (S/)</Label>
+              <Input
+                id="montoImpuestos"
+                type="number"
+                step="0.01"
+                min="0"
+                className="mt-1.5"
+                value={montoImpuestos}
+                onChange={(e) => setMontoImpuestos(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Si todavía no lo sabes con exactitud, puedes actualizarlo después desde el
+                detalle de la compra.
+              </p>
+            </div>
+          )}
           <div className="sm:col-span-2">
             <Label htmlFor="comprobanteUrl">Enlace al comprobante/factura (opcional)</Label>
             <Input

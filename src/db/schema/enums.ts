@@ -40,9 +40,12 @@ export const estadoReclamoEnum = pgEnum("estado_reclamo", [
 ]);
 
 // Compras a proveedores (Amazon u otros) para reabastecer el catálogo —
-// distinto de "pedidos" (ventas a clientes).
+// distinto de "pedidos" (ventas a clientes). "en_almacen_usa": llegó al
+// casillero/almacén de EE.UU. y espera ahí (consolidación) hasta que el
+// forwarder lo despacha a Perú — recién ahí cobra desaduanaje + peso.
 export const estadoCompraEnum = pgEnum("estado_compra", [
   "pedido",
+  "en_almacen_usa",
   "en_transito",
   "aduana",
   "recibido",
