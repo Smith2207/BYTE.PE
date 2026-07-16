@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
 } from "drizzle-orm/pg-core";
+import { videoEstadoEnum } from "./enums";
 
 export const categorias = pgTable("categorias", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -44,6 +45,11 @@ export const productos = pgTable("productos", {
   garantiaMeses: integer("garantia_meses").notNull().default(0),
   destacado: boolean("destacado").notNull().default(false),
   activo: boolean("activo").notNull().default(true),
+  // Video corto autogenerado (HyperFrames, servicio aparte en Railway) —
+  // ver services/video-render/. videoUrl queda null hasta que el render
+  // termine y suba el MP4 a Vercel Blob.
+  videoUrl: text("video_url"),
+  videoEstado: videoEstadoEnum("video_estado").notNull().default("sin_generar"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

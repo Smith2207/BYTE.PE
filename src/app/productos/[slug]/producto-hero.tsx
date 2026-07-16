@@ -86,6 +86,7 @@ export function ProductoHero({
             categoriaSlug={producto.categoria.slug}
             imagenes={producto.imagenes}
             nombre={producto.nombre}
+            videoUrl={producto.videoEstado === "listo" ? producto.videoUrl : null}
           />
         </div>
 

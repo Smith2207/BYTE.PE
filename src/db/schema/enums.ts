@@ -97,3 +97,13 @@ export type TipoEnvioCompra = (typeof tipoEnvioCompraEnum.enumValues)[number];
 export type TipoDevolucion = (typeof tipoDevolucionEnum.enumValues)[number];
 export type EstadoDevolucion = (typeof estadoDevolucionEnum.enumValues)[number];
 export type CategoriaGasto = (typeof categoriaGastoEnum.enumValues)[number];
+
+// Estado del video de producto autogenerado (HyperFrames, servicio aparte
+// en Railway) — "sin_generar" es el default para todo producto existente.
+export const videoEstadoEnum = pgEnum("video_estado", [
+  "sin_generar",
+  "generando",
+  "listo",
+  "error",
+]);
+export type VideoEstado = (typeof videoEstadoEnum.enumValues)[number];

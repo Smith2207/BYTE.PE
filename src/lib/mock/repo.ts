@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, ilike, inArray, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, productos, variantesProducto } from "@/db/schema";
+import type { VideoEstado } from "@/db/schema";
 
 /**
  * Repositorio de catálogo sobre Postgres (Neon) vía Drizzle. Reemplaza al
@@ -36,6 +37,8 @@ export type ProductoAlmacenado = {
   garantiaMeses: number;
   destacado: boolean;
   activo: boolean;
+  videoUrl: string | null;
+  videoEstado: VideoEstado;
 };
 
 export type VarianteAlmacenada = {
@@ -78,6 +81,10 @@ export type ProductoCatalogo = {
   // sin elegir una primero — la card del listado usa esto para decidir si
   // muestra el botón rápido de agregar o manda al detalle a elegir.
   tieneVariantes: boolean;
+  // Video corto autogenerado (HyperFrames) — null hasta que el render
+  // termine. Se muestra como alternativa a las fotos en la galería.
+  videoUrl: string | null;
+  videoEstado: VideoEstado;
 };
 
 export type VarianteCatalogo = {
@@ -124,6 +131,8 @@ function aProductoAlmacenado(p: typeof productos.$inferSelect): ProductoAlmacena
     garantiaMeses: p.garantiaMeses,
     destacado: p.destacado,
     activo: p.activo,
+    videoUrl: p.videoUrl,
+    videoEstado: p.videoEstado,
   };
 }
 
@@ -157,6 +166,8 @@ function aProductoCatalogo(
     destacado: p.destacado,
     createdAt: p.createdAt.toISOString(),
     tieneVariantes,
+    videoUrl: p.videoUrl,
+    videoEstado: p.videoEstado,
   };
 }
 
@@ -455,7 +466,10 @@ export async function adminObtenerProducto(id: string): Promise<ProductoAlmacena
   return p ? aProductoAlmacenado(p) : null;
 }
 
-export type ProductoFormInput = Omit<ProductoAlmacenado, "id" | "slug" | "activo"> & {
+export type ProductoFormInput = Omit<
+  ProductoAlmacenado,
+  "id" | "slug" | "activo" | "videoUrl" | "videoEstado"
+> & {
   slug?: string;
 };
 
@@ -518,6 +532,36 @@ export async function adminActualizarProducto(
 
 export async function adminEliminarProducto(id: string) {
   await db.delete(productos).where(eq(productos.id, id));
+}
+
+/** Dispara el estado "generando" apenas se manda el producto al servicio de
+ * render (services/video-render, en Railway) — antes de saber si el render
+ * va a funcionar. */
+export async function marcarVideoGenerando(id: string): Promise<void> {
+  await db
+    .update(productos)
+    .set({ videoEstado: "generando", updatedAt: new Date() })
+    .where(eq(productos.id, id));
+}
+
+/** Guarda el resultado que manda de vuelta el webhook del servicio de
+ * render: la URL del MP4 en Vercel Blob si salió bien, o vuelve a
+ * "sin_generar" si falló (para que el admin pueda reintentar). */
+export async function guardarResultadoVideo(
+  id: string,
+  resultado: { videoUrl: string } | { error: string },
+): Promise<void> {
+  if ("videoUrl" in resultado) {
+    await db
+      .update(productos)
+      .set({ videoEstado: "listo", videoUrl: resultado.videoUrl, updatedAt: new Date() })
+      .where(eq(productos.id, id));
+  } else {
+    await db
+      .update(productos)
+      .set({ videoEstado: "error", updatedAt: new Date() })
+      .where(eq(productos.id, id));
+  }
 }
 
 export async function adminListarCategorias(): Promise<CategoriaAlmacenada[]> {
