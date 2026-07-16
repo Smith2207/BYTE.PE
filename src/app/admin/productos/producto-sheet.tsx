@@ -69,7 +69,7 @@ export function ProductoSheet({
   const [videoUrl, setVideoUrl] = React.useState(producto?.videoUrl ?? null);
   const [generandoVideo, setGenerandoVideo] = React.useState(false);
 
-  // El render lo hace un servicio aparte (Railway) y avisa por webhook —
+  // El render lo hace un servicio aparte (Render) y avisa por webhook —
   // este componente no se entera solo, así que mientras esté "generando"
   // refresca la página server-side cada pocos segundos hasta ver el
   // resultado (o hasta que el admin cierre el sheet).

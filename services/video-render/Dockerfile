@@ -1,4 +1,4 @@
-# Servicio HTTP standalone para Railway — renderiza un video corto por
+# Servicio HTTP standalone para Render — renderiza un video corto por
 # producto con HyperFrames (heygen-com/hyperframes, OSS Apache-2.0) y avisa
 # a BYTE.PE por webhook cuando termina. Ver server.ts y el plan del repo
 # principal (services/video-render no es parte del deploy de Vercel).
@@ -8,7 +8,7 @@
 # (packages/cli/src/docker/Dockerfile.render en su repo) — no es una
 # receta inventada, es la que ellos mismos usan para renders en Docker.
 # Aun así, HyperFrames es un proyecto muy joven (~4 meses): tratar esto
-# como experimental hasta probarlo en Railway de verdad.
+# como experimental hasta probarlo en Render de verdad.
 
 FROM node:22-bookworm-slim
 

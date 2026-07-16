@@ -4,7 +4,7 @@ import { guardarResultadoVideo } from "@/lib/mock/repo";
 
 /**
  * Recibe el resultado del render de video de un producto desde
- * services/video-render (Railway) — ver ese servicio y
+ * services/video-render (Render) — ver ese servicio y
  * VIDEO_RENDER_SHARED_SECRET en .env.example. Mismo estilo que el webhook
  * de Mercado Pago: responde 200 salvo error de auth, para no generar
  * reintentos infinitos del lado del servicio de render.

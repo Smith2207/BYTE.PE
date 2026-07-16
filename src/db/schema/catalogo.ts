@@ -45,7 +45,7 @@ export const productos = pgTable("productos", {
   garantiaMeses: integer("garantia_meses").notNull().default(0),
   destacado: boolean("destacado").notNull().default(false),
   activo: boolean("activo").notNull().default(true),
-  // Video corto autogenerado (HyperFrames, servicio aparte en Railway) —
+  // Video corto autogenerado (HyperFrames, servicio aparte en Render) —
   // ver services/video-render/. videoUrl queda null hasta que el render
   // termine y suba el MP4 a Vercel Blob.
   videoUrl: text("video_url"),

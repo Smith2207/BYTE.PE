@@ -36,7 +36,7 @@ export async function eliminarProductoAction(id: string) {
 }
 
 /** Dispara el render de un video corto del producto en services/video-render
- * (Railway) — solo manda la señal y espera la confirmación de que el
+ * (Render) — solo manda la señal y espera la confirmación de que el
  * servicio la recibió (202); el render en sí es asíncrono y su resultado
  * llega después por /api/webhooks/video-producto. */
 export async function generarVideoProductoAction(id: string) {

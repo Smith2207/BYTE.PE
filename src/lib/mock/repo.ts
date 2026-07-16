@@ -535,7 +535,7 @@ export async function adminEliminarProducto(id: string) {
 }
 
 /** Dispara el estado "generando" apenas se manda el producto al servicio de
- * render (services/video-render, en Railway) — antes de saber si el render
+ * render (services/video-render, en Render) — antes de saber si el render
  * va a funcionar. */
 export async function marcarVideoGenerando(id: string): Promise<void> {
   await db

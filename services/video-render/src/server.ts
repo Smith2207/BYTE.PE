@@ -15,7 +15,7 @@ const SHARED_SECRET = process.env.VIDEO_RENDER_SHARED_SECRET;
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 
 // Falla rápido al arrancar si falta algo — mejor un crash claro en los logs
-// de Railway que aceptar pedidos que van a fallar silenciosamente después.
+// de Render que aceptar pedidos que van a fallar silenciosamente después.
 for (const [nombre, valor] of Object.entries({
   VIDEO_RENDER_SHARED_SECRET: SHARED_SECRET,
   WEBHOOK_URL: WEBHOOK_URL,

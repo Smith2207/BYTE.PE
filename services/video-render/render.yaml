@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: byte-pe-video-render
+    runtime: docker
+    plan: starter
+    rootDir: services/video-render
+    dockerfilePath: services/video-render/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: VIDEO_RENDER_SHARED_SECRET
+        sync: false
+      - key: WEBHOOK_URL
+        sync: false
+      - key: BLOB_READ_WRITE_TOKEN
+        sync: false
+      - key: PORT
+        value: "8080"

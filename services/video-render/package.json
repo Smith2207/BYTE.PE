@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "version": "1.0.0",
-  "description": "Servicio HTTP standalone (Railway) que renderiza un video corto por producto con HyperFrames — ver ../../src/app/api/webhooks/video-producto y el plan en la raíz del repo.",
+  "description": "Servicio HTTP standalone (Render) que renderiza un video corto por producto con HyperFrames — ver ../../src/app/api/webhooks/video-producto y el plan en la raíz del repo.",
   "scripts": {
     "start": "tsx src/server.ts",
     "dev": "tsx watch src/server.ts"
