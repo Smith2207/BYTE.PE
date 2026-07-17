@@ -51,7 +51,11 @@ export const facturacionSchema = z.object({
 export const checkoutSchema = z.object({
   direccion: direccionSchema,
   facturacion: facturacionSchema,
-  metodoPago: z.enum(["tarjeta", "yape", "plin", "transferencia", "contra_entrega"]),
+  metodoPago: z.enum(["tarjeta", "yape", "plin", "prex", "transferencia", "contra_entrega"]),
+  // El costo real se recalcula server-side a partir de esto — nunca se
+  // confía en un monto de envío mandado por el cliente.
+  courierId: z.string().min(1, "Selecciona un courier"),
+  comprobantePagoUrl: z.string().optional(),
   cuponCodigo: z.string().optional(),
 });
 

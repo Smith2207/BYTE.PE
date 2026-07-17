@@ -21,3 +21,26 @@ export const footerLegalLinks = [
   { nombre: "Política de Privacidad", href: "/privacidad" },
   { nombre: "Cambios y Devoluciones", href: "/cambios-y-devoluciones" },
 ];
+
+// Pago manual mientras no hay pasarela con RUC (Culqi, etc.) — se muestra
+// directo en el paso de "Método de pago" del checkout en vez de "te lo
+// enviaremos". El QR de Yape sirve también para Plin por la interoperabilidad
+// de billeteras digitales vigente en Perú desde 2023, así que un solo QR
+// cubre ambas apps.
+export const datosPago = {
+  yape: {
+    qr: "/pago/qr-yape.jpeg",
+    titular: "Branly Smith Paucar Arias",
+  },
+  prex: {
+    qr: "/pago/qr-prex.png",
+    titular: "Branly Smith Paucar Arias",
+  },
+  interbank: {
+    banco: "Interbank",
+    tipoCuenta: "Cuenta Simple Soles",
+    numeroCuenta: "8983378472115",
+    cci: "00389801337847211540",
+    titular: "BRANLY SMITH PAUCAR ARIAS",
+  },
+};

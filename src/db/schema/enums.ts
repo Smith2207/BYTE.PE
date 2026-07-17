@@ -23,6 +23,7 @@ export const metodoPagoEnum = pgEnum("metodo_pago", [
   "tarjeta",
   "yape",
   "plin",
+  "prex",
   "transferencia",
   "contra_entrega",
 ]);

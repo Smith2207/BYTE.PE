@@ -6,7 +6,7 @@ import { db } from "@/db";
 import { getCuponPorCodigo, incrementarUso } from "@/lib/cupones/store";
 import { validarCupon } from "@/lib/cupones/validar";
 import { decrementarStock, getProductoPorId } from "@/lib/mock/repo";
-import { getTarifaEnvioPorDepartamento } from "@/lib/mock/tarifas-envio";
+import { getCouriersConTarifaPorDepartamento, getTarifaCourierParaCheckout } from "@/lib/couriers/store";
 import { getMercadoPagoClient } from "@/lib/mercadopago/client";
 import {
   actualizarEstadoPedido,
@@ -47,6 +47,10 @@ export async function validarCuponAction(codigo: string, subtotal: number) {
   const cupon = await getCuponPorCodigo(codigo);
   const resultado = validarCupon(cupon, { subtotal });
   return resultado;
+}
+
+export async function obtenerCouriersPorDepartamentoAction(departamento: string) {
+  return getCouriersConTarifaPorDepartamento(departamento);
 }
 
 export type ItemCarritoServidor = {
@@ -94,8 +98,14 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
     envioGratis = resultado.envioGratis;
   }
 
-  const tarifa = getTarifaEnvioPorDepartamento(checkout.direccion.departamento);
-  const costoEnvio = envioGratis ? 0 : tarifa.costo;
+  const tarifaCourier = await getTarifaCourierParaCheckout(
+    checkout.courierId,
+    checkout.direccion.departamento,
+  );
+  if (!tarifaCourier) {
+    throw new Error("El courier elegido ya no está disponible para tu departamento.");
+  }
+  const costoEnvio = envioGratis ? 0 : tarifaCourier.costo;
 
   const total = Math.round((subtotal + costoEnvio - descuento) * 100) / 100;
   const { igv } = desglosarIGV(subtotal);
@@ -153,6 +163,8 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
         ruc: checkout.facturacion.ruc,
         razonSocial: checkout.facturacion.razonSocial,
         metodoPago: checkout.metodoPago,
+        courier: tarifaCourier.nombre,
+        comprobantePagoUrl: checkout.comprobantePagoUrl,
         createdAt: new Date().toISOString(),
       },
       tx,

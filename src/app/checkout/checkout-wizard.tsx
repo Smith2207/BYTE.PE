@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
-import { Check, Loader2, Search, Truck } from "lucide-react";
+import { Check, Copy, Loader2, Search, Truck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +28,14 @@ import { ELASTIC_EASE } from "@/lib/motion";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, formatoDireccion, desglosarIGV } from "@/lib/format";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
-import { getTarifaEnvioPorDepartamento } from "@/lib/mock/tarifas-envio";
 import { direccionSchema, documentoSchema } from "@/lib/validations/checkout";
+import { datosPago } from "@/lib/site-config";
+import type { OpcionCourierCheckout } from "@/lib/couriers/store";
 import {
   confirmarPedidoAction,
   confirmarPedidoConTarjetaAction,
   consultarDocumentoAction,
+  obtenerCouriersPorDepartamentoAction,
   validarCuponAction,
 } from "./actions";
 import { crearDireccionAction } from "@/app/cuenta/direcciones/actions";
@@ -53,6 +56,152 @@ type Facturacion = {
   ruc: string;
   razonSocial: string;
 };
+
+function copiar(valor: string, etiqueta: string) {
+  navigator.clipboard.writeText(valor);
+  toast.success(`${etiqueta} copiado`);
+}
+
+/** Fila con un dato de pago (cuenta, CCI, titular...) y botón para copiarlo —
+ * evita que el cliente tenga que transcribir números largos a mano. */
+function FilaDato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2">
+      <div className="min-w-0">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{etiqueta}</p>
+        <p className="truncate font-mono text-sm">{valor}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => copiar(valor, etiqueta)}
+        aria-label={`Copiar ${etiqueta}`}
+        className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+      >
+        <Copy className="size-4" />
+      </button>
+    </div>
+  );
+}
+
+/** QR de pago (Yape/Plin, Prex) — se muestra inline al elegir el método en
+ * vez de "te lo enviaremos", para que el cliente pague ahí mismo. */
+function QrDePago({ qr, titular, monto }: { qr: string; titular: string; monto: number }) {
+  return (
+    <div className="mt-4 flex flex-col items-center gap-3 rounded-lg border border-border/60 bg-muted/20 p-4 sm:flex-row sm:items-start">
+      <Image
+        src={qr}
+        alt={`QR de pago — ${titular}`}
+        width={160}
+        height={160}
+        className="rounded-lg border border-border/60"
+      />
+      <div className="w-full space-y-2 text-center sm:text-left">
+        <p className="text-sm">
+          Escanea y paga <span className="font-semibold">{formatoPEN(monto)}</span>
+        </p>
+        <FilaDato etiqueta="Titular" valor={titular} />
+      </div>
+    </div>
+  );
+}
+
+/** Datos de la cuenta Interbank — mismo patrón que QrDePago pero sin imagen. */
+function DatosBancarios({ monto }: { monto: number }) {
+  return (
+    <div className="mt-4 space-y-2 rounded-lg border border-border/60 bg-muted/20 p-4">
+      <p className="text-sm">
+        Transfiere <span className="font-semibold">{formatoPEN(monto)}</span> a:
+      </p>
+      <FilaDato etiqueta="Banco" valor={datosPago.interbank.banco} />
+      <FilaDato etiqueta={datosPago.interbank.tipoCuenta} valor={datosPago.interbank.numeroCuenta} />
+      <FilaDato etiqueta="CCI (otros bancos)" valor={datosPago.interbank.cci} />
+      <FilaDato etiqueta="Titular" valor={datosPago.interbank.titular} />
+    </div>
+  );
+}
+
+/** Sube la captura/foto del pago a /api/pedidos/comprobante — obligatorio
+ * para confirmar el pedido con Yape/Prex/transferencia, ver `requiereComprobante`
+ * en CheckoutWizard. Un solo widget compartido entre los tres métodos en vez
+ * de repetirlo, porque el estado subido no depende de cuál esté elegido. */
+function SubirComprobante({
+  url,
+  subiendo,
+  onSubiendoChange,
+  onUrlChange,
+}: {
+  url: string | null;
+  subiendo: boolean;
+  onSubiendoChange: (v: boolean) => void;
+  onUrlChange: (url: string | null) => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    if (!archivo) return;
+    onSubiendoChange(true);
+    try {
+      const formData = new FormData();
+      formData.append("archivo", archivo);
+      const res = await fetch("/api/pedidos/comprobante", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se pudo subir el comprobante");
+      onUrlChange(data.url);
+      toast.success("Comprobante subido");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo subir el comprobante");
+    } finally {
+      onSubiendoChange(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div className="mt-4 space-y-2 rounded-lg border border-border/60 bg-muted/20 p-4">
+      <p className="text-sm font-semibold">Comprobante de pago</p>
+      {url ? (
+        <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate text-sm text-primary underline underline-offset-2"
+          >
+            Ver comprobante subido
+          </a>
+          <button
+            type="button"
+            onClick={() => onUrlChange(null)}
+            className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Quitar
+          </button>
+        </div>
+      ) : (
+        <>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,.pdf"
+            onChange={onFileChange}
+            disabled={subiendo}
+            className="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-foreground hover:file:bg-secondary/80"
+          />
+          {subiendo && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Loader2 className="size-3 animate-spin" /> Subiendo…
+            </p>
+          )}
+        </>
+      )}
+      <p className="text-xs text-muted-foreground">
+        Foto o captura de pantalla del pago (JPG, PNG o PDF, máx. 10MB). Obligatorio para
+        confirmar el pedido con este método.
+      </p>
+    </div>
+  );
+}
 
 export function CheckoutWizard({
   usuario,
@@ -89,7 +238,7 @@ export function CheckoutWizard({
   });
   const [guardarEnPerfil, setGuardarEnPerfil] = React.useState(false);
   const [metodoPago, setMetodoPago] =
-    React.useState<"tarjeta" | "yape" | "plin" | "transferencia" | "contra_entrega">(
+    React.useState<"tarjeta" | "yape" | "plin" | "prex" | "transferencia" | "contra_entrega">(
       "yape",
     );
   const [cuponInput, setCuponInput] = React.useState("");
@@ -97,6 +246,37 @@ export function CheckoutWizard({
   const [validandoCupon, setValidandoCupon] = React.useState(false);
   const [errores, setErrores] = React.useState<Record<string, string>>({});
   const [buscandoDocumento, setBuscandoDocumento] = React.useState(false);
+  const [couriers, setCouriers] = React.useState<OpcionCourierCheckout[]>([]);
+  const [courierId, setCourierId] = React.useState<string | null>(null);
+  const [cargandoCouriers, setCargandoCouriers] = React.useState(false);
+  const [comprobanteUrl, setComprobanteUrl] = React.useState<string | null>(null);
+  const [subiendoComprobante, setSubiendoComprobante] = React.useState(false);
+
+  // El costo real de envío se recalcula server-side según el courier
+  // elegido — esto solo trae las opciones disponibles para mostrarlas.
+  React.useEffect(() => {
+    if (!direccion.departamento) {
+      setCouriers([]);
+      setCourierId(null);
+      return;
+    }
+    let cancelado = false;
+    setCargandoCouriers(true);
+    obtenerCouriersPorDepartamentoAction(direccion.departamento)
+      .then((opciones) => {
+        if (cancelado) return;
+        setCouriers(opciones);
+        setCourierId((actual) =>
+          actual && opciones.some((o) => o.courierId === actual) ? actual : (opciones[0]?.courierId ?? null),
+        );
+      })
+      .finally(() => {
+        if (!cancelado) setCargandoCouriers(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [direccion.departamento]);
 
   const provinciasDisponibles = React.useMemo(
     () => (direccion.departamento ? getProvinciasDe(direccion.departamento) : []),
@@ -113,10 +293,9 @@ export function CheckoutWizard({
   // Los precios ya incluyen IGV — se descompone para mostrarlo, nunca se
   // suma aparte (el total nunca debe subir respecto al precio mostrado).
   const { igv } = desglosarIGV(subtotal);
-  const tarifa = direccion.departamento
-    ? getTarifaEnvioPorDepartamento(direccion.departamento)
-    : null;
-  const costoEnvio = cuponAplicado?.ok && cuponAplicado.envioGratis ? 0 : (tarifa?.costo ?? 0);
+  const courierSeleccionado = couriers.find((c) => c.courierId === courierId) ?? null;
+  const costoEnvio =
+    cuponAplicado?.ok && cuponAplicado.envioGratis ? 0 : (courierSeleccionado?.costo ?? 0);
   const descuento = cuponAplicado?.ok ? cuponAplicado.descuento : 0;
   const total = Math.max(0, subtotal + costoEnvio - descuento);
 
@@ -161,9 +340,19 @@ export function CheckoutWizard({
     return Object.keys(nuevosErrores).length === 0;
   }
 
+  const requiereComprobante = metodoPago === "yape" || metodoPago === "prex" || metodoPago === "transferencia";
+
   function siguiente() {
     if (paso === 0 && !validarPasoEnvio()) {
       toast.error("Revisa los campos marcados");
+      return;
+    }
+    if (paso === 1 && !courierId) {
+      toast.error("Elige un courier para continuar");
+      return;
+    }
+    if (paso === 3 && requiereComprobante && !comprobanteUrl) {
+      toast.error("Sube tu comprobante de pago para continuar");
       return;
     }
     setPaso((p) => Math.min(PASOS.length - 1, p + 1));
@@ -233,6 +422,14 @@ export function CheckoutWizard({
   }
 
   async function confirmarPedido() {
+    if (!courierId) {
+      toast.error("Elige un courier de envío antes de confirmar");
+      return;
+    }
+    if (requiereComprobante && !comprobanteUrl) {
+      toast.error("Sube tu comprobante de pago antes de confirmar");
+      return;
+    }
     setEnviando(true);
     try {
       const payload = {
@@ -244,6 +441,8 @@ export function CheckoutWizard({
             razonSocial: facturacion.requiereFactura ? facturacion.razonSocial : undefined,
           },
           metodoPago,
+          courierId,
+          comprobantePagoUrl: comprobanteUrl ?? undefined,
           cuponCodigo: cuponAplicado?.ok ? cuponInput : undefined,
         },
         items: items.map((i) => ({
@@ -581,26 +780,40 @@ export function CheckoutWizard({
           <Card>
             <CardContent className="pt-6">
               <h3 className="mb-4 text-sm font-semibold">Método de envío</h3>
-              {tarifa ? (
-                <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-secondary/40 p-4">
-                  <Truck className="mt-0.5 size-5 text-primary" />
-                  <div>
-                    <p className="text-sm font-semibold">
-                      Envío a {direccion.departamento} — {formatoPEN(tarifa.costo)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Llega en {tarifa.diasEstimadosMin}-{tarifa.diasEstimadosMax} días hábiles.
-                    </p>
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      El courier (Olva, Shalom u otro según cobertura) se asigna al despachar tu
-                      pedido y recibirás el número de tracking por correo.
-                    </p>
-                  </div>
-                </div>
-              ) : (
+              {!direccion.departamento ? (
                 <p className="text-sm text-muted-foreground">
-                  Selecciona un departamento en el paso anterior para calcular el envío.
+                  Selecciona un departamento en el paso anterior para ver couriers disponibles.
                 </p>
+              ) : cargandoCouriers ? (
+                <p className="text-sm text-muted-foreground">Buscando couriers disponibles…</p>
+              ) : couriers.length === 0 ? (
+                <p className="text-sm text-destructive">
+                  No hay couriers disponibles para {direccion.departamento} por ahora.
+                </p>
+              ) : (
+                <RadioGroup value={courierId ?? undefined} onValueChange={setCourierId}>
+                  {couriers.map((c) => (
+                    <label
+                      key={c.courierId}
+                      className="flex items-center gap-3 rounded-xl border border-border/60 p-4"
+                    >
+                      <RadioGroupItem value={c.courierId} />
+                      <Truck className="size-5 text-primary" />
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold">
+                          {c.nombre} — {formatoPEN(c.costo)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Llega en {c.diasEstimadosMin}-{c.diasEstimadosMax} días hábiles a{" "}
+                          {direccion.departamento}.
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    Envío por agencia — recibirás el número de tracking por correo.
+                  </p>
+                </RadioGroup>
               )}
             </CardContent>
           </Card>
@@ -644,24 +857,49 @@ export function CheckoutWizard({
             <CardContent className="pt-6">
               <h3 className="mb-4 text-sm font-semibold">Método de pago</h3>
               <RadioGroup value={metodoPago} onValueChange={(v) => setMetodoPago(v as typeof metodoPago)}>
-                <label className="flex items-center gap-3 rounded-xl border border-border/60 p-4">
-                  <RadioGroupItem value="yape" />
-                  <div>
-                    <p className="text-sm font-semibold">Yape / Plin</p>
-                    <p className="text-xs text-muted-foreground">
-                      Escanea el QR que te enviaremos y sube tu comprobante para validación manual.
-                    </p>
-                  </div>
-                </label>
-                <label className="flex items-center gap-3 rounded-xl border border-border/60 p-4">
-                  <RadioGroupItem value="transferencia" />
-                  <div>
-                    <p className="text-sm font-semibold">Transferencia / depósito bancario</p>
-                    <p className="text-xs text-muted-foreground">
-                      Te enviamos los datos de la cuenta; el pedido se confirma al verificar el pago.
-                    </p>
-                  </div>
-                </label>
+                <div className="rounded-xl border border-border/60 p-4">
+                  <label className="flex items-center gap-3">
+                    <RadioGroupItem value="yape" />
+                    <div>
+                      <p className="text-sm font-semibold">Yape / Plin</p>
+                      <p className="text-xs text-muted-foreground">
+                        Escanea el QR y sube tu comprobante para validación manual.
+                      </p>
+                    </div>
+                  </label>
+                  {metodoPago === "yape" && (
+                    <QrDePago qr={datosPago.yape.qr} titular={datosPago.yape.titular} monto={total} />
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-border/60 p-4">
+                  <label className="flex items-center gap-3">
+                    <RadioGroupItem value="prex" />
+                    <div>
+                      <p className="text-sm font-semibold">Prex</p>
+                      <p className="text-xs text-muted-foreground">
+                        Escanea el QR y sube tu comprobante para validación manual.
+                      </p>
+                    </div>
+                  </label>
+                  {metodoPago === "prex" && (
+                    <QrDePago qr={datosPago.prex.qr} titular={datosPago.prex.titular} monto={total} />
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-border/60 p-4">
+                  <label className="flex items-center gap-3">
+                    <RadioGroupItem value="transferencia" />
+                    <div>
+                      <p className="text-sm font-semibold">Transferencia / depósito bancario</p>
+                      <p className="text-xs text-muted-foreground">
+                        Transfiere y sube tu comprobante; el pedido se confirma al verificar el pago.
+                      </p>
+                    </div>
+                  </label>
+                  {metodoPago === "transferencia" && <DatosBancarios monto={total} />}
+                </div>
+
                 <label className="flex items-center gap-3 rounded-xl border border-border/60 p-4">
                   <RadioGroupItem value="contra_entrega" />
                   <div>
@@ -681,6 +919,15 @@ export function CheckoutWizard({
                   </div>
                 </label>
               </RadioGroup>
+
+              {requiereComprobante && (
+                <SubirComprobante
+                  url={comprobanteUrl}
+                  subiendo={subiendoComprobante}
+                  onSubiendoChange={setSubiendoComprobante}
+                  onUrlChange={setComprobanteUrl}
+                />
+              )}
             </CardContent>
           </Card>
         )}
@@ -703,11 +950,13 @@ export function CheckoutWizard({
                   <span className="text-foreground">Pago:</span>{" "}
                   {metodoPago === "yape"
                     ? "Yape / Plin"
-                    : metodoPago === "transferencia"
-                      ? "Transferencia bancaria"
-                      : metodoPago === "contra_entrega"
-                        ? "Contra entrega"
-                        : "Tarjeta"}
+                    : metodoPago === "prex"
+                      ? "Prex"
+                      : metodoPago === "transferencia"
+                        ? "Transferencia bancaria"
+                        : metodoPago === "contra_entrega"
+                          ? "Contra entrega"
+                          : "Tarjeta"}
                 </p>
               </div>
               <Magnetic strength={0.15} className="mt-2 block">
@@ -763,7 +1012,9 @@ export function CheckoutWizard({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Envío</span>
-                <span className="font-mono">{tarifa ? formatoPEN(costoEnvio) : "Por calcular"}</span>
+                <span className="font-mono">
+                  {courierSeleccionado ? formatoPEN(costoEnvio) : "Por calcular"}
+                </span>
               </div>
               {descuento > 0 && (
                 <div className="flex justify-between text-primary">

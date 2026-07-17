@@ -49,6 +49,9 @@ export type PedidoMock = {
   metodoPago: string;
   courier?: string;
   numeroTracking?: string;
+  // Captura de pantalla/foto del pago (Yape, Prex, transferencia) para
+  // verificación manual — ver comprobante-uploader del checkout.
+  comprobantePagoUrl?: string;
   createdAt: string;
 };
 
@@ -60,7 +63,7 @@ export async function generarNumeroPedido(tx: Ejecutor = db) {
   return `ORD-${new Date().getFullYear()}${correlativo}`;
 }
 
-type GuardarPedidoInput = Omit<PedidoMock, "id" | "estado" | "courier" | "numeroTracking"> & {
+type GuardarPedidoInput = Omit<PedidoMock, "id" | "estado" | "numeroTracking"> & {
   estado?: PedidoMock["estado"];
 };
 
@@ -110,6 +113,8 @@ export async function guardarPedido(pedido: GuardarPedidoInput, tx: Ejecutor = d
       ruc: pedido.ruc,
       razonSocial: pedido.razonSocial,
       metodoPago: pedido.metodoPago as MetodoPago,
+      courier: pedido.courier ?? null,
+      comprobantePagoUrl: pedido.comprobantePagoUrl ?? null,
     })
     .returning({ id: pedidos.id });
 
@@ -180,6 +185,7 @@ async function aPedidoMock(
     metodoPago: fila.metodoPago ?? "",
     courier: fila.courier ?? undefined,
     numeroTracking: fila.numeroTracking ?? undefined,
+    comprobantePagoUrl: fila.comprobantePagoUrl ?? undefined,
     createdAt: fila.createdAt.toISOString(),
   };
 }

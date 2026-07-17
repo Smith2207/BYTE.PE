@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Receipt } from "lucide-react";
+import { FileImage, Receipt } from "lucide-react";
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +118,13 @@ export function PedidoFila({ pedido }: { pedido: PedidoMock }) {
         </Badge>
       </TableCell>
       <TableCell className="text-right">
+        {pedido.comprobantePagoUrl && (
+          <Button variant="ghost" size="icon" asChild aria-label="Ver comprobante de pago">
+            <Link href={pedido.comprobantePagoUrl} target="_blank">
+              <FileImage className="size-4" />
+            </Link>
+          </Button>
+        )}
         <Button variant="ghost" size="icon" asChild aria-label="Ver boleta">
           <Link href={`/pedido/${pedido.numeroPedido}/boleta`} target="_blank">
             <Receipt className="size-4" />
