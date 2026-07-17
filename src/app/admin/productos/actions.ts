@@ -7,9 +7,6 @@ import {
   adminEliminarProducto,
   adminListarProductos,
   adminListarCategorias,
-  adminObtenerProducto,
-  marcarVideoGenerando,
-  guardarResultadoVideo,
   type ProductoFormInput,
 } from "@/lib/mock/repo";
 import { filaImportacionSchema, type FilaImportacion } from "@/lib/validations/importar-productos";
@@ -33,62 +30,6 @@ export async function eliminarProductoAction(id: string) {
   await adminEliminarProducto(id);
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
-}
-
-/** Dispara el render de un video corto del producto en services/video-render
- * (Render) — solo manda la señal y espera la confirmación de que el
- * servicio la recibió (202); el render en sí es asíncrono y su resultado
- * llega después por /api/webhooks/video-producto. */
-export async function generarVideoProductoAction(id: string) {
-  const producto = await adminObtenerProducto(id);
-  if (!producto) throw new Error("Producto no encontrado");
-
-  await marcarVideoGenerando(id);
-  revalidatePath("/admin/productos");
-
-  const serviceUrl = process.env.VIDEO_RENDER_SERVICE_URL;
-  const secret = process.env.VIDEO_RENDER_SHARED_SECRET;
-  if (!serviceUrl || !secret) {
-    await guardarResultadoVideo(id, {
-      error: "Falta configurar VIDEO_RENDER_SERVICE_URL/VIDEO_RENDER_SHARED_SECRET",
-    });
-    revalidatePath("/admin/productos");
-    throw new Error("El servicio de video aún no está configurado (ver .env.example).");
-  }
-
-  try {
-    const res = await fetch(`${serviceUrl.replace(/\/$/, "")}/render`, {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-render-secret": secret },
-      body: JSON.stringify({
-        productoId: producto.id,
-        nombre: producto.nombre,
-        marca: producto.marca,
-        precio: producto.precioOferta ?? producto.precio,
-        imagenes: producto.imagenes,
-        specsJson: producto.specsJson,
-      }),
-    });
-    if (!res.ok) {
-      const detalle = await res.text().catch(() => "");
-      await guardarResultadoVideo(id, {
-        error: `El servicio de render respondió ${res.status}${detalle ? `: ${detalle}` : ""}`,
-      });
-      revalidatePath("/admin/productos");
-      throw new Error("El servicio de render rechazó la solicitud.");
-    }
-  } catch (err) {
-    if (err instanceof Error && err.message === "El servicio de render rechazó la solicitud.") {
-      throw err;
-    }
-    await guardarResultadoVideo(id, {
-      error: err instanceof Error ? err.message : "No se pudo contactar el servicio de render",
-    });
-    revalidatePath("/admin/productos");
-    throw new Error("No se pudo contactar el servicio de render.");
-  }
-
-  revalidatePath("/admin/productos");
 }
 
 export async function importarProductosAction(filas: FilaImportacion[]) {

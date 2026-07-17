@@ -3,10 +3,9 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Plus, Video, X } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +28,7 @@ import {
 import { ImagenUploader } from "@/components/admin/imagen-uploader";
 import type { CategoriaAlmacenada, ProductoAlmacenado, ProductoFormInput } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
-import { crearProductoAction, actualizarProductoAction, generarVideoProductoAction } from "./actions";
+import { crearProductoAction, actualizarProductoAction } from "./actions";
 
 export function ProductoSheet({
   categorias,
@@ -64,41 +63,6 @@ export function ProductoSheet({
     destacado: producto?.destacado ?? false,
   });
   const [imagenes, setImagenes] = React.useState<string[]>(producto?.imagenes ?? []);
-
-  const [videoEstado, setVideoEstado] = React.useState(producto?.videoEstado ?? "sin_generar");
-  const [videoUrl, setVideoUrl] = React.useState(producto?.videoUrl ?? null);
-  const [generandoVideo, setGenerandoVideo] = React.useState(false);
-
-  // El render lo hace un servicio aparte (Render) y avisa por webhook —
-  // este componente no se entera solo, así que mientras esté "generando"
-  // refresca la página server-side cada pocos segundos hasta ver el
-  // resultado (o hasta que el admin cierre el sheet).
-  React.useEffect(() => {
-    setVideoEstado(producto?.videoEstado ?? "sin_generar");
-    setVideoUrl(producto?.videoUrl ?? null);
-  }, [producto?.videoEstado, producto?.videoUrl]);
-
-  React.useEffect(() => {
-    if (!open || videoEstado !== "generando") return;
-    const intervalo = setInterval(() => router.refresh(), 5000);
-    return () => clearInterval(intervalo);
-  }, [open, videoEstado, router]);
-
-  async function onGenerarVideo() {
-    if (!producto) return;
-    setGenerandoVideo(true);
-    try {
-      await generarVideoProductoAction(producto.id);
-      setVideoEstado("generando");
-      toast.success("Generando video…", { description: "Puede tardar unos minutos, es experimental." });
-      router.refresh();
-    } catch (err) {
-      setVideoEstado("error");
-      toast.error(err instanceof Error ? err.message : "No se pudo iniciar el render");
-    } finally {
-      setGenerandoVideo(false);
-    }
-  }
 
   const margen = React.useMemo(() => {
     const precioVenta = Number(form.precioOferta || form.precio);
@@ -363,55 +327,6 @@ export function ProductoSheet({
               ))}
             </div>
           </section>
-
-          {producto && (
-            <section className="space-y-3 rounded-xl border border-border/60 p-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Video de producto
-                </h3>
-                {videoEstado === "generando" && <Badge variant="secondary">Generando…</Badge>}
-                {videoEstado === "listo" && <Badge className="bg-primary text-primary-foreground">Listo</Badge>}
-                {videoEstado === "error" && <Badge variant="destructive">Error</Badge>}
-              </div>
-
-              {videoUrl && videoEstado === "listo" && (
-                // eslint-disable-next-line jsx-a11y/media-has-caption
-                <video controls src={videoUrl} className="w-full rounded-lg bg-black" />
-              )}
-
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={generandoVideo || videoEstado === "generando"}
-                onClick={onGenerarVideo}
-              >
-                {generandoVideo || videoEstado === "generando" ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Video className="size-4" />
-                )}
-                {videoEstado === "listo"
-                  ? "Regenerar video"
-                  : videoEstado === "error"
-                    ? "Reintentar"
-                    : videoEstado === "generando"
-                      ? "Generando…"
-                      : "Generar video"}
-              </Button>
-
-              {videoEstado === "error" && (
-                <p className="text-xs text-destructive">
-                  El último intento falló. Puedes reintentar.
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Video corto generado automáticamente a partir de las fotos y datos del producto
-                (función experimental, puede tardar varios minutos o fallar).
-              </p>
-            </section>
-          )}
 
           <SheetFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
