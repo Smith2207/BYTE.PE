@@ -1,5 +1,17 @@
 import type { Config } from "tailwindcss";
 
+// Los tokens de color (--primary, --accent, etc. en globals.css) guardan un
+// oklch(...) completo, no los canales sueltos — por eso el patrón clásico de
+// shadcn (`hsl(var(--x) / <alpha-value>)`) no sirve acá: generaría
+// `oklch(oklch(...) / 0.5)`, inválido. Sintaxis de color relativo de CSS
+// (`oklch(from <color> l c h / A)`) sí puede tomar ese oklch(...) completo y
+// solo pisarle el alfa — así `bg-primary/40` genera CSS real en vez de
+// desaparecer en silencio (bug documentado en el README, antes "parcheado"
+// caso por caso en vez de arreglado en la raíz).
+function conAlfa(variable: string) {
+  return `oklch(from var(${variable}) l c h / <alpha-value>)`;
+}
+
 const config: Config = {
     darkMode: ["class"],
     content: [
@@ -10,55 +22,55 @@ const config: Config = {
   theme: {
   	extend: {
   		colors: {
-  			background: 'var(--background)',
-  			foreground: 'var(--foreground)',
+  			background: conAlfa('--background'),
+  			foreground: conAlfa('--foreground'),
   			card: {
-  				DEFAULT: 'var(--card)',
-  				foreground: 'var(--card-foreground)'
+  				DEFAULT: conAlfa('--card'),
+  				foreground: conAlfa('--card-foreground')
   			},
   			popover: {
-  				DEFAULT: 'var(--popover)',
-  				foreground: 'var(--popover-foreground)'
+  				DEFAULT: conAlfa('--popover'),
+  				foreground: conAlfa('--popover-foreground')
   			},
   			primary: {
-  				DEFAULT: 'var(--primary)',
-  				foreground: 'var(--primary-foreground)'
+  				DEFAULT: conAlfa('--primary'),
+  				foreground: conAlfa('--primary-foreground')
   			},
   			secondary: {
-  				DEFAULT: 'var(--secondary)',
-  				foreground: 'var(--secondary-foreground)'
+  				DEFAULT: conAlfa('--secondary'),
+  				foreground: conAlfa('--secondary-foreground')
   			},
   			muted: {
-  				DEFAULT: 'var(--muted)',
-  				foreground: 'var(--muted-foreground)'
+  				DEFAULT: conAlfa('--muted'),
+  				foreground: conAlfa('--muted-foreground')
   			},
   			accent: {
-  				DEFAULT: 'var(--accent)',
-  				foreground: 'var(--accent-foreground)'
+  				DEFAULT: conAlfa('--accent'),
+  				foreground: conAlfa('--accent-foreground')
   			},
   			destructive: {
-  				DEFAULT: 'var(--destructive)',
-  				foreground: 'var(--destructive-foreground)'
+  				DEFAULT: conAlfa('--destructive'),
+  				foreground: conAlfa('--destructive-foreground')
   			},
-  			border: 'var(--border)',
-  			input: 'var(--input)',
-  			ring: 'var(--ring)',
+  			border: conAlfa('--border'),
+  			input: conAlfa('--input'),
+  			ring: conAlfa('--ring'),
   			chart: {
-  				'1': 'var(--chart-1)',
-  				'2': 'var(--chart-2)',
-  				'3': 'var(--chart-3)',
-  				'4': 'var(--chart-4)',
-  				'5': 'var(--chart-5)'
+  				'1': conAlfa('--chart-1'),
+  				'2': conAlfa('--chart-2'),
+  				'3': conAlfa('--chart-3'),
+  				'4': conAlfa('--chart-4'),
+  				'5': conAlfa('--chart-5')
   			},
   			sidebar: {
-  				DEFAULT: 'var(--sidebar)',
-  				foreground: 'var(--sidebar-foreground)',
-  				primary: 'var(--sidebar-primary)',
-  				'primary-foreground': 'var(--sidebar-primary-foreground)',
-  				accent: 'var(--sidebar-accent)',
-  				'accent-foreground': 'var(--sidebar-accent-foreground)',
-  				border: 'var(--sidebar-border)',
-  				ring: 'var(--sidebar-ring)'
+  				DEFAULT: conAlfa('--sidebar'),
+  				foreground: conAlfa('--sidebar-foreground'),
+  				primary: conAlfa('--sidebar-primary'),
+  				'primary-foreground': conAlfa('--sidebar-primary-foreground'),
+  				accent: conAlfa('--sidebar-accent'),
+  				'accent-foreground': conAlfa('--sidebar-accent-foreground'),
+  				border: conAlfa('--sidebar-border'),
+  				ring: conAlfa('--sidebar-ring')
   			}
   		},
   		fontFamily: {

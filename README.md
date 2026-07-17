@@ -60,6 +60,7 @@ Ecommerce completo de electrónica y tecnología para Perú — laptops, celular
 - **Transacciones reales**: la confirmación de un pedido (verificar stock → descontar → aplicar cupón → guardar pedido) corre dentro de una única `db.transaction()` — si algo falla, nada queda a medias.
 - **Todas las integraciones externas degradan con gracia**: si falta un token (Mercado Pago, apiperu.dev, Google, Blob, email), la función correspondiente devuelve `null`/no hace nada — nunca bloquea una compra. En producción, la única excepción es la subida de imágenes sin `BLOB_READ_WRITE_TOKEN`, que falla explícito en vez de escribir a un filesystem efímero que se perdería igual.
 - **NextAuth con config dividida**: `auth.config.ts` (Edge-safe, sin providers, usado por el middleware) + `auth.ts` (config completa con Credentials/Google, runtime Node.js).
+- **Opacidad de color con tokens `oklch()`**: los tokens de tema (`--primary`, `--accent`, etc. en `globals.css`) guardan un `oklch(...)` completo, no canales sueltos, así que el patrón clásico de shadcn (`hsl(var(--x) / <alpha-value>)`) no aplica. `tailwind.config.ts` envuelve cada token con sintaxis de color relativo de CSS (`oklch(from var(--x) l c h / <alpha-value>)`), que sí puede tomar ese `oklch(...)` completo y solo pisarle el alfa — así clases como `bg-primary/10` generan CSS real en vez de desaparecer en silencio.
 
 ---
 
@@ -97,6 +98,4 @@ Usuario admin de prueba tras el seed: `admin@ecomers.test` / `admin123`.
 ## Pendiente
 
 - **Mercado Pago**: código listo, falta configurar credenciales reales
-- SEO de lanzamiento (sitemap.xml, robots.txt, datos estructurados JSON-LD)
 - Tests automatizados (hoy la verificación es manual en cada cambio)
-- Auditoría completa de un bug ya corregido parcialmente: algunas clases `bg-x/NN` de Tailwind no generan CSS cuando el color base es una variable `oklch()` — se corrigió en los 3 casos detectados (navbar, wishlist, uploader admin), pero podría haber más sin detectar
