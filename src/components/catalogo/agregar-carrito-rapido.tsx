@@ -3,6 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 import { Check, ShoppingBag } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart/cart-context";
@@ -49,16 +50,43 @@ export function AgregarCarritoRapido({
   }
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
       aria-label="Agregar al carrito"
+      whileTap={{ scale: 0.85 }}
+      animate={agregado ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+      transition={{ duration: 0.35, ease: "easeOut" }}
       className={cn(
-        "flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:bg-primary/90 active:scale-95",
+        "flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90",
         className,
       )}
     >
-      {agregado ? <Check className="size-4" /> : <ShoppingBag className="size-4" />}
-    </button>
+      <AnimatePresence mode="wait" initial={false}>
+        {agregado ? (
+          <motion.span
+            key="check"
+            initial={{ scale: 0.4, rotate: -90, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0.4, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "backOut" }}
+            className="flex"
+          >
+            <Check className="size-4" />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="bag"
+            initial={{ scale: 0.4, rotate: 90, opacity: 0 }}
+            animate={{ scale: 1, rotate: 0, opacity: 1 }}
+            exit={{ scale: 0.4, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "backOut" }}
+            className="flex"
+          >
+            <ShoppingBag className="size-4" />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   );
 }

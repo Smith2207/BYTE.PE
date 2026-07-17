@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, Search, Heart, ShoppingBag, User, LogOut, Package, Shield } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -188,11 +189,22 @@ export function Navbar() {
           <Button variant="ghost" size="icon" asChild className="relative" aria-label="Carrito">
             <Link href="/carrito">
               <ShoppingBag className="size-5" />
-              {cantidadTotal > 0 && (
-                <Badge className="absolute -right-1 -top-1 h-[18px] min-w-[18px] justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
-                  {cantidadTotal}
-                </Badge>
-              )}
+              <AnimatePresence>
+                {cantidadTotal > 0 && (
+                  <motion.div
+                    key={cantidadTotal}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                    className="absolute -right-1 -top-1"
+                  >
+                    <Badge className="h-[18px] min-w-[18px] justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
+                      {cantidadTotal}
+                    </Badge>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </Link>
           </Button>
         </div>
