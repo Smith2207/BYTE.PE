@@ -14,9 +14,13 @@ import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
  */
 
 export function HeroScene({
-  videoSrc = "/videos/hero-tech",
+  videoSrc,
 }: {
-  /** Sin extensión — se prueban .webm y .mp4 en ese orden (ver <source>). */
+  /** Sin extensión — se prueban .webm y .mp4 en ese orden (ver <source>).
+   * Sin valor por defecto a propósito: todavía no hay ningún archivo real
+   * en /public/videos, y pedir uno que no existe solo generaba 404 en
+   * cada carga sin ningún beneficio visual (el fallback de abajo ya se ve
+   * bien solo). Pasa la ruta acá el día que subas un video real. */
   videoSrc?: string;
 }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -52,23 +56,26 @@ export function HeroScene({
           <GlowOrb />
         </div>
 
-        {/* Video real, opcional — si no existe ningún archivo todavía en
-            /public/videos, se queda en opacity-0 y no rompe nada
-            visualmente (queda el glow de fondo). */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          onCanPlay={() => setVideoReady(true)}
-          onError={() => setVideoReady(false)}
-          className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ${
-            videoReady ? "opacity-100" : "opacity-0"
-          }`}
-        >
-          <source src={`${videoSrc}.webm`} type="video/webm" />
-          <source src={`${videoSrc}.mp4`} type="video/mp4" />
-        </video>
+        {/* Video real, opcional — solo se pide/renderiza si hay una ruta
+            real (ver comentario del prop). Mientras tanto, el glow de
+            fondo de arriba es el fallback y no queda ningún <video> roto
+            pidiendo un archivo inexistente. */}
+        {videoSrc && (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            onCanPlay={() => setVideoReady(true)}
+            onError={() => setVideoReady(false)}
+            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-1000 ${
+              videoReady ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            <source src={`${videoSrc}.webm`} type="video/webm" />
+            <source src={`${videoSrc}.mp4`} type="video/mp4" />
+          </video>
+        )}
       </div>
 
       {/* Overlays para sostener la legibilidad del texto sobre el video
