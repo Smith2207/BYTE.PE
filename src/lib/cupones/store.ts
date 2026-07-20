@@ -57,7 +57,19 @@ export async function adminListarCupones(): Promise<CuponAlmacenado[]> {
 
 export type CuponFormInput = Omit<CuponSeed, "codigo"> & { codigo: string };
 
+/** Nunca confiar solo en la validación del navegador — un cupón de
+ * "500% de descuento" por un typo dejaría precios negativos en checkout. */
+function validarCuponInput(input: Partial<CuponFormInput>) {
+  if (input.tipo === "porcentaje" && input.valor != null && input.valor > 100) {
+    throw new Error("Un descuento por porcentaje no puede ser mayor a 100%.");
+  }
+  if (input.fechaInicio && input.fechaFin && input.fechaFin < input.fechaInicio) {
+    throw new Error('"Vigente hasta" no puede ser antes que "Vigente desde".');
+  }
+}
+
 export async function adminCrearCupon(input: CuponFormInput): Promise<CuponAlmacenado> {
+  validarCuponInput(input);
   const existente = await getCuponPorCodigo(input.codigo);
   if (existente) throw new Error("Ya existe un cupón con ese código.");
 
@@ -80,6 +92,7 @@ export async function adminActualizarCupon(
   id: string,
   input: Partial<CuponFormInput & { activo: boolean }>,
 ): Promise<CuponAlmacenado> {
+  validarCuponInput(input);
   const cambios: Partial<typeof cupones.$inferInsert> = {};
   if (input.codigo !== undefined) cambios.codigo = input.codigo.toUpperCase();
   if (input.tipo !== undefined) cambios.tipo = input.tipo;

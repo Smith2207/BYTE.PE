@@ -30,6 +30,15 @@ function aInputDate(iso: string) {
   return iso.slice(0, 10);
 }
 
+/** Vigencia por 90 días — antes era un string fijo ("2026-12-31") que se
+ * iba a volver una fecha vencida/absurda apenas pasara esa fecha, sin que
+ * nadie lo notara. */
+function fechaFinPorDefecto() {
+  const fecha = new Date();
+  fecha.setDate(fecha.getDate() + 90);
+  return fecha.toISOString().slice(0, 10);
+}
+
 export function CuponDialog({ cupon }: { cupon?: CuponAlmacenado }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -40,12 +49,22 @@ export function CuponDialog({ cupon }: { cupon?: CuponAlmacenado }) {
     valor: cupon?.valor?.toString() ?? "10",
     montoMinimoCompra: cupon?.montoMinimoCompra?.toString() ?? "0",
     fechaInicio: cupon ? aInputDate(cupon.fechaInicio) : new Date().toISOString().slice(0, 10),
-    fechaFin: cupon ? aInputDate(cupon.fechaFin) : "2026-12-31",
+    fechaFin: cupon ? aInputDate(cupon.fechaFin) : fechaFinPorDefecto(),
     usosMaximos: cupon?.usosMaximos?.toString() ?? "",
   });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (form.tipo === "porcentaje" && Number(form.valor) > 100) {
+      toast.error("Un descuento por porcentaje no puede ser mayor a 100%");
+      return;
+    }
+    if (form.fechaFin < form.fechaInicio) {
+      toast.error('"Vigente hasta" no puede ser antes que "Vigente desde"');
+      return;
+    }
+
     setGuardando(true);
     try {
       const input = {
@@ -125,6 +144,7 @@ export function CuponDialog({ cupon }: { cupon?: CuponAlmacenado }) {
                   type="number"
                   step="0.01"
                   min="0"
+                  max={form.tipo === "porcentaje" ? 100 : undefined}
                   className="mt-1.5"
                   value={form.valor}
                   onChange={(e) => setForm((f) => ({ ...f, valor: e.target.value }))}

@@ -11,19 +11,29 @@ import { formatoPEN } from "@/lib/format";
 import { EliminarProductoBoton } from "./eliminar-boton";
 import { ProductoSheet } from "./producto-sheet";
 import { ImportarProductosDialog } from "./importar-dialog";
+import { ProductosFiltros } from "./productos-filtros";
+import { StockCell } from "./stock-cell";
 
 export const metadata = { title: "Admin — Productos" };
 
 export default async function AdminProductosPage({
   searchParams,
 }: {
-  searchParams: { q?: string; editar?: string };
+  searchParams: { q?: string; editar?: string; categoria?: string; estado?: string };
 }) {
   const [todos, categorias] = await Promise.all([adminListarProductos(), adminListarCategorias()]);
   const q = searchParams.q?.trim().toLowerCase();
-  const productos = q
+  let productos = q
     ? todos.filter((p) => p.nombre.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q))
     : todos;
+  if (searchParams.categoria) {
+    productos = productos.filter((p) => p.categoriaId === searchParams.categoria);
+  }
+  if (searchParams.estado === "activo") {
+    productos = productos.filter((p) => p.activo);
+  } else if (searchParams.estado === "inactivo") {
+    productos = productos.filter((p) => !p.activo);
+  }
 
   return (
     <div>
@@ -51,11 +61,15 @@ export default async function AdminProductosPage({
         </div>
       </div>
 
+      <ProductosFiltros categorias={categorias} />
+
       {productos.length === 0 ? (
         <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-20 text-center">
           <PackageSearch className="size-10 text-muted-foreground" />
-          <p className="mt-4 text-sm font-semibold">Sin resultados para &quot;{q}&quot;</p>
-          <p className="mt-1 text-sm text-muted-foreground">Prueba con otro nombre o SKU.</p>
+          <p className="mt-4 text-sm font-semibold">Sin resultados</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Prueba con otro nombre, SKU, categoría o estado.
+          </p>
           <Link href="/admin/productos" className="mt-4 text-sm text-primary hover:underline">
             Ver todos los productos
           </Link>
@@ -83,9 +97,7 @@ export default async function AdminProductosPage({
                 <TableCell className="text-muted-foreground">{p.categoriaNombre}</TableCell>
                 <TableCell>{formatoPEN(p.precioOferta ?? p.precio)}</TableCell>
                 <TableCell>
-                  <Badge variant={p.stock === 0 ? "destructive" : p.stock <= 5 ? "secondary" : "outline"}>
-                    {p.stock}
-                  </Badge>
+                  <StockCell productoId={p.id} stock={p.stock} />
                 </TableCell>
                 <TableCell>
                   <Badge variant={p.activo ? "outline" : "secondary"}>
