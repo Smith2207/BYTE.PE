@@ -7,6 +7,7 @@ import { AgregarCarritoRapido } from "@/components/catalogo/agregar-carrito-rapi
 import { Badge } from "@/components/ui/badge";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
+import { siteConfig } from "@/lib/site-config";
 
 export function ProductoCard({
   producto,
@@ -36,6 +37,11 @@ export function ProductoCard({
               <Badge className="bg-primary text-primary-foreground">Más vendido</Badge>
             )}
             {etiqueta === "nuevo" && <Badge variant="outline">Nuevo</Badge>}
+            {siteConfig.envioGratis && (
+              <Badge variant="outline" className="border-emerald-500/40 text-emerald-600">
+                Envío gratis
+              </Badge>
+            )}
             {!producto.disponible && <Badge variant="secondary">Agotado</Badge>}
           </div>
           <WishlistBoton productoId={producto.id} className="absolute right-3 top-3" />

@@ -5,6 +5,10 @@ export const siteConfig = {
   // Placeholder — reemplazar por el número real de atención antes de producción.
   whatsapp: "51999999999",
   email: "hola@byte.pe",
+  // Interruptor único: envío gratis en todo el sitio, sin monto mínimo. La
+  // tienda absorbe el costo real del courier (ver costoEnvioReal en pedidos)
+  // — apagar esto vuelve a cobrar la tarifa real de cada courier.
+  envioGratis: true,
 };
 
 export const categoriasNav = [

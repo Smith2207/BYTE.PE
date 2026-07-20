@@ -352,6 +352,24 @@ export async function getProductoPorId(productoId: string): Promise<ProductoCata
   return aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? ""), conVariantes.has(p.id));
 }
 
+/** Hidrata una lista de IDs a ProductoCatalogo preservando el orden
+ * recibido (ej. un ranking por co-ocurrencia) — inArray no garantiza
+ * orden, así que se reordena a mano tras la consulta. Solo productos
+ * activos. */
+export async function getProductosPorIds(ids: string[]): Promise<ProductoCatalogo[]> {
+  if (ids.length === 0) return [];
+  const categoriasPorId = await mapaCategorias();
+  const filas = await db
+    .select()
+    .from(productos)
+    .where(and(inArray(productos.id, ids), eq(productos.activo, true)));
+  const conVariantes = await mapaTieneVariantes(filas.map((p) => p.id));
+  const porId = new Map(
+    filas.map((p) => [p.id, aProductoCatalogo(p, categoriasPorId.get(p.categoriaId ?? ""), conVariantes.has(p.id))]),
+  );
+  return ids.map((id) => porId.get(id)).filter((p): p is ProductoCatalogo => p != null);
+}
+
 /**
  * Descuenta stock al confirmar un pedido. El llamador (checkout/actions.ts)
  * la ejecuta dentro de una transacción junto con la creación del pedido.

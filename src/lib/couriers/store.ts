@@ -100,6 +100,31 @@ export async function crearTarifaCourier(input: {
   return aTarifaAlmacenada(fila);
 }
 
+/** Misma tarifa/tiempo aplicada a varios departamentos de una sola vez —
+ * evita repetir el formulario de a uno para cubrir todo el país. */
+export async function crearTarifasCourierLote(input: {
+  courierId: string;
+  departamentos: string[];
+  costo: number;
+  diasEstimadosMin: number;
+  diasEstimadosMax: number;
+}): Promise<TarifaCourierAlmacenada[]> {
+  if (input.departamentos.length === 0) return [];
+  const filas = await db
+    .insert(tarifasCourier)
+    .values(
+      input.departamentos.map((departamento) => ({
+        courierId: input.courierId,
+        departamento,
+        costo: input.costo.toFixed(2),
+        diasEstimadosMin: input.diasEstimadosMin,
+        diasEstimadosMax: input.diasEstimadosMax,
+      })),
+    )
+    .returning();
+  return filas.map(aTarifaAlmacenada);
+}
+
 export async function eliminarTarifaCourier(id: string) {
   await db.delete(tarifasCourier).where(eq(tarifasCourier.id, id));
 }

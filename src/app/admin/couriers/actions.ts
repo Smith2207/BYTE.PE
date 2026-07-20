@@ -7,6 +7,7 @@ import {
   actualizarCourier,
   eliminarCourier,
   crearTarifaCourier,
+  crearTarifasCourierLote,
   eliminarTarifaCourier,
 } from "@/lib/couriers/store";
 
@@ -54,4 +55,19 @@ export async function crearTarifaCourierAction(input: z.infer<typeof tarifaSchem
 export async function eliminarTarifaCourierAction(id: string) {
   await eliminarTarifaCourier(id);
   revalidatePath("/admin/couriers");
+}
+
+const tarifaLoteSchema = z.object({
+  courierId: z.string().min(1),
+  departamentos: z.array(z.string().min(1)).min(1, "Selecciona al menos un departamento"),
+  costo: z.number().nonnegative("Ingresa un costo válido"),
+  diasEstimadosMin: z.number().int().min(0),
+  diasEstimadosMax: z.number().int().min(0),
+});
+
+export async function crearTarifasCourierLoteAction(input: z.infer<typeof tarifaLoteSchema>) {
+  const datos = tarifaLoteSchema.parse(input);
+  const tarifas = await crearTarifasCourierLote(datos);
+  revalidatePath("/admin/couriers");
+  return tarifas;
 }

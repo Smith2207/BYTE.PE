@@ -7,7 +7,13 @@ import { ProductoCard } from "@/components/catalogo/producto-card";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 
-export function RelacionadosCarousel({ productos }: { productos: ProductoCatalogo[] }) {
+export function RelacionadosCarousel({
+  productos,
+  titulo = "También te puede interesar",
+}: {
+  productos: ProductoCatalogo[];
+  titulo?: string;
+}) {
   const scrollerRef = React.useRef<HTMLDivElement>(null);
 
   function scrollBy(delta: number) {
@@ -17,7 +23,7 @@ export function RelacionadosCarousel({ productos }: { productos: ProductoCatalog
   return (
     <div className="mt-16">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-semibold">También te puede interesar</h2>
+        <h2 className="font-display text-xl font-semibold">{titulo}</h2>
         <div className="hidden gap-2 sm:flex">
           <button
             type="button"

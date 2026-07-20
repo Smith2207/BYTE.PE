@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { cerrarCarritoAction, sincronizarCarritoAction } from "@/app/carrito/actions";
 
 export type CartItem = {
   productoId: string;
@@ -111,9 +112,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "hydrate", items });
   }, []);
 
+  // Solo empieza a sincronizar con BD desde el primer momento en que el
+  // carrito tiene algo — evita crear una fila vacía + cookie de sesión
+  // para cada visitante que nunca agrega nada. Una vez que sincronizó al
+  // menos una vez, sigue sincronizando también los vaciados (para que el
+  // recordatorio de carrito abandonado no dispare sobre items que el
+  // usuario ya quitó).
+  const yaSincronizoAlgunaVez = React.useRef(false);
+
   React.useEffect(() => {
     if (!state.hidratado) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
+
+    if (state.items.length === 0 && !yaSincronizoAlgunaVez.current) return;
+    yaSincronizoAlgunaVez.current = true;
+
+    const timeout = setTimeout(() => {
+      sincronizarCarritoAction(
+        state.items.map((i) => ({
+          productoId: i.productoId,
+          varianteId: i.varianteId,
+          cantidad: i.cantidad,
+        })),
+      ).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timeout);
   }, [state.items, state.hidratado]);
 
   const value = React.useMemo<CartContextValue>(() => {
@@ -127,7 +150,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       quitarItem: (productoId, varianteId) => dispatch({ type: "remove", productoId, varianteId }),
       actualizarCantidad: (productoId, varianteId, cantidad) =>
         dispatch({ type: "setCantidad", productoId, varianteId, cantidad }),
-      vaciarCarrito: () => dispatch({ type: "clear" }),
+      vaciarCarrito: () => {
+        dispatch({ type: "clear" });
+        cerrarCarritoAction().catch(() => {});
+      },
     };
   }, [state.items]);
 

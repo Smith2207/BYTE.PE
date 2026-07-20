@@ -181,6 +181,76 @@ export function plantillaSolicitudDevolucionActualizada(input: {
   return envoltorio(contenido);
 }
 
+export function plantillaAvisoStockDisponible(producto: { nombre: string; slug: string }) {
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">¡Ya volvió el stock!</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      <strong style="color:#e5e5e5;">${producto.nombre}</strong>, que nos pediste que te avisáramos, ya
+      está disponible.
+    </p>
+    <a href="${BASE_URL}/productos/${producto.slug}"
+       style="display:inline-block;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
+      Ver producto
+    </a>`;
+  return envoltorio(contenido);
+}
+
+export function plantillaBajadaPrecioWishlist(
+  producto: { nombre: string; slug: string },
+  precioAnterior: number,
+  precioActual: number,
+) {
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">Bajó de precio</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      <strong style="color:#e5e5e5;">${producto.nombre}</strong>, que tienes en tu lista de deseos, ahora
+      cuesta <strong style="color:#ffffff;">${formatoPEN(precioActual)}</strong>
+      <span style="text-decoration:line-through;color:#6b6b6b;margin-left:6px;">${formatoPEN(precioAnterior)}</span>.
+    </p>
+    <a href="${BASE_URL}/productos/${producto.slug}"
+       style="display:inline-block;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
+      Ver producto
+    </a>`;
+  return envoltorio(contenido);
+}
+
+export function plantillaCarritoAbandonado(input: {
+  nombre: string;
+  items: { nombre: string; cantidad: number; precioUnitario: number }[];
+  subtotal: number;
+}) {
+  const filas = input.items
+    .map(
+      (item) => `
+    <tr>
+      <td style="padding:8px 0;color:#e5e5e5;font-size:14px;">${item.cantidad}x ${item.nombre}</td>
+      <td style="padding:8px 0;color:#e5e5e5;font-size:14px;text-align:right;white-space:nowrap;">
+        ${formatoPEN(item.precioUnitario * item.cantidad)}
+      </td>
+    </tr>`,
+    )
+    .join("");
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">Dejaste algo en tu carrito</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      Hola ${input.nombre.split(" ")[0]}, estos productos siguen esperándote en tu carrito de ${siteConfig.nombre}.
+    </p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:8px;">
+      ${filas}
+    </table>
+    <div style="border-top:1px solid #2a2a2a;padding-top:12px;margin-top:8px;">
+      <table style="width:100%;"><tr>
+        <td style="color:#ffffff;font-weight:700;">Subtotal</td>
+        <td style="text-align:right;color:#ffffff;font-weight:700;">${formatoPEN(input.subtotal)}</td>
+      </tr></table>
+    </div>
+    <a href="${BASE_URL}/carrito"
+       style="display:inline-block;margin-top:20px;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
+      Volver a mi carrito
+    </a>`;
+  return envoltorio(contenido);
+}
+
 export function plantillaRecuperarContrasena(nombre: string, token: string) {
   const resetUrl = `${BASE_URL}/restablecer-contrasena/${token}`;
   const contenido = `

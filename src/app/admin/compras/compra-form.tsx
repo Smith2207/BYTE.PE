@@ -19,6 +19,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ImagenUploader } from "@/components/admin/imagen-uploader";
 import { ComprobanteUploader } from "@/components/admin/comprobante-uploader";
 import { COURIERS_INTERNACIONALES, COURIERS_NACIONALES } from "@/lib/tracking/carriers";
@@ -174,6 +175,15 @@ export function CompraForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="envio">Envío</TabsTrigger>
+          <TabsTrigger value="productos">Productos ({items.length})</TabsTrigger>
+          <TabsTrigger value="costos">Costos y cierre</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="space-y-6">
       <Card>
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
           <div>
@@ -250,7 +260,14 @@ export function CompraForm({
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
 
+        <TabsContent value="envio" className="space-y-6">
+      {tipoEnvio === "local" && (
+        <p className="text-sm text-muted-foreground">
+          Compra local — no hay tramo de envío que configurar.
+        </p>
+      )}
       {tipoEnvio === "almacen_usa" && (
         <Card>
           <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
@@ -327,7 +344,9 @@ export function CompraForm({
           </CardContent>
         </Card>
       )}
+        </TabsContent>
 
+        <TabsContent value="productos" className="space-y-6">
       <Card>
         <CardContent className="pt-6">
           <div className="mb-3 flex items-center justify-between">
@@ -463,7 +482,9 @@ export function CompraForm({
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
 
+        <TabsContent value="costos" className="space-y-6">
       <Card>
         <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
           <div>
@@ -544,6 +565,8 @@ export function CompraForm({
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={() => router.push("/admin/compras")}>

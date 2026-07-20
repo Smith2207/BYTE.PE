@@ -1,4 +1,4 @@
-import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { usuarios } from "./usuarios";
 import { productos, variantesProducto } from "./catalogo";
 
@@ -9,6 +9,9 @@ export const carritos = pgTable("carritos", {
   sessionId: text("session_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  // Evita reenviar el correo de "carrito abandonado" más de una vez por
+  // período de inactividad; se resetea a false en cada sync con actividad real.
+  recordatorioEnviado: boolean("recordatorio_enviado").notNull().default(false),
 });
 
 export const carritoItems = pgTable("carrito_items", {

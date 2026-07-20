@@ -78,10 +78,14 @@ export default async function AdminDashboardPage() {
     ingresosPorProductos > 0 ? Math.round((margenBruto / ingresosPorProductos) * 100) : 0;
 
   // Utilidad neta = margen bruto (ya sin IGV ni costo de mercadería) menos
-  // los gastos operativos (alquiler, marketing, sueldos...) — todo a nivel
-  // histórico total, igual que el resto de tarjetas de esta sección.
+  // los gastos operativos (alquiler, marketing, sueldos...) y menos el
+  // costo de envío que la tienda absorbió (costoEnvioReal) — con envío
+  // gratis global, ya no es cierto que "el envío cubre el costo del
+  // courier", así que hay que restarlo explícitamente o la utilidad
+  // quedaría inflada.
   const gastosOperativosTotales = gastos.reduce((acc, g) => acc + g.monto, 0);
-  const utilidadNeta = margenBruto - gastosOperativosTotales;
+  const costoEnvioAbsorbido = pedidosValidos.reduce((acc, p) => acc + (p.costoEnvioReal ?? 0), 0);
+  const utilidadNeta = margenBruto - gastosOperativosTotales - costoEnvioAbsorbido;
 
   const conteoVentasPorProducto = new Map<string, number>();
   for (const pedido of pedidos) {
@@ -246,7 +250,8 @@ export default async function AdminDashboardPage() {
                 <p className="text-xs text-muted-foreground">Utilidad neta estimada</p>
                 <p className="text-lg font-bold">{formatoPEN(utilidadNeta)}</p>
                 <p className="text-[11px] text-muted-foreground">
-                  Margen bruto − {formatoPEN(gastosOperativosTotales)} en gastos ·{" "}
+                  Margen bruto − {formatoPEN(gastosOperativosTotales)} en gastos −{" "}
+                  {formatoPEN(costoEnvioAbsorbido)} en envío gratis absorbido ·{" "}
                   <Link href="/admin/gastos" className="text-primary hover:underline">
                     Ver gastos
                   </Link>

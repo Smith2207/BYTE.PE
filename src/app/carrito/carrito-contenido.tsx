@@ -13,6 +13,7 @@ import { TextScramble } from "@/components/fx/text-scramble";
 import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, desglosarIGV } from "@/lib/format";
 import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
+import { siteConfig } from "@/lib/site-config";
 
 export function CarritoContenido() {
   const { items, subtotal, actualizarCantidad, quitarItem } = useCart();
@@ -135,16 +136,20 @@ export function CarritoContenido() {
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Envío</span>
-                <span>Se calcula en el checkout</span>
+                <span className={siteConfig.envioGratis ? "font-medium text-emerald-600" : ""}>
+                  {siteConfig.envioGratis ? "Gratis" : "Se calcula en el checkout"}
+                </span>
               </div>
             </div>
             <Separator />
             <div className="flex justify-between text-base font-bold">
-              <span>Total estimado</span>
+              <span>{siteConfig.envioGratis ? "Total" : "Total estimado"}</span>
               <TextScramble value={formatoPEN(subtotal)} />
             </div>
             <p className="text-xs text-muted-foreground">
-              Precio final — sin cargos ocultos. Solo falta sumar el envío.
+              {siteConfig.envioGratis
+                ? "Precio final — sin cargos ocultos ni costo de envío."
+                : "Precio final — sin cargos ocultos. Solo falta sumar el envío."}
             </p>
             <Magnetic className="block">
               <Button size="lg" className="w-full rounded-full" asChild>

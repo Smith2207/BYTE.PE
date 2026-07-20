@@ -1,0 +1,6 @@
+{
+  "crons": [
+    { "path": "/api/cron/notificaciones-producto", "schedule": "0 13 * * *" },
+    { "path": "/api/cron/carrito-abandonado", "schedule": "0 15 * * *" }
+  ]
+}

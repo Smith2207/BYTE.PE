@@ -1,4 +1,5 @@
 import { and, desc, eq, gte, lt, ne, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { pedidos, pedidoItems, direcciones, cupones } from "@/db/schema";
 import type { TipoDocumento, MetodoPago } from "@/db/schema/enums";
@@ -29,6 +30,9 @@ export type PedidoMock = {
   igv: number;
   descuento: number;
   costoEnvio: number;
+  // Costo real de la tarifa de courier, se cobre o no al cliente (ver
+  // siteConfig.envioGratis). Nulo en pedidos previos a este campo.
+  costoEnvioReal?: number | null;
   total: number;
   cuponCodigo?: string;
   direccion: {
@@ -101,6 +105,7 @@ export async function guardarPedido(pedido: GuardarPedidoInput, tx: Ejecutor = d
       igv: pedido.igv.toFixed(2),
       descuento: pedido.descuento.toFixed(2),
       costoEnvio: pedido.costoEnvio.toFixed(2),
+      costoEnvioReal: pedido.costoEnvioReal != null ? pedido.costoEnvioReal.toFixed(2) : null,
       total: pedido.total.toFixed(2),
       cuponId,
       direccionEnvioId: direccionFila.id,
@@ -165,6 +170,7 @@ async function aPedidoMock(
     igv: Number(fila.igv),
     descuento: Number(fila.descuento),
     costoEnvio: Number(fila.costoEnvio),
+    costoEnvioReal: fila.costoEnvioReal != null ? Number(fila.costoEnvioReal) : null,
     total: Number(fila.total),
     cuponCodigo: cuponFila[0]?.codigo,
     direccion: {
@@ -232,6 +238,30 @@ export async function getProductoIdsMasVendidos(limit = 4): Promise<string[]> {
     .where(ne(pedidos.estado, "cancelado"))
     .groupBy(pedidoItems.productoId)
     .orderBy(desc(sql`sum(${pedidoItems.cantidad})`))
+    .limit(limit);
+  return filas.map((f) => f.productoId).filter((id): id is string => id != null);
+}
+
+/** IDs de productos que más frecuentemente se compraron en el mismo
+ * pedido que `productoId` (self-join sobre pedidoItems), ordenados por
+ * cantidad de pedidos distintos que los emparejan — para la sección
+ * "Comprados juntos" en la página de producto. */
+export async function getProductoIdsCompradosJuntos(productoId: string, limit = 4): Promise<string[]> {
+  const pi2 = alias(pedidoItems, "pi2");
+  const filas = await db
+    .select({
+      productoId: pi2.productoId,
+      coocurrencias: sql<number>`count(distinct ${pedidoItems.pedidoId})::int`,
+    })
+    .from(pedidoItems)
+    .innerJoin(
+      pi2,
+      and(eq(pedidoItems.pedidoId, pi2.pedidoId), ne(pi2.productoId, pedidoItems.productoId)),
+    )
+    .innerJoin(pedidos, eq(pedidoItems.pedidoId, pedidos.id))
+    .where(and(eq(pedidoItems.productoId, productoId), ne(pedidos.estado, "cancelado")))
+    .groupBy(pi2.productoId)
+    .orderBy(desc(sql`count(distinct ${pedidoItems.pedidoId})`))
     .limit(limit);
   return filas.map((f) => f.productoId).filter((id): id is string => id != null);
 }

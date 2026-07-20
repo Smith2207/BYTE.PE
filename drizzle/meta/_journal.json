@@ -8,6 +8,13 @@
       "when": 1783978879251,
       "tag": "0000_late_leo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784410278518,
+      "tag": "0001_lethal_tarantula",
+      "breakpoints": true
     }
   ]
 }

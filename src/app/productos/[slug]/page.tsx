@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
-import { getProductoBySlug } from "@/lib/mock/repo";
+import { getProductoBySlug, getProductosPorIds } from "@/lib/mock/repo";
+import { getProductoIdsCompradosJuntos } from "@/lib/pedidos/store";
 import { auth } from "@/auth";
 import { estaEnWishlist } from "@/lib/wishlist/store";
 import { ResenasSection } from "./resenas-section";
@@ -45,6 +46,8 @@ export default async function ProductoPage({ params }: { params: { slug: string 
   const inicialEnWishlist = session?.user?.id
     ? await estaEnWishlist(session.user.id, producto.id)
     : false;
+  const idsCompradosJuntos = await getProductoIdsCompradosJuntos(producto.id);
+  const compradosJuntos = await getProductosPorIds(idsCompradosJuntos);
 
   const productoJsonLd = {
     "@context": "https://schema.org",
@@ -118,6 +121,10 @@ export default async function ProductoPage({ params }: { params: { slug: string 
         <EspecificacionesCards specs={producto.specsJson} />
 
         {relacionados.length > 0 && <RelacionadosCarousel productos={relacionados} />}
+
+        {compradosJuntos.length > 0 && (
+          <RelacionadosCarousel productos={compradosJuntos} titulo="Comprados juntos" />
+        )}
 
         <RevealOnScroll y={30}>
           <ResenasSection productoId={producto.id} productoSlug={producto.slug} />

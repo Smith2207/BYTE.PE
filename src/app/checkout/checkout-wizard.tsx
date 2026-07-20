@@ -29,7 +29,7 @@ import { useCart } from "@/lib/cart/cart-context";
 import { formatoPEN, formatoDireccion, desglosarIGV } from "@/lib/format";
 import { departamentosPeru, getProvinciasDe, getDistritosDe } from "@/lib/peru-data";
 import { direccionSchema, documentoSchema } from "@/lib/validations/checkout";
-import { datosPago } from "@/lib/site-config";
+import { datosPago, siteConfig } from "@/lib/site-config";
 import type { OpcionCourierCheckout } from "@/lib/couriers/store";
 import {
   confirmarPedidoAction,
@@ -44,7 +44,7 @@ import type { ResultadoCupon } from "@/lib/cupones/validar";
 import type { UsuarioAlmacenado } from "@/lib/usuarios/store";
 import type { DireccionAlmacenada } from "@/lib/direcciones/store";
 
-const PASOS = ["Envío", "Método de envío", "Cupón", "Pago", "Confirmación"] as const;
+const PASOS = ["Envío", "Método de envío", "Pago", "Confirmación"] as const;
 
 type Facturacion = {
   tipoDocumento: "dni" | "ruc";
@@ -295,7 +295,9 @@ export function CheckoutWizard({
   const { igv } = desglosarIGV(subtotal);
   const courierSeleccionado = couriers.find((c) => c.courierId === courierId) ?? null;
   const costoEnvio =
-    cuponAplicado?.ok && cuponAplicado.envioGratis ? 0 : (courierSeleccionado?.costo ?? 0);
+    siteConfig.envioGratis || (cuponAplicado?.ok && cuponAplicado.envioGratis)
+      ? 0
+      : (courierSeleccionado?.costo ?? 0);
   const descuento = cuponAplicado?.ok ? cuponAplicado.descuento : 0;
   const total = Math.max(0, subtotal + costoEnvio - descuento);
 
@@ -351,7 +353,7 @@ export function CheckoutWizard({
       toast.error("Elige un courier para continuar");
       return;
     }
-    if (paso === 3 && requiereComprobante && !comprobanteUrl) {
+    if (paso === 2 && requiereComprobante && !comprobanteUrl) {
       toast.error("Sube tu comprobante de pago para continuar");
       return;
     }
@@ -801,7 +803,7 @@ export function CheckoutWizard({
                       <Truck className="size-5 text-primary" />
                       <div className="flex-1">
                         <p className="text-sm font-semibold">
-                          {c.nombre} — {formatoPEN(c.costo)}
+                          {c.nombre} — {siteConfig.envioGratis ? "Gratis" : formatoPEN(c.costo)}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Llega en {c.diasEstimadosMin}-{c.diasEstimadosMax} días hábiles a{" "}
@@ -821,40 +823,39 @@ export function CheckoutWizard({
 
         {paso === 2 && (
           <Card>
-            <CardContent className="pt-6">
-              <h3 className="mb-4 text-sm font-semibold">¿Tienes un cupón?</h3>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Ej: BIENVENIDO10"
-                  value={cuponInput}
-                  onChange={(e) => setCuponInput(e.target.value.toUpperCase())}
-                  className="max-w-xs"
-                />
-                <Button variant="secondary" onClick={aplicarCupon} disabled={validandoCupon}>
-                  {validandoCupon ? <Loader2 className="size-4 animate-spin" /> : "Aplicar"}
-                </Button>
-              </div>
-              {cuponAplicado && (
-                <p
-                  className={`mt-3 text-sm ${cuponAplicado.ok ? "text-primary" : "text-destructive"}`}
-                >
-                  {cuponAplicado.ok
-                    ? cuponAplicado.envioGratis
-                      ? "¡Envío gratis aplicado!"
-                      : `Descuento aplicado: ${formatoPEN(cuponAplicado.descuento)}`
-                    : cuponAplicado.motivo}
+            <CardContent className="space-y-6 pt-6">
+              <div>
+                <h3 className="mb-4 text-sm font-semibold">¿Tienes un cupón?</h3>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Ej: BIENVENIDO10"
+                    value={cuponInput}
+                    onChange={(e) => setCuponInput(e.target.value.toUpperCase())}
+                    className="max-w-xs"
+                  />
+                  <Button variant="secondary" onClick={aplicarCupon} disabled={validandoCupon}>
+                    {validandoCupon ? <Loader2 className="size-4 animate-spin" /> : "Aplicar"}
+                  </Button>
+                </div>
+                {cuponAplicado && (
+                  <p
+                    className={`mt-3 text-sm ${cuponAplicado.ok ? "text-primary" : "text-destructive"}`}
+                  >
+                    {cuponAplicado.ok
+                      ? cuponAplicado.envioGratis
+                        ? "¡Envío gratis aplicado!"
+                        : `Descuento aplicado: ${formatoPEN(cuponAplicado.descuento)}`
+                      : cuponAplicado.motivo}
+                  </p>
+                )}
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Puedes continuar sin cupón si no tienes uno.
                 </p>
-              )}
-              <p className="mt-4 text-xs text-muted-foreground">
-                Puedes continuar sin cupón si no tienes uno.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+              </div>
 
-        {paso === 3 && (
-          <Card>
-            <CardContent className="pt-6">
+              <Separator />
+
+              <div>
               <h3 className="mb-4 text-sm font-semibold">Método de pago</h3>
               <RadioGroup value={metodoPago} onValueChange={(v) => setMetodoPago(v as typeof metodoPago)}>
                 <div className="rounded-xl border border-border/60 p-4">
@@ -928,11 +929,12 @@ export function CheckoutWizard({
                   onUrlChange={setComprobanteUrl}
                 />
               )}
+              </div>
             </CardContent>
           </Card>
         )}
 
-        {paso === 4 && (
+        {paso === 3 && (
           <Card>
             <CardContent className="space-y-4 pt-6">
               <h3 className="text-sm font-semibold">Revisa tu pedido</h3>
@@ -1013,7 +1015,11 @@ export function CheckoutWizard({
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Envío</span>
                 <span className="font-mono">
-                  {courierSeleccionado ? formatoPEN(costoEnvio) : "Por calcular"}
+                  {!courierSeleccionado
+                    ? "Por calcular"
+                    : siteConfig.envioGratis
+                      ? "Gratis"
+                      : formatoPEN(costoEnvio)}
                 </span>
               </div>
               {descuento > 0 && (

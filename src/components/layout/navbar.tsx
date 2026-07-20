@@ -30,6 +30,21 @@ import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart/cart-context";
 import { ModeToggle } from "@/components/mode-toggle";
 import { FloatingIndicator } from "@/components/fx/floating-indicator";
+import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
+
+/** Pop sutil al pasar el mouse/tocar — para íconos sueltos del navbar
+ * (wishlist, cuenta) que no tienen ninguna otra animación propia. */
+function IconPop({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.span
+      whileHover={{ scale: 1.15 }}
+      whileTap={{ scale: 0.85 }}
+      className="inline-flex"
+    >
+      {children}
+    </motion.span>
+  );
+}
 
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
@@ -79,32 +94,39 @@ export function Navbar() {
                 {siteConfig.nombre}
               </SheetTitle>
             </SheetHeader>
-            <nav className="mt-6 flex flex-col gap-1">
+            <StaggerFields className="mt-6 flex flex-col gap-1">
               {categoriasNav.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/productos?categoria=${c.slug}`}
-                  onClick={() => setMobileOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition hover:bg-secondary hover:text-foreground"
-                >
-                  {c.nombre}
-                </Link>
+                <StaggerField key={c.slug}>
+                  <Link
+                    href={`/productos?categoria=${c.slug}`}
+                    onClick={() => setMobileOpen(false)}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition hover:bg-secondary hover:text-foreground"
+                  >
+                    {c.nombre}
+                  </Link>
+                </StaggerField>
               ))}
-              <Link
-                href="/productos"
-                onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-primary"
-              >
-                Ver todo el catálogo
-              </Link>
-            </nav>
+              <StaggerField>
+                <Link
+                  href="/productos"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-lg px-3 py-2.5 text-sm font-medium text-primary"
+                >
+                  Ver todo el catálogo
+                </Link>
+              </StaggerField>
+            </StaggerFields>
           </SheetContent>
         </Sheet>
 
         <Link href="/" className="mr-2 shrink-0">
-          <span className="font-display text-xl font-semibold tracking-tight">
+          <motion.span
+            whileHover={{ scale: 1.04 }}
+            transition={{ type: "spring", stiffness: 400, damping: 15 }}
+            className="inline-block font-display text-xl font-semibold tracking-tight"
+          >
             {siteConfig.nombre}
-          </span>
+          </motion.span>
         </Link>
 
         <nav
@@ -141,14 +163,18 @@ export function Navbar() {
           <ModeToggle />
           <Button variant="ghost" size="icon" asChild aria-label="Lista de deseos">
             <Link href="/cuenta/wishlist">
-              <Heart className="size-5" />
+              <IconPop>
+                <Heart className="size-5" />
+              </IconPop>
             </Link>
           </Button>
           {status === "authenticated" ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="Mi cuenta">
-                  <User className="size-5" />
+                  <IconPop>
+                    <User className="size-5" />
+                  </IconPop>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -182,7 +208,9 @@ export function Navbar() {
           ) : (
             <Button variant="ghost" size="icon" asChild aria-label="Iniciar sesión">
               <Link href="/login">
-                <User className="size-5" />
+                <IconPop>
+                  <User className="size-5" />
+                </IconPop>
               </Link>
             </Button>
           )}

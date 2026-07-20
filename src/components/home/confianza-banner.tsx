@@ -1,7 +1,12 @@
 import { BadgeCheck, PackageCheck, ShieldCheck, Truck } from "lucide-react";
+import { siteConfig } from "@/lib/site-config";
 
 const items = [
-  { icono: Truck, titulo: "Envío a todo el Perú", desc: "Costo calculado según tu destino" },
+  {
+    icono: Truck,
+    titulo: siteConfig.envioGratis ? "Envío gratis a todo el Perú" : "Envío a todo el Perú",
+    desc: siteConfig.envioGratis ? "En todos tus pedidos, sin mínimo" : "Costo calculado según tu destino",
+  },
   { icono: ShieldCheck, titulo: "Compra protegida", desc: "Pago seguro y datos cifrados" },
   { icono: PackageCheck, titulo: "Garantía oficial", desc: "Meses de garantía en cada producto" },
   { icono: BadgeCheck, titulo: "Cambios sin drama", desc: "7 días para cambios y devoluciones" },

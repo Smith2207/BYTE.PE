@@ -25,6 +25,10 @@ export const pedidos = pgTable("pedidos", {
   igv: numeric("igv", { precision: 10, scale: 2 }).notNull(),
   descuento: numeric("descuento", { precision: 10, scale: 2 }).notNull().default("0"),
   costoEnvio: numeric("costo_envio", { precision: 10, scale: 2 }).notNull().default("0"),
+  // Costo real de la tarifa del courier elegido, se le cobre o no al
+  // cliente (con envío gratis global, costoEnvio=0 pero esto conserva el
+  // costo real que la tienda absorbió — lo usa el dashboard de utilidad).
+  costoEnvioReal: numeric("costo_envio_real", { precision: 10, scale: 2 }),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
 
   cuponId: uuid("cupon_id").references(() => cupones.id),

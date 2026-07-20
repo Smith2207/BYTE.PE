@@ -105,7 +105,7 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
   if (!tarifaCourier) {
     throw new Error("El courier elegido ya no está disponible para tu departamento.");
   }
-  const costoEnvio = envioGratis ? 0 : tarifaCourier.costo;
+  const costoEnvio = siteConfig.envioGratis || envioGratis ? 0 : tarifaCourier.costo;
 
   const total = Math.round((subtotal + costoEnvio - descuento) * 100) / 100;
   const { igv } = desglosarIGV(subtotal);
@@ -151,6 +151,7 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
         igv,
         descuento,
         costoEnvio,
+        costoEnvioReal: tarifaCourier.costo,
         total,
         cuponCodigo: input.cuponCodigo,
         direccion: checkout.direccion,
