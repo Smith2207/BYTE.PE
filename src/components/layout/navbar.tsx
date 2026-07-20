@@ -31,6 +31,7 @@ import { useCart } from "@/lib/cart/cart-context";
 import { ModeToggle } from "@/components/mode-toggle";
 import { FloatingIndicator } from "@/components/fx/floating-indicator";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
+import { useAbrirAuthModal } from "@/components/auth/use-auth-modal";
 
 /** Pop sutil al pasar el mouse/tocar — para íconos sueltos del navbar
  * (wishlist, cuenta) que no tienen ninguna otra animación propia. */
@@ -54,6 +55,7 @@ export function Navbar() {
   const { cantidadTotal } = useCart();
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const abrirAuthModal = useAbrirAuthModal();
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -206,12 +208,15 @@ export function Navbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" asChild aria-label="Iniciar sesión">
-              <Link href="/login">
-                <IconPop>
-                  <User className="size-5" />
-                </IconPop>
-              </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Iniciar sesión"
+              onClick={() => abrirAuthModal("login")}
+            >
+              <IconPop>
+                <User className="size-5" />
+              </IconPop>
             </Button>
           )}
           <Button variant="ghost" size="icon" asChild className="relative" aria-label="Carrito">

@@ -5,11 +5,7 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-
-// Páginas de auth "enfocadas" — sin el navbar/footer de la tienda pública
-// (categorías, carrito, etc.), para que no se sientan como una pantalla
-// más del catálogo sino como su propio flujo.
-const RUTAS_SIN_CHROME = ["/login", "/registro"];
+import { AuthModal } from "@/components/auth/auth-modal";
 
 // Transición de página con framer-motion — complementa a GSAP/Lenis (que
 // animan *dentro* de cada página) cubriendo lo que ellos no hacen: el
@@ -40,17 +36,6 @@ function TransicionPagina({ children }: { children: React.ReactNode }) {
 }
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const sinChrome = RUTAS_SIN_CHROME.includes(pathname);
-
-  if (sinChrome) {
-    return (
-      <main className="flex-1">
-        <TransicionPagina>{children}</TransicionPagina>
-      </main>
-    );
-  }
-
   return (
     <>
       <Navbar />
@@ -58,6 +43,9 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
         <TransicionPagina>{children}</TransicionPagina>
       </main>
       <Footer />
+      <React.Suspense fallback={null}>
+        <AuthModal />
+      </React.Suspense>
     </>
   );
 }

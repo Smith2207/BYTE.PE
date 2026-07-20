@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -20,18 +19,15 @@ import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
 import { GLASS_CARD } from "@/lib/motion";
 
-export function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  // Si vino de un redirect explícito (ej. el middleware lo mandó a /login
-  // al intentar entrar a /checkout o /admin), respetamos ese destino tal
-  // cual. Si no hay ninguno, cae en /cuenta — pero el middleware mismo
-  // redirige cualquier /cuenta/* a /admin cuando el usuario es admin (ver
-  // src/middleware.ts), así que un admin siempre termina en /admin sin
-  // depender de leer su rol acá en el cliente justo después del login
-  // (evita una carrera con la sesión recién creada).
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/cuenta";
-
+export function LoginForm({
+  callbackUrl,
+  onSwitchModo,
+  onSuccess,
+}: {
+  callbackUrl?: string | null;
+  onSwitchModo: () => void;
+  onSuccess: () => void;
+}) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [enviando, setEnviando] = React.useState(false);
@@ -47,8 +43,7 @@ export function LoginForm() {
         shake();
         return;
       }
-      router.push(callbackUrl);
-      router.refresh();
+      onSuccess();
     } finally {
       setEnviando(false);
     }
@@ -57,7 +52,7 @@ export function LoginForm() {
   return (
     <motion.div animate={controls}>
       <Card className={GLASS_CARD}>
-        <CardContent className="pt-6">
+        <CardContent className="space-y-5 pt-6">
           <StaggerFields className="space-y-5">
             <form onSubmit={onSubmit} className="space-y-4">
               <StaggerField>
@@ -110,7 +105,7 @@ export function LoginForm() {
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => signIn("google", { callbackUrl })}
+                  onClick={() => signIn("google", { callbackUrl: callbackUrl ?? "/cuenta" })}
                 >
                   <GoogleIcon className="size-4" />
                   Continuar con Google
@@ -121,9 +116,13 @@ export function LoginForm() {
             <StaggerField>
               <p className="text-center text-sm text-muted-foreground">
                 ¿No tienes cuenta?{" "}
-                <Link href="/registro" className="font-medium text-primary hover:underline">
+                <button
+                  type="button"
+                  onClick={onSwitchModo}
+                  className="font-medium text-primary hover:underline"
+                >
                   Regístrate
-                </Link>
+                </button>
               </p>
             </StaggerField>
           </StaggerFields>

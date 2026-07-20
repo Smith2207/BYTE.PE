@@ -1,17 +1,8 @@
-import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
-import { ScrollCinematicBackdrop } from "@/components/fx/scroll-cinematic-backdrop";
-import { RegistroForm } from "./registro-form";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Crear cuenta" };
-
+/** Registro ahora es un modal sobre la página actual (ver AuthModal), no
+ * una página propia. Se conserva como redirect de compatibilidad para
+ * enlaces/bookmarks viejos. */
 export default function RegistroPage() {
-  return (
-    <div className="relative mx-auto max-w-sm px-4 py-16 sm:px-6">
-      <ScrollCinematicBackdrop />
-      <RevealOnScroll y={24} className="relative z-10">
-        <h1 className="font-display mb-6 text-center text-2xl font-bold">Crear cuenta</h1>
-        <RegistroForm />
-      </RevealOnScroll>
-    </div>
-  );
+  redirect("/?auth=registro");
 }

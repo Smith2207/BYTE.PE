@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { crearResenaAction } from "./actions";
+import { useAbrirAuthModal } from "@/components/auth/use-auth-modal";
 
 export function ResenaForm({ productoId, productoSlug }: { productoId: string; productoSlug: string }) {
   const router = useRouter();
   const { status } = useSession();
+  const abrirAuthModal = useAbrirAuthModal();
   const [calificacion, setCalificacion] = React.useState(5);
   const [comentario, setComentario] = React.useState("");
   const [enviando, setEnviando] = React.useState(false);
@@ -23,7 +25,7 @@ export function ResenaForm({ productoId, productoSlug }: { productoId: string; p
     return (
       <Card>
         <CardContent className="py-6 text-sm text-muted-foreground">
-          <button className="font-medium text-primary hover:underline" onClick={() => router.push("/login")}>
+          <button className="font-medium text-primary hover:underline" onClick={() => abrirAuthModal("login")}>
             Inicia sesión
           </button>{" "}
           para dejar tu reseña.

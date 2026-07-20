@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -19,10 +17,17 @@ import { Magnetic } from "@/components/fx/magnetic";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
 import { GLASS_CARD } from "@/lib/motion";
-import { registrarUsuarioAction } from "./actions";
+import { registrarUsuarioAction } from "@/app/registro/actions";
 
-export function RegistroForm() {
-  const router = useRouter();
+export function RegistroForm({
+  callbackUrl,
+  onSwitchModo,
+  onSuccess,
+}: {
+  callbackUrl?: string | null;
+  onSwitchModo: () => void;
+  onSuccess: () => void;
+}) {
   const [form, setForm] = React.useState({ nombre: "", email: "", password: "" });
   const [enviando, setEnviando] = React.useState(false);
   const { controls, shake } = useShake();
@@ -39,12 +44,11 @@ export function RegistroForm() {
       });
       if (res?.error) {
         toast.error("Cuenta creada, pero no se pudo iniciar sesión automáticamente");
-        router.push("/login");
+        onSwitchModo();
         return;
       }
       toast.success("¡Cuenta creada!");
-      router.push("/cuenta");
-      router.refresh();
+      onSuccess();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo crear la cuenta");
       shake();
@@ -112,7 +116,7 @@ export function RegistroForm() {
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => signIn("google", { callbackUrl: "/cuenta" })}
+                  onClick={() => signIn("google", { callbackUrl: callbackUrl ?? "/cuenta" })}
                 >
                   <GoogleIcon className="size-4" />
                   Continuar con Google
@@ -123,9 +127,13 @@ export function RegistroForm() {
             <StaggerField>
               <p className="text-center text-sm text-muted-foreground">
                 ¿Ya tienes cuenta?{" "}
-                <Link href="/login" className="font-medium text-primary hover:underline">
+                <button
+                  type="button"
+                  onClick={onSwitchModo}
+                  className="font-medium text-primary hover:underline"
+                >
                   Inicia sesión
-                </Link>
+                </button>
               </p>
             </StaggerField>
           </StaggerFields>

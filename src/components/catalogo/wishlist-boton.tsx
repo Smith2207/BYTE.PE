@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Heart } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { alternarWishlistAction } from "@/lib/wishlist/actions";
+import { useAbrirAuthModal } from "@/components/auth/use-auth-modal";
 
 export function WishlistBoton({
   productoId,
@@ -18,8 +18,8 @@ export function WishlistBoton({
   inicialEnWishlist?: boolean;
   className?: string;
 }) {
-  const router = useRouter();
   const { status } = useSession();
+  const abrirAuthModal = useAbrirAuthModal();
   const [activo, setActivo] = React.useState(inicialEnWishlist);
   const [cargando, setCargando] = React.useState(false);
 
@@ -29,7 +29,7 @@ export function WishlistBoton({
 
     if (status !== "authenticated") {
       toast.error("Inicia sesión para guardar en tu lista de deseos");
-      router.push("/login");
+      abrirAuthModal("login");
       return;
     }
 

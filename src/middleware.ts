@@ -11,9 +11,13 @@ export default auth((req) => {
   const esCheckout = pathname.startsWith("/checkout");
 
   if (!req.auth && (esAdmin || esCuenta || esCheckout)) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+    // Login es un modal (ver AuthModal), no una página propia — se abre
+    // sobre el home con el destino original en callbackUrl para volver
+    // ahí apenas inicie sesión.
+    const homeConModal = new URL("/", req.nextUrl.origin);
+    homeConModal.searchParams.set("auth", "login");
+    homeConModal.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(homeConModal);
   }
 
   if (esAdmin && req.auth?.user.rol !== "admin") {
