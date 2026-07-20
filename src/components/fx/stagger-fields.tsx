@@ -11,15 +11,18 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 
 const contenedor: Variants = {
   oculto: {},
-  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.05 } },
+  // delayChildren espera a que termine la entrada del contenedor que lo
+  // envuelve (ej. la tarjeta del modal, ~0.35s) antes de arrancar la
+  // cascada — si arrancan juntos, se pisan y no se lee como dos pasos.
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.25 } },
 };
 
 const campo: Variants = {
-  oculto: { opacity: 0, y: 12 },
+  oculto: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
   },
 };
 

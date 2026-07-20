@@ -66,30 +66,38 @@ export function AuthModal() {
               onOpenAutoFocus={(e) => e.preventDefault()}
               aria-describedby={undefined}
             >
-              <motion.div
-                className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-4 focus:outline-none"
-                initial={reducida ? undefined : { opacity: 0, scale: 0.96, y: 16 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={reducida ? undefined : { opacity: 0, scale: 0.96, y: 10 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <DialogPrimitive.Title className="mb-4 text-center text-2xl font-bold font-display">
-                  {modo === "registro" ? "Crear cuenta" : "Iniciar sesión"}
-                </DialogPrimitive.Title>
-                {modo === "registro" ? (
-                  <RegistroForm
-                    callbackUrl={callbackUrl}
-                    onSwitchModo={() => cambiarModo("login")}
-                    onSuccess={onSuccess}
-                  />
-                ) : (
-                  <LoginForm
-                    callbackUrl={callbackUrl}
-                    onSwitchModo={() => cambiarModo("registro")}
-                    onSuccess={onSuccess}
-                  />
-                )}
-              </motion.div>
+              {/* Centrado con un elemento propio, sin animación — si el
+                  centrado (-translate-x/y-1/2) viviera en el mismo nodo que
+                  anima framer-motion, el `transform` inline que motion pone
+                  para scale/y pisaría por completo esas clases de Tailwind y
+                  el modal quedaría descentrado todo el tiempo, no solo
+                  durante la transición. */}
+              <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 px-4">
+                <motion.div
+                  className="max-h-[85vh] overflow-y-auto focus:outline-none"
+                  initial={reducida ? undefined : { opacity: 0, scale: 0.95, y: 24 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={reducida ? undefined : { opacity: 0, scale: 0.95, y: 16 }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <DialogPrimitive.Title className="mb-4 text-center text-2xl font-bold font-display">
+                    {modo === "registro" ? "Crear cuenta" : "Iniciar sesión"}
+                  </DialogPrimitive.Title>
+                  {modo === "registro" ? (
+                    <RegistroForm
+                      callbackUrl={callbackUrl}
+                      onSwitchModo={() => cambiarModo("login")}
+                      onSuccess={onSuccess}
+                    />
+                  ) : (
+                    <LoginForm
+                      callbackUrl={callbackUrl}
+                      onSwitchModo={() => cambiarModo("registro")}
+                      onSuccess={onSuccess}
+                    />
+                  )}
+                </motion.div>
+              </div>
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         )}
