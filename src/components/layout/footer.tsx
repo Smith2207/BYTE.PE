@@ -80,10 +80,8 @@ export function Footer() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>
-            © {new Date().getFullYear()} {siteConfig.nombre}. Todos los precios incluyen IGV
-            (18%).
+            © {new Date().getFullYear()} {siteConfig.nombre}. Todos los derechos reservados.
           </p>
-          <p>Proyecto en fase de prueba (MVP) — pagos y envíos en modo demostración.</p>
         </div>
       </div>
     </footer>
