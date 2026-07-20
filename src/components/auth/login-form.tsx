@@ -17,7 +17,7 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Magnetic } from "@/components/fx/magnetic";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
-import { GLASS_CARD } from "@/lib/motion";
+import { MODAL_CARD } from "@/lib/motion";
 
 export function LoginForm({
   callbackUrl,
@@ -51,7 +51,7 @@ export function LoginForm({
 
   return (
     <motion.div animate={controls}>
-      <Card className={GLASS_CARD}>
+      <Card className={MODAL_CARD}>
         <CardContent className="space-y-5 pt-6">
           <StaggerFields className="space-y-5">
             <form onSubmit={onSubmit} className="space-y-4">

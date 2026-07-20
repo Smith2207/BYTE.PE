@@ -16,3 +16,10 @@ export const STAGGER_MAX = 0.05;
  * antes repetida a mano en cada archivo, cualquier ajuste al estilo
  * "vidrio" requería tocar 5+ lugares. */
 export const GLASS_CARD = "border-border bg-card/80 backdrop-blur-lg";
+
+/** Card del AuthModal — flota sobre CUALQUIER página de fondo (no solo el
+ * backdrop cinemático propio de login/registro), así que necesita más
+ * contraste/elevación que GLASS_CARD: sin borde (el aro blanco se veía
+ * como un marco duro encima de fondos claros/con color) y con sombra
+ * fuerte en su lugar para separarla del contenido de atrás. */
+export const MODAL_CARD = "border-0 bg-card/95 shadow-2xl shadow-black/50 backdrop-blur-xl";
