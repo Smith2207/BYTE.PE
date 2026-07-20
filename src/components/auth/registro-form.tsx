@@ -16,7 +16,7 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Magnetic } from "@/components/fx/magnetic";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
-import { MODAL_CARD } from "@/lib/motion";
+import { MODAL_CARD, MODAL_INPUT } from "@/lib/motion";
 import { registrarUsuarioAction } from "@/app/registro/actions";
 
 export function RegistroForm({
@@ -68,7 +68,7 @@ export function RegistroForm({
                 <Input
                   id="nombre"
                   required
-                  className="mt-1.5"
+                  className={`mt-1.5 ${MODAL_INPUT}`}
                   value={form.nombre}
                   onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
                 />
@@ -79,7 +79,7 @@ export function RegistroForm({
                   id="email"
                   type="email"
                   required
-                  className="mt-1.5"
+                  className={`mt-1.5 ${MODAL_INPUT}`}
                   value={form.email}
                   onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                 />
@@ -90,7 +90,7 @@ export function RegistroForm({
                   id="password"
                   required
                   minLength={6}
-                  className="mt-1.5"
+                  className={`mt-1.5 ${MODAL_INPUT}`}
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 />
@@ -115,7 +115,7 @@ export function RegistroForm({
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className={`w-full ${MODAL_INPUT}`}
                   onClick={() => signIn("google", { callbackUrl: callbackUrl ?? "/cuenta" })}
                 >
                   <GoogleIcon className="size-4" />

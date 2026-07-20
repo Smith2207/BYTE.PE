@@ -17,7 +17,7 @@ import { GoogleIcon } from "@/components/icons/google-icon";
 import { Magnetic } from "@/components/fx/magnetic";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
-import { MODAL_CARD } from "@/lib/motion";
+import { MODAL_CARD, MODAL_INPUT } from "@/lib/motion";
 
 export function LoginForm({
   callbackUrl,
@@ -61,7 +61,7 @@ export function LoginForm({
                   id="email"
                   type="email"
                   required
-                  className="mt-1.5"
+                  className={`mt-1.5 ${MODAL_INPUT}`}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -79,7 +79,7 @@ export function LoginForm({
                 <PasswordInput
                   id="password"
                   required
-                  className="mt-1.5"
+                  className={`mt-1.5 ${MODAL_INPUT}`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -104,7 +104,7 @@ export function LoginForm({
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full"
+                  className={`w-full ${MODAL_INPUT}`}
                   onClick={() => signIn("google", { callbackUrl: callbackUrl ?? "/cuenta" })}
                 >
                   <GoogleIcon className="size-4" />

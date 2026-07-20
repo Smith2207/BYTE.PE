@@ -28,7 +28,6 @@ import {
 import { categoriasNav, siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/lib/cart/cart-context";
-import { ModeToggle } from "@/components/mode-toggle";
 import { FloatingIndicator } from "@/components/fx/floating-indicator";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useAbrirAuthModal } from "@/components/auth/use-auth-modal";
@@ -162,7 +161,6 @@ export function Navbar() {
           <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Buscar">
             <Search className="size-5" />
           </Button>
-          <ModeToggle />
           <Button variant="ghost" size="icon" asChild aria-label="Lista de deseos">
             <Link href="/cuenta/wishlist">
               <IconPop>

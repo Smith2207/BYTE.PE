@@ -23,3 +23,9 @@ export const GLASS_CARD = "border-border bg-card/80 backdrop-blur-lg";
  * como un marco duro encima de fondos claros/con color) y con sombra
  * fuerte en su lugar para separarla del contenido de atrás. */
 export const MODAL_CARD = "border-0 bg-card/95 shadow-2xl shadow-black/50 backdrop-blur-xl";
+
+/** Inputs del AuthModal — mismo criterio que MODAL_CARD: nada de borde
+ * blanco (`border-input` al 12%), relleno con `bg-secondary` (ya parte de
+ * la paleta neutra del sitio, mismo tono que usa el buscador del navbar)
+ * en vez de un aro. */
+export const MODAL_INPUT = "border-transparent bg-secondary/60 focus-visible:bg-secondary";
