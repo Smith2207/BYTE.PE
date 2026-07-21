@@ -33,59 +33,66 @@ export default async function BoletaPage({ params }: { params: { numero: string 
         <ImprimirBoton />
       </div>
 
+      {/* Colores explícitos con `print:` (no solo la variable --foreground
+          de globals.css) — Safari/WebKit no siempre recalcula custom
+          properties de CSS dentro de @media print, así que depender solo
+          de la variable dejaba el comprobante en blanco ahí aunque en
+          Chrome se viera bien. Con clases print: literales (print:text-black,
+          print:text-neutral-600, print:border-neutral-300) el color queda
+          fijo sin pasar por ninguna variable, funciona en cualquier motor. */}
       <div className="rounded-2xl border border-border bg-card p-8 print:rounded-none print:border-0 print:bg-white print:p-0 print:text-black">
-        <div className="flex items-start justify-between gap-4 border-b border-border pb-6">
+        <div className="flex items-start justify-between gap-4 border-b border-border pb-6 print:border-neutral-300">
           <div>
-            <p className="font-display text-lg font-semibold">{siteConfig.nombre}</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="font-display text-lg font-semibold print:text-black">{siteConfig.nombre}</p>
+            <p className="text-xs text-muted-foreground print:text-neutral-600">
               RUC 20000000001 (simulado — fase de prueba)
             </p>
-            <p className="text-xs text-muted-foreground">Lima, Perú</p>
-            <p className="text-xs text-muted-foreground">{siteConfig.email}</p>
+            <p className="text-xs text-muted-foreground print:text-neutral-600">Lima, Perú</p>
+            <p className="text-xs text-muted-foreground print:text-neutral-600">{siteConfig.email}</p>
           </div>
-          <div className="rounded-lg border border-border px-4 py-3 text-right">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <div className="rounded-lg border border-border px-4 py-3 text-right print:border-neutral-300">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
               {esFactura ? "Factura electrónica" : "Boleta de venta electrónica"}
             </p>
-            <p className="font-mono text-base font-semibold">{numeroComprobante}</p>
+            <p className="font-mono text-base font-semibold print:text-black">{numeroComprobante}</p>
           </div>
         </div>
 
-        <div className="grid gap-4 border-b border-border py-6 sm:grid-cols-2">
+        <div className="grid gap-4 border-b border-border py-6 sm:grid-cols-2 print:border-neutral-300">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
               {esFactura ? "Cliente" : "Señor(a)"}
             </p>
-            <p className="mt-1 text-sm font-medium">
+            <p className="mt-1 text-sm font-medium print:text-black">
               {esFactura ? pedido.razonSocial : pedido.nombreComprador}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground print:text-neutral-600">
               {esFactura ? "RUC" : pedido.tipoDocumento.toUpperCase()}:{" "}
               {esFactura ? pedido.ruc : pedido.docComprador}
             </p>
-            <p className="text-xs text-muted-foreground">{pedido.emailComprador}</p>
+            <p className="text-xs text-muted-foreground print:text-neutral-600">{pedido.emailComprador}</p>
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
               Fecha de emisión
             </p>
-            <p className="mt-1 text-sm">
+            <p className="mt-1 text-sm print:text-black">
               {new Date(pedido.createdAt).toLocaleDateString("es-PE", {
                 day: "2-digit",
                 month: "long",
                 year: "numeric",
               })}
             </p>
-            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
               Envío a
             </p>
-            <p className="text-xs text-muted-foreground">{formatoDireccion(pedido.direccion)}</p>
+            <p className="text-xs text-muted-foreground print:text-neutral-600">{formatoDireccion(pedido.direccion)}</p>
           </div>
         </div>
 
-        <table className="w-full border-b border-border text-sm">
+        <table className="w-full border-b border-border text-sm print:border-neutral-300">
           <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground">
+            <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground print:text-neutral-600">
               <th className="py-3">Descripción</th>
               <th className="py-3 text-center">Cant.</th>
               <th className="py-3 text-right">P. unitario</th>
@@ -94,16 +101,16 @@ export default async function BoletaPage({ params }: { params: { numero: string 
           </thead>
           <tbody>
             {pedido.items.map((item, i) => (
-              <tr key={i} className="border-t border-border/60">
-                <td className="py-3 pr-2">
+              <tr key={i} className="border-t border-border/60 print:border-neutral-300">
+                <td className="py-3 pr-2 print:text-black">
                   {item.nombreProducto}
                   {item.varianteLabel && (
-                    <span className="text-muted-foreground"> ({item.varianteLabel})</span>
+                    <span className="text-muted-foreground print:text-neutral-600"> ({item.varianteLabel})</span>
                   )}
                 </td>
-                <td className="py-3 text-center">{item.cantidad}</td>
-                <td className="py-3 text-right">{formatoPEN(item.precioUnitario)}</td>
-                <td className="py-3 text-right">
+                <td className="py-3 text-center print:text-black">{item.cantidad}</td>
+                <td className="py-3 text-right print:text-black">{formatoPEN(item.precioUnitario)}</td>
+                <td className="py-3 text-right print:text-black">
                   {formatoPEN(item.precioUnitario * item.cantidad)}
                 </td>
               </tr>
@@ -114,33 +121,33 @@ export default async function BoletaPage({ params }: { params: { numero: string 
         <div className="flex justify-end py-6">
           <div className="w-56 space-y-1.5 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Op. gravada</span>
-              <span>{formatoPEN(pedido.subtotal - pedido.igv)}</span>
+              <span className="text-muted-foreground print:text-neutral-600">Op. gravada</span>
+              <span className="print:text-black">{formatoPEN(pedido.subtotal - pedido.igv)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">IGV ({IGV_PORCENTAJE}%)</span>
-              <span>{formatoPEN(pedido.igv)}</span>
+              <span className="text-muted-foreground print:text-neutral-600">IGV ({IGV_PORCENTAJE}%)</span>
+              <span className="print:text-black">{formatoPEN(pedido.igv)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Envío</span>
-              <span>{formatoPEN(pedido.costoEnvio)}</span>
+              <span className="text-muted-foreground print:text-neutral-600">Envío</span>
+              <span className="print:text-black">{formatoPEN(pedido.costoEnvio)}</span>
             </div>
             {pedido.descuento > 0 && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">
+                <span className="text-muted-foreground print:text-neutral-600">
                   Descuento{pedido.cuponCodigo ? ` (${pedido.cuponCodigo})` : ""}
                 </span>
-                <span>-{formatoPEN(pedido.descuento)}</span>
+                <span className="print:text-black">-{formatoPEN(pedido.descuento)}</span>
               </div>
             )}
-            <div className="flex justify-between border-t border-border pt-1.5 text-base font-semibold">
-              <span>Total</span>
-              <span>{formatoPEN(pedido.total)}</span>
+            <div className="flex justify-between border-t border-border pt-1.5 text-base font-semibold print:border-neutral-300">
+              <span className="print:text-black">Total</span>
+              <span className="print:text-black">{formatoPEN(pedido.total)}</span>
             </div>
           </div>
         </div>
 
-        <p className="border-t border-border pt-4 text-center text-[11px] leading-relaxed text-muted-foreground">
+        <p className="border-t border-border pt-4 text-center text-[11px] leading-relaxed text-muted-foreground print:border-neutral-300 print:text-neutral-600">
           Comprobante simulado — proyecto en fase de prueba (MVP). No constituye un comprobante de
           pago electrónico homologado por SUNAT.
         </p>
