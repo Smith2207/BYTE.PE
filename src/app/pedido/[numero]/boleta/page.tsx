@@ -5,11 +5,20 @@ import { ArrowLeft } from "lucide-react";
 import { getPedido } from "@/lib/pedidos/store";
 import { formatoPEN, formatoDireccion } from "@/lib/format";
 import { siteConfig } from "@/lib/site-config";
+import { ESTADO_PEDIDO_ETIQUETA } from "@/components/pedidos/estado-pedido-badge";
 import { ImprimirBoton } from "./imprimir-boton";
 
 export const metadata = { title: "Comprobante de pago" };
 
 const IGV_PORCENTAJE = 18;
+
+const METODO_PAGO_ETIQUETA: Record<string, string> = {
+  yape: "Yape / Plin",
+  prex: "Prex",
+  transferencia: "Transferencia bancaria",
+  contra_entrega: "Contra entrega",
+  tarjeta: "Tarjeta de crédito/débito",
+};
 
 export default async function BoletaPage({ params }: { params: { numero: string } }) {
   const pedido = await getPedido(params.numero);
@@ -40,7 +49,9 @@ export default async function BoletaPage({ params }: { params: { numero: string 
           Chrome se viera bien. Con clases print: literales (print:text-black,
           print:text-neutral-600, print:border-neutral-300) el color queda
           fijo sin pasar por ninguna variable, funciona en cualquier motor. */}
-      <div className="rounded-2xl border border-border bg-card p-8 print:rounded-none print:border-0 print:bg-white print:p-0 print:text-black">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card print:rounded-none print:border-0 print:bg-white print:text-black">
+        <div className="h-1.5 bg-primary print:hidden" />
+        <div className="p-8 print:p-0">
         <div className="flex items-start justify-between gap-4 border-b border-border pb-6 print:border-neutral-300">
           <div>
             <p className="font-display text-lg font-semibold print:text-black">{siteConfig.nombre}</p>
@@ -90,6 +101,34 @@ export default async function BoletaPage({ params }: { params: { numero: string 
           </div>
         </div>
 
+        <div className="grid grid-cols-2 gap-4 border-b border-border py-6 sm:grid-cols-3 print:border-neutral-300">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
+              Método de pago
+            </p>
+            <p className="mt-1 text-sm print:text-black">
+              {METODO_PAGO_ETIQUETA[pedido.metodoPago] ?? pedido.metodoPago}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
+              Estado del pedido
+            </p>
+            <p className="mt-1 text-sm print:text-black">{ESTADO_PEDIDO_ETIQUETA[pedido.estado]}</p>
+          </div>
+          {pedido.courier && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
+                Courier{pedido.numeroTracking ? " / tracking" : ""}
+              </p>
+              <p className="mt-1 text-sm print:text-black">
+                {pedido.courier}
+                {pedido.numeroTracking && ` — ${pedido.numeroTracking}`}
+              </p>
+            </div>
+          )}
+        </div>
+
         <table className="w-full border-b border-border text-sm print:border-neutral-300">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-muted-foreground print:text-neutral-600">
@@ -101,7 +140,12 @@ export default async function BoletaPage({ params }: { params: { numero: string 
           </thead>
           <tbody>
             {pedido.items.map((item, i) => (
-              <tr key={i} className="border-t border-border/60 print:border-neutral-300">
+              <tr
+                key={i}
+                className={`border-t border-border/60 print:border-neutral-300 ${
+                  i % 2 === 1 ? "bg-secondary/30 print:bg-neutral-50" : ""
+                }`}
+              >
                 <td className="py-3 pr-2 print:text-black">
                   {item.nombreProducto}
                   {item.varianteLabel && (
@@ -147,10 +191,22 @@ export default async function BoletaPage({ params }: { params: { numero: string 
           </div>
         </div>
 
-        <p className="border-t border-border pt-4 text-center text-[11px] leading-relaxed text-muted-foreground print:border-neutral-300 print:text-neutral-600">
-          Comprobante simulado — proyecto en fase de prueba (MVP). No constituye un comprobante de
-          pago electrónico homologado por SUNAT.
-        </p>
+        <div className="border-t border-border pt-4 text-center print:border-neutral-300">
+          <p className="text-sm font-medium print:text-black">¡Gracias por tu compra!</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground print:text-neutral-600">
+            Comprobante simulado — proyecto en fase de prueba (MVP). No constituye un comprobante de
+            pago electrónico homologado por SUNAT.
+          </p>
+          <p className="mt-2 text-[10px] text-muted-foreground print:text-neutral-600">
+            Documento generado el{" "}
+            {new Date().toLocaleDateString("es-PE", {
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+        </div>
       </div>
     </div>
   );
