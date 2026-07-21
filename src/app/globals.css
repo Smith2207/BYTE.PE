@@ -98,9 +98,35 @@
   }
 }
 
-/* Fondo blanco al imprimir (ej. la boleta), sin depender de que el
-   usuario tenga activado "imprimir gráficos de fondo" en su navegador. */
+/* El sitio es solo modo oscuro (texto claro sobre fondo oscuro) — pero
+   imprimir/"Guardar como PDF" con esos mismos colores da texto casi
+   blanco sobre la hoja blanca del papel, prácticamente ilegible (el
+   navegador tampoco imprime fondos de color salvo que el usuario active
+   "imprimir graficos de fondo" a mano). Se pisan acá los tokens de color,
+   de los que ya toman todas las clases de fondo, texto y borde del sitio,
+   por una escala de grises apta para papel, sin tener que acordarse de
+   agregar print: en cada componente nuevo que se imprima a futuro. */
 @media print {
+  :root,
+  .dark {
+    --background: #ffffff;
+    --foreground: #000000;
+    --card: #ffffff;
+    --card-foreground: #000000;
+    --popover: #ffffff;
+    --popover-foreground: #000000;
+    --primary: #000000;
+    --primary-foreground: #ffffff;
+    --secondary: #f2f2f2;
+    --secondary-foreground: #000000;
+    --muted: #f2f2f2;
+    --muted-foreground: #444444;
+    --accent: #f2f2f2;
+    --accent-foreground: #000000;
+    --border: #cccccc;
+    --input: #cccccc;
+  }
+
   body {
     background: #fff;
   }
