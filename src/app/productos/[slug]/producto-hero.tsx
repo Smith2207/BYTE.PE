@@ -73,7 +73,7 @@ export function ProductoHero({
   return (
     <section
       ref={rootRef}
-      className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black px-6 py-12 text-white sm:px-10 lg:px-14 lg:py-16"
+      className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-background px-6 py-12 text-white sm:px-10 lg:px-14 lg:py-16"
     >
       <div ref={backdropRef} className="absolute inset-0 scale-110">
         <GlowOrb />

@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
+import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
 
 export function CtaFinal() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black px-8 py-16 text-center text-white sm:px-16">
+      <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-background px-8 py-16 text-center text-white sm:px-16">
+        <div className="absolute inset-0 scale-110">
+          <GlowOrb />
+        </div>
         <AtmosphereLayer glowPosition="50% 40%" showRays={false} intensity={0.8} />
         <div className="relative z-10">
           <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
