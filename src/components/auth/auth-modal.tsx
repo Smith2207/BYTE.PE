@@ -80,9 +80,6 @@ export function AuthModal() {
                   exit={reducida ? undefined : { opacity: 0, scale: 0.95, y: 16 }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <DialogPrimitive.Title className="mb-4 text-center text-2xl font-bold font-display">
-                    {modo === "registro" ? "Crear cuenta" : "Iniciar sesión"}
-                  </DialogPrimitive.Title>
                   {modo === "registro" ? (
                     <RegistroForm
                       callbackUrl={callbackUrl}

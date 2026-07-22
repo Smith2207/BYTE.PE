@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -60,8 +61,21 @@ export function RegistroForm({
   return (
     <motion.div animate={controls}>
       <Card className={MODAL_CARD}>
-        <CardContent className="pt-6">
+        <CardContent className="pt-8">
           <StaggerFields className="space-y-4">
+            <StaggerField className="flex flex-col items-center gap-3 text-center">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <UserPlus className="size-6" strokeWidth={1.75} />
+              </span>
+              <div>
+                <DialogPrimitive.Title className="text-xl font-bold font-display">
+                  Crea tu cuenta
+                </DialogPrimitive.Title>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Comprá más rápido la próxima vez y hacé seguimiento de tus pedidos.
+                </p>
+              </div>
+            </StaggerField>
             <form onSubmit={onSubmit} className="space-y-4">
               <StaggerField>
                 <Label htmlFor="nombre">Nombre completo</Label>

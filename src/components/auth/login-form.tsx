@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, LogIn } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -52,8 +53,21 @@ export function LoginForm({
   return (
     <motion.div animate={controls}>
       <Card className={MODAL_CARD}>
-        <CardContent className="space-y-5 pt-6">
+        <CardContent className="space-y-5 pt-8">
           <StaggerFields className="space-y-5">
+            <StaggerField className="flex flex-col items-center gap-3 text-center">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <LogIn className="size-6" strokeWidth={1.75} />
+              </span>
+              <div>
+                <DialogPrimitive.Title className="text-xl font-bold font-display">
+                  Inicia sesión
+                </DialogPrimitive.Title>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Entra para ver tus pedidos, favoritos y direcciones guardadas.
+                </p>
+              </div>
+            </StaggerField>
             <form onSubmit={onSubmit} className="space-y-4">
               <StaggerField>
                 <Label htmlFor="email">Correo electrónico</Label>
