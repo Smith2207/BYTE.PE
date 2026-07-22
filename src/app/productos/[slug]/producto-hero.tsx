@@ -73,7 +73,7 @@ export function ProductoHero({
   return (
     <section
       ref={rootRef}
-      className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-background px-6 py-12 text-white sm:px-10 lg:px-14 lg:py-16"
+      className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-background px-6 py-12 text-foreground sm:px-10 lg:px-14 lg:py-16"
     >
       <div ref={backdropRef} className="absolute inset-0 scale-110">
         <GlowOrb />
@@ -97,7 +97,7 @@ export function ProductoHero({
             <WishlistBoton
               productoId={producto.id}
               inicialEnWishlist={inicialEnWishlist}
-              className="border border-white/10"
+              className="border border-foreground/10"
             />
           </div>
 
@@ -112,7 +112,7 @@ export function ProductoHero({
           <div data-ph-price className="mt-6 flex items-center gap-3">
             <TextScramble value={formatoPEN(producto.precioFinal)} className="text-3xl font-bold" />
             {producto.precioOferta && (
-              <span className="font-mono text-base text-white/40 line-through">
+              <span className="font-mono text-base text-foreground/40 line-through">
                 {formatoPEN(producto.precio)}
               </span>
             )}
@@ -122,26 +122,26 @@ export function ProductoHero({
               </Badge>
             )}
           </div>
-          <p className="mt-1 text-xs text-white/40">Precio incluye IGV (18%)</p>
+          <p className="mt-1 text-xs text-foreground/40">Precio incluye IGV (18%)</p>
 
           <div className="mt-6 flex flex-wrap gap-2">
             {especificacionesDestacadas.map(([clave, valor]) => (
               <span
                 key={clave}
                 data-ph-meta
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70"
+                className="rounded-full border border-foreground/10 bg-foreground/5 px-3 py-1.5 text-xs text-foreground/70"
               >
-                <span className="text-white/40">{clave}:</span>{" "}
+                <span className="text-foreground/40">{clave}:</span>{" "}
                 <span className="font-mono">{valor}</span>
               </span>
             ))}
           </div>
 
-          <p className="mt-6 max-w-md text-sm leading-relaxed text-white/60">
+          <p className="mt-6 max-w-md text-sm leading-relaxed text-foreground/60">
             {producto.descripcion}
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-4 text-xs text-white/50">
+          <div className="mt-5 flex flex-wrap gap-4 text-xs text-foreground/50">
             <span data-ph-meta className="flex items-center gap-1.5">
               <ShieldCheck className="size-4 text-primary" />
               {producto.garantiaMeses} meses de garantía

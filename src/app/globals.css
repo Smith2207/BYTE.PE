@@ -16,7 +16,12 @@
  */
 @layer base {
   :root {
-    --background: oklch(1 0 0);
+    /* Modo claro con tinte "celeste": mismo hue de --primary (255) pero
+       con croma muy bajo en las superficies neutras, en vez de gris puro
+       — así el tono azulado se siente en todo el fondo, no solo en los
+       botones. --card/--popover quedan en blanco puro para que las
+       tarjetas "floten" sobre el fondo con un poco de contraste. */
+    --background: oklch(0.98 0.01 255);
     --foreground: oklch(0.145 0 0);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
@@ -24,16 +29,16 @@
     --popover-foreground: oklch(0.145 0 0);
     --primary: oklch(0.55 0.19 255);
     --primary-foreground: oklch(0.99 0 0);
-    --secondary: oklch(0.96 0 0);
+    --secondary: oklch(0.94 0.015 255);
     --secondary-foreground: oklch(0.16 0 0);
-    --muted: oklch(0.96 0 0);
+    --muted: oklch(0.94 0.015 255);
     --muted-foreground: oklch(0.5 0 0);
-    --accent: oklch(0.96 0 0);
+    --accent: oklch(0.94 0.015 255);
     --accent-foreground: oklch(0.16 0 0);
     --destructive: oklch(0.58 0.22 25);
     --destructive-foreground: oklch(0.99 0 0);
-    --border: oklch(0.9 0 0);
-    --input: oklch(0.9 0 0);
+    --border: oklch(0.88 0.015 255);
+    --input: oklch(0.88 0.015 255);
     --ring: oklch(0.55 0.19 255);
     --chart-1: oklch(0.55 0.19 255);
     --chart-2: oklch(0.63 0.15 200);
@@ -102,11 +107,11 @@
   }
 }
 
-/* El sitio es solo modo oscuro (texto claro sobre fondo oscuro) — pero
-   imprimir/"Guardar como PDF" con esos mismos colores da texto casi
-   blanco sobre la hoja blanca del papel, prácticamente ilegible (el
-   navegador tampoco imprime fondos de color salvo que el usuario active
-   "imprimir graficos de fondo" a mano). Se pisan acá los tokens de color,
+/* Sea cual sea el tema activo (--foreground/--background claro u oscuro),
+   imprimir/"Guardar como PDF" con esos mismos colores puede dar texto
+   ilegible sobre la hoja blanca del papel (el navegador tampoco imprime
+   fondos de color salvo que el usuario active "imprimir graficos de
+   fondo" a mano). Se pisan acá los tokens de color,
    de los que ya toman todas las clases de fondo, texto y borde del sitio,
    por una escala de grises apta para papel, sin tener que acordarse de
    agregar print: en cada componente nuevo que se imprima a futuro. */

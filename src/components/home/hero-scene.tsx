@@ -79,10 +79,12 @@ export function HeroScene({
       </div>
 
       {/* Overlays para sostener la legibilidad del texto sobre el video
-          full-bleed: degradado diagonal + wash uniforme + viñeta inferior. */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
-      <div className="absolute inset-0 bg-black/10" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40" />
+          full-bleed: degradado diagonal + wash uniforme + viñeta inferior.
+          Usan el token --background (no negro fijo) para que en modo claro
+          "aclaren" en vez de ensuciar el fondo con negro. */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent" />
+      <div className="absolute inset-0 bg-background/10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/40" />
 
       <AtmosphereLayer glowPosition="70% 45%" />
     </div>

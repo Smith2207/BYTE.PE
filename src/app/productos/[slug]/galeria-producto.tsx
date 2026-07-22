@@ -72,7 +72,7 @@ export function GaleriaProducto({
     <div>
       <div
         ref={frameRef}
-        className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5"
+        className="group relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/5"
         style={{ perspective: "1000px" }}
       >
         <div ref={imgWrapRef} style={{ transformStyle: "preserve-3d" }}>
@@ -81,13 +81,13 @@ export function GaleriaProducto({
             imagenUrl={imagenes[seleccionada]}
             alt={nombre}
             className="aspect-square w-full transition-transform duration-700 ease-out group-hover:scale-[1.04]"
-            iconClassName="size-32 text-white/40"
+            iconClassName="size-32 text-foreground/40"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
         </div>
         {/* Barrido de luz al hover */}
-        <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-tr from-transparent via-white/10 to-transparent transition-transform duration-1000 ease-out group-hover:translate-x-full" />
+        <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-tr from-transparent via-foreground/10 to-transparent transition-transform duration-1000 ease-out group-hover:translate-x-full" />
       </div>
 
       {imagenes.length > 1 && (
@@ -101,7 +101,7 @@ export function GaleriaProducto({
                 "relative size-16 shrink-0 overflow-hidden rounded-xl border transition-all duration-300",
                 i === seleccionada
                   ? "border-primary ring-2 ring-primary/40"
-                  : "border-white/10 opacity-60 hover:opacity-100",
+                  : "border-foreground/10 opacity-60 hover:opacity-100",
               )}
             >
               <ProductoMedia
@@ -109,7 +109,7 @@ export function GaleriaProducto({
                 imagenUrl={url}
                 alt={`${nombre} — foto ${i + 1}`}
                 className="size-16"
-                iconClassName="size-6 text-white/40"
+                iconClassName="size-6 text-foreground/40"
                 sizes="64px"
               />
             </button>

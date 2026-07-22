@@ -50,7 +50,7 @@ export function Hero() {
   return (
     <section
       ref={rootRef}
-      className="relative flex h-screen min-h-[640px] w-full items-center overflow-hidden bg-background text-white"
+      className="relative flex h-screen min-h-[640px] w-full items-center overflow-hidden bg-background text-foreground"
     >
       <div data-hero-visual className="absolute inset-0">
         <HeroScene />
@@ -86,7 +86,7 @@ export function Hero() {
 
           <p
             data-hero-copy
-            className="mt-6 max-w-sm text-sm font-normal leading-relaxed text-white/70 drop-shadow-md md:text-base"
+            className="mt-6 max-w-sm text-sm font-normal leading-relaxed text-foreground/70 drop-shadow-md md:text-base"
           >
             Laptops, celulares, PCs gamer y accesorios — la tecnología que necesitas, con
             envío a todo el Perú.
@@ -112,7 +112,7 @@ export function Hero() {
               <Button
                 asChild
                 variant="outline"
-                className="h-auto rounded-lg border-white/40 bg-transparent px-7 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-white transition-colors duration-300 hover:border-white hover:bg-white/5 hover:text-white"
+                className="h-auto rounded-lg border-foreground/40 bg-transparent px-7 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-foreground transition-colors duration-300 hover:border-foreground hover:bg-foreground/5 hover:text-foreground"
               >
                 <Link href="#destacados">Ofertas destacadas</Link>
               </Button>
@@ -132,12 +132,12 @@ export function Hero() {
               className="group flex cursor-pointer items-center gap-4"
             >
               <span
-                className={`w-5 shrink-0 ${i === 0 ? "text-primary" : "text-white/40 transition-colors duration-300 group-hover:text-white"}`}
+                className={`w-5 shrink-0 ${i === 0 ? "text-primary" : "text-foreground/40 transition-colors duration-300 group-hover:text-foreground"}`}
               >
                 {String(i + 1).padStart(2, "0")}
               </span>
               <span
-                className={`uppercase ${i === 0 ? "text-white" : "text-white/40 transition-colors duration-300 group-hover:text-white"}`}
+                className={`uppercase ${i === 0 ? "text-foreground" : "text-foreground/40 transition-colors duration-300 group-hover:text-foreground"}`}
               >
                 {c.nombre}
               </span>
@@ -148,7 +148,7 @@ export function Hero() {
 
       <div
         data-hero-scroll
-        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/60"
+        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-foreground/60"
       >
         Scroll
         <span className="animate-scroll block h-6 w-px bg-gradient-to-b from-primary to-transparent" />

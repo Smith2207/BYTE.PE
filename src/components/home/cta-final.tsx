@@ -5,7 +5,7 @@ import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
 export function CtaFinal() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-background px-8 py-16 text-center text-white sm:px-16">
+      <div className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-background px-8 py-16 text-center text-foreground sm:px-16">
         <div className="absolute inset-0 scale-110">
           <GlowOrb />
         </div>
@@ -14,7 +14,7 @@ export function CtaFinal() {
           <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
             Tu próximo equipo te espera
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-sm text-white/70 sm:text-base">
+          <p className="mx-auto mt-4 max-w-md text-sm text-foreground/70 sm:text-base">
             Laptops, celulares, PCs gamer y accesorios — con envío a todo el Perú y precios sin sorpresas.
           </p>
           <Link

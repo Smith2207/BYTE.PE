@@ -1,10 +1,12 @@
 import { CHART_SERIE_PRINCIPAL } from "@/lib/chart-colors";
 
 /**
- * Piezas atmosféricas reutilizables para secciones "cinematográficas"
- * sobre fondo negro — un solo hue (el azul ya validado para gráficos),
- * sin lógica de mouse propia. Usadas por el Hero del home, el Hero de
- * producto y el fondo ambiental del resto de la página de producto.
+ * Piezas atmosféricas reutilizables para secciones "cinematográficas" —
+ * un solo hue (el azul ya validado para gráficos), sin lógica de mouse
+ * propia. Usadas por el Hero del home, el Hero de producto, el CTA final
+ * y el fondo ambiental del resto de la página de producto. Los colores
+ * usan tokens del tema (--foreground, --background), no blanco/negro
+ * fijo, para verse bien tanto en modo claro como oscuro.
  */
 const PARTICULAS = Array.from({ length: 16 }, (_, i) => ({
   left: (i * 6.25 + (i % 3) * 9) % 100,
@@ -19,8 +21,8 @@ export function GlowOrb({ className }: { className?: string }) {
     <div className={className ?? "absolute inset-0 overflow-hidden"}>
       <div className="absolute left-1/2 top-1/2 size-[32rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-[100px]" />
       <div className="absolute left-1/2 top-1/2 size-[26rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 blur-[80px] motion-safe:animate-pulse-glow" />
-      <div className="absolute left-1/2 top-1/2 size-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 motion-safe:animate-spin-slow" />
-      <div className="absolute left-1/2 top-1/2 size-[30rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.06] motion-safe:animate-spin-slow-reverse" />
+      <div className="absolute left-1/2 top-1/2 size-[22rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-foreground/10 motion-safe:animate-spin-slow" />
+      <div className="absolute left-1/2 top-1/2 size-[30rem] -translate-x-1/2 -translate-y-1/2 rounded-full border border-foreground/[0.06] motion-safe:animate-spin-slow-reverse" />
     </div>
   );
 }
@@ -60,14 +62,21 @@ export function AtmosphereLayer({
       {showVignette && (
         <div
           className="pointer-events-none absolute inset-0"
-          style={{ boxShadow: `inset 0 0 150px rgba(0,0,0,${0.65 * intensity})` }}
+          style={{
+            // Sintaxis de color relativo (mismo truco que tailwind.config.ts
+            // usa para alfa sobre tokens oklch): toma --background tal cual
+            // esté (casi negro en oscuro, casi blanco en claro) y solo le
+            // pisa el alfa — así la viñeta oscurece en un tema y "aclara"
+            // en el otro, coherente con el fondo real en vez de negro fijo.
+            boxShadow: `inset 0 0 150px oklch(from var(--background) l c h / ${0.65 * intensity})`,
+          }}
         />
       )}
 
       {showRays && (
         <>
           <div className="pointer-events-none absolute -right-10 -top-20 h-[40rem] w-40 -rotate-45 bg-gradient-to-b from-primary/20 to-transparent blur-[80px] motion-safe:animate-pulse-glow" />
-          <div className="pointer-events-none absolute right-20 -top-10 h-[34rem] w-32 -rotate-45 bg-gradient-to-b from-white/10 to-transparent blur-[100px] [animation-delay:1.2s] motion-safe:animate-pulse-glow" />
+          <div className="pointer-events-none absolute right-20 -top-10 h-[34rem] w-32 -rotate-45 bg-gradient-to-b from-foreground/10 to-transparent blur-[100px] [animation-delay:1.2s] motion-safe:animate-pulse-glow" />
         </>
       )}
 
@@ -76,7 +85,7 @@ export function AtmosphereLayer({
           {PARTICULAS.map((p, i) => (
             <span
               key={i}
-              className="absolute bottom-0 rounded-full bg-white/70 motion-safe:animate-float-up"
+              className="absolute bottom-0 rounded-full bg-foreground/70 motion-safe:animate-float-up"
               style={{
                 left: `${p.left}%`,
                 width: p.size,

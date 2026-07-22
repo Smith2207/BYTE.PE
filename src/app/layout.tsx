@@ -57,7 +57,7 @@ export default function RootLayout({
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizacionJsonLd) }}
         />
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <SessionProvider>
             <CartProvider>
               <SmoothScrollProvider>
