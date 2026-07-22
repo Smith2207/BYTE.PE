@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { Magnetic } from "@/components/fx/magnetic";
 
 export function CtaFinal() {
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-background px-8 py-16 text-center text-foreground sm:px-16">
+      <RevealOnScroll y={32} className="relative overflow-hidden rounded-[2rem] border border-foreground/10 bg-background px-8 py-16 text-center text-foreground sm:px-16">
         <div className="absolute inset-0 scale-110">
           <GlowOrb />
         </div>
@@ -17,15 +19,17 @@ export function CtaFinal() {
           <p className="mx-auto mt-4 max-w-md text-sm text-foreground/70 sm:text-base">
             Laptops, celulares, PCs gamer y accesorios — con envío a todo el Perú y precios sin sorpresas.
           </p>
-          <Link
-            href="/productos"
-            className="group mt-8 inline-flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#0058d8] px-7 text-base font-semibold text-white transition-shadow hover:shadow-[0_0_20px_rgba(57,135,229,0.4)]"
-          >
-            Ver catálogo completo
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+          <Magnetic strength={0.15} className="mt-8 inline-block">
+            <Link
+              href="/productos"
+              className="group inline-flex h-12 items-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#0058d8] px-7 text-base font-semibold text-white transition-shadow hover:shadow-[0_0_20px_rgba(57,135,229,0.4)]"
+            >
+              Ver catálogo completo
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </Magnetic>
         </div>
-      </div>
+      </RevealOnScroll>
     </section>
   );
 }

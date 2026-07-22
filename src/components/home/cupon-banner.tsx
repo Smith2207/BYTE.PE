@@ -1,6 +1,7 @@
 import { Tag } from "lucide-react";
 import { getCuponDestacado } from "@/lib/cupones/store";
 import { CopiarCuponBoton } from "./copiar-cupon-boton";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 
 function descripcionCupon(cupon: NonNullable<Awaited<ReturnType<typeof getCuponDestacado>>>) {
   if (cupon.tipo === "envio_gratis") return "Envío gratis en tu próxima compra";
@@ -14,10 +15,14 @@ export async function CuponBanner() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 px-6 py-5 sm:flex-row">
+      <RevealOnScroll
+        y={20}
+        className="flex flex-col items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 px-6 py-5 sm:flex-row"
+      >
         <div className="flex items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Tag className="size-5" />
+          <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <span className="absolute inset-0 rounded-full bg-primary/20 motion-safe:animate-pulse-glow" />
+            <Tag className="relative size-5" />
           </span>
           <div>
             <p className="text-sm font-semibold">{descripcionCupon(cupon)}</p>
@@ -29,7 +34,7 @@ export async function CuponBanner() {
           </div>
         </div>
         <CopiarCuponBoton codigo={cupon.codigo} />
-      </div>
+      </RevealOnScroll>
     </section>
   );
 }

@@ -1,5 +1,7 @@
 import { BadgeCheck, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { STAGGER_MAX } from "@/lib/motion";
 
 const items = [
   {
@@ -15,9 +17,14 @@ const items = [
 export function ConfianzaBanner() {
   return (
     <section className="border-y border-border/50 bg-card/40">
-      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <RevealOnScroll
+        className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8"
+        selector="[data-confianza-item]"
+        stagger={STAGGER_MAX}
+        y={20}
+      >
         {items.map((item) => (
-          <div key={item.titulo} className="flex items-start gap-3">
+          <div key={item.titulo} data-confianza-item className="flex items-start gap-3">
             <item.icono className="mt-0.5 size-6 shrink-0 text-primary" strokeWidth={1.5} />
             <div>
               <p className="text-sm font-semibold">{item.titulo}</p>
@@ -25,7 +32,7 @@ export function ConfianzaBanner() {
             </div>
           </div>
         ))}
-      </div>
+      </RevealOnScroll>
     </section>
   );
 }
