@@ -53,7 +53,7 @@ export default async function CuentaPage() {
           <div>
             <p className="text-lg font-semibold">{usuario.nombre}</p>
             <p className="text-sm text-muted-foreground">{usuario.email}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground capitalize">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Miembro desde {miembroDesde}
             </p>
           </div>

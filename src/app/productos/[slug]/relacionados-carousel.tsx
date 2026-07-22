@@ -15,6 +15,23 @@ export function RelacionadosCarousel({
   titulo?: string;
 }) {
   const scrollerRef = React.useRef<HTMLDivElement>(null);
+  // Con pocos relacionados, el carrusel no llega a desbordar — mostrar las
+  // flechas igual dejaba dos botones que no hacían nada al tocarlos.
+  const [desbordado, setDesbordado] = React.useState(false);
+
+  React.useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    function chequear() {
+      setDesbordado(el!.scrollWidth > el!.clientWidth + 1);
+    }
+
+    chequear();
+    const observer = new ResizeObserver(chequear);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [productos]);
 
   function scrollBy(delta: number) {
     scrollerRef.current?.scrollBy({ left: delta, behavior: "smooth" });
@@ -24,24 +41,26 @@ export function RelacionadosCarousel({
     <div className="mt-16">
       <div className="flex items-center justify-between">
         <h2 className="font-display text-xl font-semibold">{titulo}</h2>
-        <div className="hidden gap-2 sm:flex">
-          <button
-            type="button"
-            onClick={() => scrollBy(-320)}
-            aria-label="Anterior"
-            className="flex size-9 items-center justify-center rounded-full border border-border/60 text-foreground/70 transition hover:border-primary/40 hover:text-primary"
-          >
-            <ChevronLeft className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollBy(320)}
-            aria-label="Siguiente"
-            className="flex size-9 items-center justify-center rounded-full border border-border/60 text-foreground/70 transition hover:border-primary/40 hover:text-primary"
-          >
-            <ChevronRight className="size-4" />
-          </button>
-        </div>
+        {desbordado && (
+          <div className="hidden gap-2 sm:flex">
+            <button
+              type="button"
+              onClick={() => scrollBy(-320)}
+              aria-label="Anterior"
+              className="flex size-9 items-center justify-center rounded-full border border-border/60 text-foreground/70 transition hover:border-primary/40 hover:text-primary"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollBy(320)}
+              aria-label="Siguiente"
+              className="flex size-9 items-center justify-center rounded-full border border-border/60 text-foreground/70 transition hover:border-primary/40 hover:text-primary"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <RevealOnScroll
