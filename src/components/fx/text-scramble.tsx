@@ -35,12 +35,16 @@ export function TextScramble({
 
     const largoFinal = value.length;
     const progresoPorCaracter = 1 / largoFinal;
-    let frame = 0;
-    const totalFrames = Math.round((durationMs / 1000) * 60);
+    // Tiempo real transcurrido, no conteo de frames — un conteo fijo
+    // (frame++ hasta totalFrames = duration * 60fps asumidos) hace que la
+    // duración real dependa del refresh rate del dispositivo: en un celular
+    // de gama baja que renderiza a menos de 60fps, la animación tarda
+    // varias veces más de lo pensado y el precio queda con caracteres
+    // basura mucho más tiempo del previsto.
+    const inicio = performance.now();
 
     const ticker = () => {
-      frame++;
-      const progresoGlobal = frame / totalFrames;
+      const progresoGlobal = (performance.now() - inicio) / durationMs;
       let salida = "";
       for (let i = 0; i < largoFinal; i++) {
         const progresoCaracter = i * progresoPorCaracter;
@@ -54,7 +58,7 @@ export function TextScramble({
       }
       el.textContent = salida;
 
-      if (frame >= totalFrames) {
+      if (progresoGlobal >= 1) {
         el.textContent = value;
         gsap.ticker.remove(ticker);
       }
