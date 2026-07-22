@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Receipt } from "lucide-react";
+import { PackageSearch, Receipt } from "lucide-react";
 import { auth } from "@/auth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
 import { EstadoDevolucionBadge } from "@/components/devoluciones/estado-devolucion-badge";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
@@ -31,7 +32,12 @@ export default async function CuentaPedidosPage() {
       <h1 className="font-display mb-6 text-2xl font-bold">Mis pedidos</h1>
 
       {pedidos.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Todavía no tienes pedidos.</p>
+        <EmptyState
+          icon={PackageSearch}
+          titulo="Todavía no tienes pedidos"
+          descripcion="Cuando compres algo, vas a poder seguir el estado de tu pedido acá."
+          cta={{ href: "/productos", label: "Ver catálogo" }}
+        />
       ) : (
         <RevealOnScroll
           className="space-y-4"

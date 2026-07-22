@@ -6,6 +6,7 @@ import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { Magnetic } from "@/components/fx/magnetic";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
@@ -20,18 +21,12 @@ export function CarritoContenido() {
 
   if (items.length === 0) {
     return (
-      <RevealOnScroll className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-24 text-center">
-        <ShoppingBag className="size-10 text-muted-foreground" />
-        <p className="mt-4 text-lg font-semibold">Tu carrito está vacío</p>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Explora el catálogo y encuentra tu próximo equipo.
-        </p>
-        <Magnetic strength={0.15} className="mt-6 inline-block">
-          <Button asChild>
-            <Link href="/productos">Ver catálogo</Link>
-          </Button>
-        </Magnetic>
-      </RevealOnScroll>
+      <EmptyState
+        icon={ShoppingBag}
+        titulo="Tu carrito está vacío"
+        descripcion="Explora el catálogo y encuentra tu próximo equipo."
+        cta={{ href: "/productos", label: "Ver catálogo" }}
+      />
     );
   }
 
