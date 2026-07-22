@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Magnetic } from "@/components/fx/magnetic";
 import { HeroScene } from "@/components/home/hero-scene";
 import { categoriasNav } from "@/lib/site-config";
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { ensureGsapPlugins, gsap, prefersReducedMotion } from "@/lib/gsap";
 
 const SELECTORES_HERO =
   "[data-hero-eyebrow], [data-hero-line], [data-hero-copy], [data-hero-cta], [data-hero-visual], [data-hero-side], [data-hero-scroll]";
@@ -47,6 +47,30 @@ export function Hero() {
     return () => ctx.revert();
   }, []);
 
+  // Parallax de salida: al bajar el scroll, el contenido se eleva y se
+  // desvanece mientras el fondo hace un leve zoom — efecto "cinematográfico"
+  // vía ScrollTrigger scrub (sincronizado con Lenis en smooth-scroll-provider),
+  // no una animación de duración fija.
+  React.useEffect(() => {
+    if (prefersReducedMotion()) return;
+    ensureGsapPlugins();
+    const ctx = gsap.context(() => {
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        })
+        .to("[data-hero-fade]", { yPercent: -15, opacity: 0.15, ease: "none" }, 0)
+        .to("[data-hero-visual]", { scale: 1.12, ease: "none" }, 0);
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <section
       ref={rootRef}
@@ -56,7 +80,10 @@ export function Hero() {
         <HeroScene />
       </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 items-center justify-between px-6 md:px-16">
+      <div
+        data-hero-fade
+        className="relative z-10 mx-auto flex w-full max-w-[1600px] flex-1 items-center justify-between px-6 md:px-16"
+      >
         <div className="max-w-xl lg:max-w-2xl">
           <div
             data-hero-eyebrow
