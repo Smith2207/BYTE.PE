@@ -52,7 +52,7 @@ export function HeroScene({
     <div ref={containerRef} className="absolute inset-0 h-full w-full">
       <div ref={parallaxRef} className="absolute inset-0 h-full w-full scale-105">
         {/* Fallback: escena de glow monocromo, siempre presente detrás del video */}
-        <div className="absolute inset-0 overflow-hidden bg-black">
+        <div className="absolute inset-0 overflow-hidden bg-background">
           <GlowOrb />
         </div>
 

@@ -50,7 +50,7 @@ export function Hero() {
   return (
     <section
       ref={rootRef}
-      className="relative flex h-screen min-h-[640px] w-full items-center overflow-hidden bg-black text-white"
+      className="relative flex h-screen min-h-[640px] w-full items-center overflow-hidden bg-background text-white"
     >
       <div data-hero-visual className="absolute inset-0">
         <HeroScene />
@@ -148,10 +148,10 @@ export function Hero() {
 
       <div
         data-hero-scroll
-        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/50"
+        className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.3em] text-white/60"
       >
         Scroll
-        <span className="animate-scroll block h-6 w-px bg-white/40" />
+        <span className="animate-scroll block h-6 w-px bg-gradient-to-b from-primary to-transparent" />
       </div>
     </section>
   );
