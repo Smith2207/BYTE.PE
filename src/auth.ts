@@ -7,6 +7,12 @@ import {
   obtenerOCrearUsuarioOAuth,
   getUsuarioPorEmail,
 } from "@/lib/usuarios/store";
+import { superoLimiteDeFallos, registrarFallo } from "@/lib/seguridad/rate-limit";
+
+// 8 intentos fallidos por correo en 15 minutos — suficiente margen para
+// que alguien se equivoque de contraseña un par de veces sin bloquearse,
+// pero corta un ataque de fuerza bruta contra una cuenta puntual.
+const LIMITE_LOGIN = { max: 8, ventanaMs: 15 * 60 * 1000 };
 
 /**
  * Config completa (Node.js runtime): solo se usa en el route handler de
@@ -25,8 +31,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
+
+        const clave = `login:${email.trim().toLowerCase()}`;
+        if (await superoLimiteDeFallos(clave, LIMITE_LOGIN)) return null;
+
         const usuario = await verificarCredenciales(email, password);
-        if (!usuario) return null;
+        if (!usuario) {
+          await registrarFallo(clave);
+          return null;
+        }
         return {
           id: usuario.id,
           name: usuario.nombre,
