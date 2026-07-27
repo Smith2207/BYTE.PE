@@ -3,6 +3,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
 import { pedidos, pedidoItems, direcciones, cupones } from "@/db/schema";
 import type { TipoDocumento, MetodoPago } from "@/db/schema/enums";
+import { decrementarStock, restaurarStock } from "@/lib/mock/repo";
 
 export type PedidoItemMock = {
   productoId: string;
@@ -312,6 +313,18 @@ export async function getVariacionUltimos30Dias(): Promise<{
   };
 }
 
+/** Estados en los que el stock de los ítems del pedido sigue reservado
+ * (ya se descontó del inventario y no se ha devuelto). "cancelado" y
+ * "reembolsado" son los únicos donde el stock ya volvió (o debe volver)
+ * al catálogo. */
+const ESTADOS_CON_STOCK_RESERVADO: PedidoMock["estado"][] = [
+  "pendiente",
+  "pagado",
+  "preparando",
+  "enviado",
+  "entregado",
+];
+
 export async function actualizarEstadoPedido(
   numeroPedido: string,
   estado: PedidoMock["estado"],
@@ -321,11 +334,49 @@ export async function actualizarEstadoPedido(
   if (datos?.courier !== undefined) cambios.courier = datos.courier;
   if (datos?.numeroTracking !== undefined) cambios.numeroTracking = datos.numeroTracking;
 
-  const [fila] = await db
-    .update(pedidos)
-    .set(cambios)
-    .where(eq(pedidos.numeroPedido, numeroPedido))
-    .returning();
-  if (!fila) throw new Error("Pedido no encontrado");
+  const fila = await db.transaction(async (tx) => {
+    const [actual] = await tx
+      .select({ id: pedidos.id, estado: pedidos.estado })
+      .from(pedidos)
+      .where(eq(pedidos.numeroPedido, numeroPedido))
+      .limit(1);
+    if (!actual) throw new Error("Pedido no encontrado");
+
+    const estadoAnterior = actual.estado as PedidoMock["estado"];
+    const teniaStock = ESTADOS_CON_STOCK_RESERVADO.includes(estadoAnterior);
+    const tieneStock = ESTADOS_CON_STOCK_RESERVADO.includes(estado);
+
+    // Cambia de "reservado" a "liberado" (ej. se cancela un pedido) o
+    // viceversa (ej. se reactiva uno cancelado por error): hay que mover
+    // el stock junto con el estado, si no el inventario queda descuadrado
+    // permanentemente.
+    if (teniaStock !== tieneStock) {
+      const items = await tx
+        .select({
+          productoId: pedidoItems.productoId,
+          varianteId: pedidoItems.varianteId,
+          cantidad: pedidoItems.cantidad,
+        })
+        .from(pedidoItems)
+        .where(eq(pedidoItems.pedidoId, actual.id));
+
+      for (const item of items) {
+        if (!item.productoId) continue;
+        if (teniaStock && !tieneStock) {
+          await restaurarStock(item.productoId, item.varianteId, item.cantidad, tx);
+        } else {
+          await decrementarStock(item.productoId, item.varianteId, item.cantidad, tx);
+        }
+      }
+    }
+
+    const [actualizado] = await tx
+      .update(pedidos)
+      .set(cambios)
+      .where(eq(pedidos.numeroPedido, numeroPedido))
+      .returning();
+    return actualizado;
+  });
+
   return aPedidoMock(fila, db);
 }
