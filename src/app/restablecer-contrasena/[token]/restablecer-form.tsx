@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Magnetic } from "@/components/fx/magnetic";
 import { restablecerPasswordAction } from "../actions";
+import { ChecklistPassword } from "@/components/auth/checklist-password";
+import { passwordValida } from "@/lib/validations/password";
 
 export function RestablecerContrasenaForm({ token }: { token: string }) {
   const router = useRouter();
@@ -22,6 +24,10 @@ export function RestablecerContrasenaForm({ token }: { token: string }) {
     e.preventDefault();
     if (password !== confirmacion) {
       toast.error("Las contraseñas no coinciden");
+      return;
+    }
+    if (!passwordValida(password)) {
+      toast.error("Tu contraseña todavía no cumple todos los requisitos");
       return;
     }
     setEnviando(true);
@@ -45,18 +51,19 @@ export function RestablecerContrasenaForm({ token }: { token: string }) {
             <PasswordInput
               id="password"
               required
-              minLength={6}
+              minLength={8}
               className="mt-1.5"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {password.length > 0 && <ChecklistPassword password={password} />}
           </div>
           <div>
             <Label htmlFor="confirmacion">Confirmar contraseña</Label>
             <PasswordInput
               id="confirmacion"
               required
-              minLength={6}
+              minLength={8}
               className="mt-1.5"
               value={confirmacion}
               onChange={(e) => setConfirmacion(e.target.value)}

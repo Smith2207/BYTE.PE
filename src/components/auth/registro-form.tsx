@@ -19,6 +19,8 @@ import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
 import { MODAL_CARD, MODAL_INPUT } from "@/lib/motion";
 import { registrarUsuarioAction } from "@/app/registro/actions";
+import { ChecklistPassword } from "./checklist-password";
+import { passwordValida } from "@/lib/validations/password";
 
 export function RegistroForm({
   callbackUrl,
@@ -35,6 +37,11 @@ export function RegistroForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!passwordValida(form.password)) {
+      toast.error("Tu contraseña todavía no cumple todos los requisitos");
+      shake();
+      return;
+    }
     setEnviando(true);
     try {
       await registrarUsuarioAction(form);
@@ -103,11 +110,12 @@ export function RegistroForm({
                 <PasswordInput
                   id="password"
                   required
-                  minLength={6}
+                  minLength={8}
                   className={`mt-1.5 ${MODAL_INPUT}`}
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                 />
+                {form.password.length > 0 && <ChecklistPassword password={form.password} />}
               </StaggerField>
               <StaggerField>
                 <Magnetic strength={0.15} className="block">

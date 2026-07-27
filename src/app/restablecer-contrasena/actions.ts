@@ -2,8 +2,9 @@
 
 import { z } from "zod";
 import { restablecerPasswordConToken } from "@/lib/usuarios/store";
+import { passwordValida, MENSAJE_PASSWORD_INVALIDA } from "@/lib/validations/password";
 
-const passwordSchema = z.string().min(6, "La contraseña debe tener al menos 6 caracteres");
+const passwordSchema = z.string().refine(passwordValida, MENSAJE_PASSWORD_INVALIDA);
 
 export async function restablecerPasswordAction(token: string, password: string) {
   const nuevaPassword = passwordSchema.parse(password);
