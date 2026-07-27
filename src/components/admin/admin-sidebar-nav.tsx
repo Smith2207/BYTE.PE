@@ -15,6 +15,7 @@ import {
   Wallet,
   ClipboardList,
   Route,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/cupones", label: "Cupones", icon: Tag, seccion: "Ventas" },
   { href: "/admin/devoluciones", label: "Devoluciones", icon: Undo2, seccion: "Postventa" },
   { href: "/admin/reclamos", label: "Reclamos", icon: FileWarning, seccion: "Postventa" },
+  { href: "/admin/resenas", label: "Reseñas", icon: MessageSquareText, seccion: "Postventa" },
   { href: "/admin/gastos", label: "Gastos", icon: Wallet, seccion: "Finanzas" },
   { href: "/admin/kardex", label: "Kardex", icon: ClipboardList, seccion: "Finanzas" },
 ] as const;

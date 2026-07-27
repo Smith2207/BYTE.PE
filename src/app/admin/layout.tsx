@@ -5,6 +5,7 @@ import { contarAlertasStock } from "@/lib/mock/repo";
 import { contarPedidosPendientes } from "@/lib/pedidos/store";
 import { contarReclamosPendientes } from "@/lib/reclamos/store";
 import { contarSolicitudesPendientes } from "@/lib/devoluciones/store";
+import { contarResenasPendientes } from "@/lib/resenas/store";
 
 /**
  * Consola de operaciones: layout fijo tipo app — sidebar y topbar no se
@@ -14,12 +15,13 @@ import { contarSolicitudesPendientes } from "@/lib/devoluciones/store";
  * alertas mientras se revisan tablas largas.
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const [pedidosPendientes, alertasStock, reclamosPendientes, devolucionesPendientes] =
+  const [pedidosPendientes, alertasStock, reclamosPendientes, devolucionesPendientes, resenasPendientes] =
     await Promise.all([
       contarPedidosPendientes(),
       contarAlertasStock(),
       contarReclamosPendientes(),
       contarSolicitudesPendientes(),
+      contarResenasPendientes(),
     ]);
 
   return (
@@ -41,6 +43,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             alertasStock={alertasStock}
             reclamosPendientes={reclamosPendientes}
             devolucionesPendientes={devolucionesPendientes}
+            resenasPendientes={resenasPendientes}
           />
         </header>
 

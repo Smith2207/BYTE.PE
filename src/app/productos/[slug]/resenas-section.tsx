@@ -1,16 +1,25 @@
-import { Star } from "lucide-react";
-import { listarResenasPorProducto, promedioCalificacion } from "@/lib/resenas/store";
+import { Star, BadgeCheck } from "lucide-react";
+import {
+  listarResenasPorProducto,
+  obtenerResenaDeUsuario,
+  promedioCalificacion,
+} from "@/lib/resenas/store";
 import { ResenaForm } from "./resena-form";
 
 export async function ResenasSection({
   productoId,
   productoSlug,
+  usuarioId,
 }: {
   productoId: string;
   productoSlug: string;
+  usuarioId?: string;
 }) {
-  const resenas = await listarResenasPorProducto(productoId);
-  const { promedio, total } = await promedioCalificacion(productoId);
+  const [resenas, { promedio, total }, resenaPropia] = await Promise.all([
+    listarResenasPorProducto(productoId),
+    promedioCalificacion(productoId),
+    usuarioId ? obtenerResenaDeUsuario(productoId, usuarioId) : Promise.resolve(null),
+  ]);
 
   return (
     <div className="mt-16">
@@ -32,7 +41,14 @@ export async function ResenasSection({
             resenas.map((r) => (
               <div key={r.id} className="rounded-xl border border-border/60 p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">{r.usuarioNombre}</span>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold">
+                    {r.usuarioNombre}
+                    {r.compraVerificada && (
+                      <span className="flex items-center gap-1 text-xs font-normal text-emerald-500">
+                        <BadgeCheck className="size-3.5" /> Compra verificada
+                      </span>
+                    )}
+                  </span>
                   <div className="flex gap-0.5">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <Star
@@ -48,7 +64,7 @@ export async function ResenasSection({
           )}
         </div>
 
-        <ResenaForm productoId={productoId} productoSlug={productoSlug} />
+        <ResenaForm productoId={productoId} productoSlug={productoSlug} resenaPropia={resenaPropia} />
       </div>
     </div>
   );

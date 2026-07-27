@@ -86,6 +86,10 @@ export const categoriaGastoEnum = pgEnum("categoria_gasto", [
   "otros",
 ]);
 
+// Moderación de reseñas: quedan "pendiente" hasta que un admin las revisa,
+// así nunca se publica un comentario ofensivo o spam sin que nadie lo vea antes.
+export const estadoResenaEnum = pgEnum("estado_resena", ["pendiente", "publicada", "rechazada"]);
+
 export type RolUsuario = (typeof rolUsuarioEnum.enumValues)[number];
 export type TipoDocumento = (typeof tipoDocumentoEnum.enumValues)[number];
 export type EstadoPedido = (typeof estadoPedidoEnum.enumValues)[number];
@@ -98,3 +102,4 @@ export type TipoEnvioCompra = (typeof tipoEnvioCompraEnum.enumValues)[number];
 export type TipoDevolucion = (typeof tipoDevolucionEnum.enumValues)[number];
 export type EstadoDevolucion = (typeof estadoDevolucionEnum.enumValues)[number];
 export type CategoriaGasto = (typeof categoriaGastoEnum.enumValues)[number];
+export type EstadoResena = (typeof estadoResenaEnum.enumValues)[number];

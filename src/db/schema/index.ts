@@ -13,4 +13,5 @@ export * from "./compras";
 export * from "./couriers";
 export * from "./devoluciones";
 export * from "./gastos";
+export * from "./seguridad";
 export * from "./relations";

@@ -12,8 +12,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { crearResenaAction } from "./actions";
 import { useAbrirAuthModal } from "@/components/auth/use-auth-modal";
+import type { ResenaAlmacenada } from "@/lib/resenas/store";
 
-export function ResenaForm({ productoId, productoSlug }: { productoId: string; productoSlug: string }) {
+export function ResenaForm({
+  productoId,
+  productoSlug,
+  resenaPropia,
+}: {
+  productoId: string;
+  productoSlug: string;
+  resenaPropia: ResenaAlmacenada | null;
+}) {
   const router = useRouter();
   const { status } = useSession();
   const abrirAuthModal = useAbrirAuthModal();
@@ -34,12 +43,29 @@ export function ResenaForm({ productoId, productoSlug }: { productoId: string; p
     );
   }
 
+  // Ya dejó una reseña de este producto (una por usuario) — se muestra su
+  // estado en vez del formulario, en lugar de dejarlo mandar duplicados
+  // que el servidor de todas formas rechazaría.
+  if (resenaPropia) {
+    const mensaje =
+      resenaPropia.estado === "publicada"
+        ? "Tu reseña ya está publicada. ¡Gracias por compartir tu experiencia!"
+        : resenaPropia.estado === "rechazada"
+          ? "Tu reseña no fue publicada porque no cumplió nuestras normas de la comunidad."
+          : "Tu reseña quedará visible en cuanto la revisemos.";
+    return (
+      <Card>
+        <CardContent className="py-6 text-sm text-muted-foreground">{mensaje}</CardContent>
+      </Card>
+    );
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setEnviando(true);
     try {
       await crearResenaAction({ productoId, productoSlug, calificacion, comentario });
-      toast.success("¡Gracias por tu reseña!");
+      toast.success("¡Gracias! Tu reseña quedará visible en cuanto la aprobemos.");
       setComentario("");
       router.refresh();
     } catch (err) {

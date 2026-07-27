@@ -127,7 +127,11 @@ export default async function ProductoPage({ params }: { params: { slug: string 
         )}
 
         <RevealOnScroll y={30}>
-          <ResenasSection productoId={producto.id} productoSlug={producto.slug} />
+          <ResenasSection
+            productoId={producto.id}
+            productoSlug={producto.slug}
+            usuarioId={session?.user?.id}
+          />
         </RevealOnScroll>
       </div>
     </div>
