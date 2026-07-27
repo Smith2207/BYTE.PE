@@ -61,6 +61,9 @@ Ecommerce completo de electrónica y tecnología para Perú — laptops, celular
 - **Todas las integraciones externas degradan con gracia**: si falta un token (Mercado Pago, apiperu.dev, Google, Blob, email), la función correspondiente devuelve `null`/no hace nada — nunca bloquea una compra. En producción, la única excepción es la subida de imágenes sin `BLOB_READ_WRITE_TOKEN`, que falla explícito en vez de escribir a un filesystem efímero que se perdería igual.
 - **NextAuth con config dividida**: `auth.config.ts` (Edge-safe, sin providers, usado por el middleware) + `auth.ts` (config completa con Credentials/Google, runtime Node.js).
 - **Opacidad de color con tokens `oklch()`**: los tokens de tema (`--primary`, `--accent`, etc. en `globals.css`) guardan un `oklch(...)` completo, no canales sueltos, así que el patrón clásico de shadcn (`hsl(var(--x) / <alpha-value>)`) no aplica. `tailwind.config.ts` envuelve cada token con sintaxis de color relativo de CSS (`oklch(from var(--x) l c h / <alpha-value>)`), que sí puede tomar ese `oklch(...)` completo y solo pisarle el alfa — así clases como `bg-primary/10` generan CSS real en vez de desaparecer en silencio.
+- **Stock reservado vs. liberado**: cancelar un pedido (webhook de Mercado Pago, fallo al generar el link de pago, o el admin a mano) repone el stock automáticamente, y reactivar uno cancelado lo vuelve a descontar — `actualizarEstadoPedido` en `src/lib/pedidos/store.ts` mueve el stock cada vez que el pedido cruza entre un estado "reservado" (pendiente...entregado) y uno "liberado" (cancelado/reembolsado), sin importar por qué camino se llegó ahí.
+- **Reseñas moderadas**: quedan `pendiente` hasta que un admin las aprueba en `/admin/resenas` (nunca se publican solas), se marca si el autor tiene una compra real del producto, y solo se permite una reseña por usuario y producto.
+- **Rate limiting sin Redis**: login, registro y "olvidé mi contraseña" están protegidos contra fuerza bruta/spam con una tabla propia en Postgres (`intentos_seguridad`, ver `src/lib/seguridad/rate-limit.ts`) en vez de un servicio externo — el volumen de auth de esta tienda no lo justifica y ya hay Postgres a mano.
 
 ---
 
@@ -98,4 +101,6 @@ Usuario admin de prueba tras el seed: `admin@ecomers.test` / `admin123`.
 ## Pendiente
 
 - **Mercado Pago**: código listo, falta configurar credenciales reales
-- Tests automatizados (hoy la verificación es manual en cada cambio)
+- Tests automatizados: hay cobertura unitaria de la lógica de negocio pura (cupones, desglose de
+  IGV, costeo por promedio ponderado, política de contraseña) con `npm test` — falta cobertura de
+  integración/e2e de los flujos completos (checkout, webhooks)
