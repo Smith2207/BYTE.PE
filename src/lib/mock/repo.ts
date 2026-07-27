@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, gte, ilike, inArray, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, productos, variantesProducto } from "@/db/schema";
+import { calcularCostoPonderado } from "@/lib/compras/costeo";
 
 /**
  * Repositorio de catálogo sobre Postgres (Neon) vía Drizzle. Reemplaza al
@@ -433,14 +434,13 @@ export async function registrarIngresoPorCompra(
 
   const stockPrevio = producto.stock;
   const costoPrevio = numNullable(producto.costoAdquisicion) ?? costoUnitario;
-  const costoPonderado =
-    (stockPrevio * costoPrevio + cantidad * costoUnitario) / (stockPrevio + cantidad);
+  const costoPonderado = calcularCostoPonderado(stockPrevio, costoPrevio, cantidad, costoUnitario);
 
   await db
     .update(productos)
     .set({
       stock: stockPrevio + cantidad,
-      costoAdquisicion: (Math.round(costoPonderado * 100) / 100).toFixed(2),
+      costoAdquisicion: costoPonderado.toFixed(2),
     })
     .where(eq(productos.id, productoId));
 }
