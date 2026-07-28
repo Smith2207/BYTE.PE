@@ -2,6 +2,7 @@ import { and, asc, desc, eq, gte, inArray, lte, ne, or, sql } from "drizzle-orm"
 import { db } from "@/db";
 import { categorias, productos, variantesProducto } from "@/db/schema";
 import { calcularCostoPonderado } from "@/lib/compras/costeo";
+import { eliminarArchivosBlob } from "@/lib/almacenamiento/blob";
 
 /**
  * Repositorio de catálogo sobre Postgres (Neon) vía Drizzle. Reemplaza al
@@ -548,13 +549,25 @@ export async function adminActualizarProducto(
   if (input.destacado !== undefined) cambios.destacado = input.destacado;
   cambios.updatedAt = new Date();
 
+  // Fotos que se sacaron del producto en esta edición — se borran de
+  // Vercel Blob después de guardar (si el update fallara no queremos
+  // haber borrado ya el archivo).
+  let imagenesQuitadas: string[] = [];
+  if (input.imagenes !== undefined) {
+    const [actual] = await db.select({ imagenes: productos.imagenes }).from(productos).where(eq(productos.id, id));
+    imagenesQuitadas = (actual?.imagenes ?? []).filter((url) => !input.imagenes!.includes(url));
+  }
+
   const [fila] = await db.update(productos).set(cambios).where(eq(productos.id, id)).returning();
   if (!fila) throw new Error("Producto no encontrado");
+  if (imagenesQuitadas.length > 0) await eliminarArchivosBlob(imagenesQuitadas);
   return aProductoAlmacenado(fila);
 }
 
 export async function adminEliminarProducto(id: string) {
+  const [fila] = await db.select({ imagenes: productos.imagenes }).from(productos).where(eq(productos.id, id));
   await db.delete(productos).where(eq(productos.id, id));
+  if (fila?.imagenes.length) await eliminarArchivosBlob(fila.imagenes);
 }
 
 export async function adminListarCategorias(): Promise<CategoriaAlmacenada[]> {

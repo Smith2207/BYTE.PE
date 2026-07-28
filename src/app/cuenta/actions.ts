@@ -15,6 +15,7 @@ import { listarResenasDeUsuario } from "@/lib/resenas/store";
 import { enviarCorreo } from "@/lib/email/client";
 import { plantillaVerificarCorreo } from "@/lib/email/plantillas";
 import { intentoPermitido } from "@/lib/seguridad/rate-limit";
+import { eliminarArchivosBlob } from "@/lib/almacenamiento/blob";
 
 export async function actualizarPerfilAction(input: {
   nombre: string;
@@ -50,7 +51,11 @@ export async function actualizarAvatarAction(imagenUrl: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Debes iniciar sesión");
 
+  const anterior = await getUsuarioPorId(session.user.id);
   const usuario = await actualizarUsuario(session.user.id, { imagen: imagenUrl });
+  if (anterior?.imagen && anterior.imagen !== imagenUrl) {
+    await eliminarArchivosBlob([anterior.imagen]);
+  }
   revalidatePath("/cuenta");
   return usuario;
 }
