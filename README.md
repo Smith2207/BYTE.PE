@@ -73,6 +73,7 @@ Ecommerce completo de electrónica y tecnología para Perú — laptops, celular
 - **Verificación de correo no bloqueante**: al registrarse se manda un link de confirmación, pero no verificarlo no impide comprar ni iniciar sesión — solo se muestra un aviso en `/cuenta` con opción de reenviar. Las cuentas de Google se marcan verificadas de entrada (Google ya lo confirmó).
 - **Búsqueda insensible a tildes sin la extensión `unaccent`**: `translate()` (función nativa de Postgres) quita los acentos más comunes del español de la columna y del término de búsqueda antes de compararlos con `ilike`, para no depender de que Neon tenga esa extensión habilitada.
 - **Bitácora de auditoría** (`/admin/bitacora`): registra quién cambió el estado de un pedido, eliminó un producto, moderó una reseña o resolvió una devolución/reembolso — no instrumenta cada clic del panel, solo las acciones que mueven plata o borran algo.
+- **Fotos de producto normalizadas al subirlas**: cualquier imagen que suba el admin (a veces viene tal cual de la publicación de Amazon/eBay del proveedor, con su propio fondo y proporción) se procesa con `sharp` antes de guardarse (`src/lib/imagenes/normalizar-foto-producto.ts`): se recortan márgenes existentes, se encaja en un lienzo cuadrado con fondo blanco sin recortar el producto, y se convierte a WebP — así el catálogo no mezcla fotos de tamaños y fondos distintos. Si el procesamiento falla por lo que sea, se sube el original en vez de bloquear la subida. No aplica a comprobantes de pago (deben quedar tal cual se subieron).
 
 ---
 
