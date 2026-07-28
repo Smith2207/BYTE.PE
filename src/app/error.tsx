@@ -6,10 +6,12 @@ import { TriangleAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { reportarErrorClienteAction } from "./error-actions";
 
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
     console.error("[error boundary]", error);
+    reportarErrorClienteAction(error.message, error.digest).catch(() => {});
   }, [error]);
 
   return (

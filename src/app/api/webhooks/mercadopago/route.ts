@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Payment } from "mercadopago";
 import { getMercadoPagoClient } from "@/lib/mercadopago/client";
 import { actualizarEstadoPedido } from "@/lib/pedidos/store";
+import { notificarErrorCritico } from "@/lib/monitoreo/notificar-error";
 
 /**
  * Notificación de pago de Mercado Pago (Checkout Pro). En sandbox, el
@@ -30,7 +31,9 @@ export async function POST(req: NextRequest) {
     }
     // "pending"/"in_process": se deja el pedido como está, MP reintenta el webhook.
   } catch (error) {
-    console.error("[webhook mercadopago] Error procesando notificación:", error);
+    // Sin esto, un webhook fallando en silencio (token vencido, etc.) solo
+    // se nota cuando un cliente reclama que pagó y su pedido nunca cambió.
+    await notificarErrorCritico("webhook de Mercado Pago", error);
     // Devolvemos 200 igual: si respondemos error, MP reintenta indefinidamente
     // notificaciones que probablemente seguirán fallando (ej. token inválido).
   }
