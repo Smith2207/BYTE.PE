@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-import { getPedido } from "@/lib/pedidos/store";
+import { getPedido, puedeVerPedido } from "@/lib/pedidos/store";
 import { formatoPEN, formatoDireccion } from "@/lib/format";
 import { siteConfig } from "@/lib/site-config";
 import { ESTADO_PEDIDO_ETIQUETA } from "@/components/pedidos/estado-pedido-badge";
 import { ImprimirBoton } from "./imprimir-boton";
+import { auth } from "@/auth";
 
 export const metadata = { title: "Comprobante de pago" };
 
@@ -20,9 +21,20 @@ const METODO_PAGO_ETIQUETA: Record<string, string> = {
   tarjeta: "Tarjeta de crédito/débito",
 };
 
-export default async function BoletaPage({ params }: { params: { numero: string } }) {
+export default async function BoletaPage({
+  params,
+  searchParams,
+}: {
+  params: { numero: string };
+  searchParams: { t?: string };
+}) {
   const pedido = await getPedido(params.numero);
   if (!pedido) notFound();
+
+  const session = await auth();
+  if (!puedeVerPedido(pedido, { usuarioId: session?.user?.id, esAdmin: session?.user?.rol === "admin", token: searchParams.t })) {
+    notFound();
+  }
 
   const esFactura = pedido.requiereFactura;
   // Formato tipo SUNAT (serie-correlativo) simulado a partir del número
@@ -34,7 +46,7 @@ export default async function BoletaPage({ params }: { params: { numero: string 
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-6 flex items-center justify-between print:hidden">
         <Link
-          href={`/pedido/${pedido.numeroPedido}`}
+          href={`/pedido/${pedido.numeroPedido}?t=${pedido.tokenAcceso}`}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" /> Volver al pedido

@@ -19,6 +19,12 @@ export const pedidos = pgTable("pedidos", {
   // Nulo permite dejar la puerta abierta a checkout de invitado a futuro.
   usuarioId: uuid("usuario_id").references(() => usuarios.id),
   numeroPedido: text("numero_pedido").notNull().unique(),
+  // numeroPedido es un correlativo simple y predecible (ORD-2026000001,
+  // ...002...) — nunca sirve por sí solo como control de acceso a
+  // /pedido/[numero]. Este token (32 bytes aleatorios, ver guardarPedido)
+  // es lo que de verdad protege esa URL para el checkout de invitado, que
+  // no tiene sesión con la que verificar dueño. Ver puedeVerPedido.
+  tokenAcceso: text("token_acceso").notNull(),
   estado: estadoPedidoEnum("estado").notNull().default("pendiente"),
 
   subtotal: numeric("subtotal", { precision: 10, scale: 2 }).notNull(),

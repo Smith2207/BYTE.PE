@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { and, desc, eq, gte, lt, ne, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/db";
@@ -17,6 +18,10 @@ export type PedidoItemMock = {
 export type PedidoMock = {
   id: string;
   numeroPedido: string;
+  // Ver tokenAcceso en src/db/schema/pedidos.ts — permite ver el pedido
+  // sin sesión (checkout de invitado) sin depender del numeroPedido
+  // correlativo, que es adivinable.
+  tokenAcceso: string;
   usuarioId?: string;
   estado:
     | "pendiente"
@@ -68,7 +73,7 @@ export async function generarNumeroPedido(tx: Ejecutor = db) {
   return `ORD-${new Date().getFullYear()}${correlativo}`;
 }
 
-type GuardarPedidoInput = Omit<PedidoMock, "id" | "estado" | "numeroTracking"> & {
+type GuardarPedidoInput = Omit<PedidoMock, "id" | "estado" | "numeroTracking" | "tokenAcceso"> & {
   estado?: PedidoMock["estado"];
 };
 
@@ -96,11 +101,13 @@ export async function guardarPedido(pedido: GuardarPedidoInput, tx: Ejecutor = d
     cuponId = cupon?.id ?? null;
   }
 
+  const tokenAcceso = crypto.randomBytes(24).toString("hex");
   const [pedidoFila] = await tx
     .insert(pedidos)
     .values({
       usuarioId: pedido.usuarioId ?? null,
       numeroPedido: pedido.numeroPedido,
+      tokenAcceso,
       estado: pedido.estado ?? "pendiente",
       subtotal: pedido.subtotal.toFixed(2),
       igv: pedido.igv.toFixed(2),
@@ -137,6 +144,8 @@ export async function guardarPedido(pedido: GuardarPedidoInput, tx: Ejecutor = d
       })),
     );
   }
+
+  return { tokenAcceso };
 }
 
 async function aPedidoMock(
@@ -157,6 +166,7 @@ async function aPedidoMock(
   return {
     id: fila.id,
     numeroPedido: fila.numeroPedido,
+    tokenAcceso: fila.tokenAcceso,
     usuarioId: fila.usuarioId ?? undefined,
     estado: fila.estado as PedidoMock["estado"],
     items: itemsFilas.map((i) => ({
@@ -379,4 +389,22 @@ export async function actualizarEstadoPedido(
   });
 
   return aPedidoMock(fila, db);
+}
+
+/**
+ * Quién puede ver /pedido/[numero] (y su boleta): un admin, el dueño de la
+ * cuenta que hizo el pedido, o quien tenga el token de acceso (checkout de
+ * invitado, o el propio dueño llegando desde el correo/el link de vuelta
+ * de Mercado Pago). Sin esto, el numeroPedido correlativo (ORD-2026000001,
+ * 000002...) alcanzaría por sí solo para ver los datos personales de
+ * cualquier pedido ajeno con solo adivinar el siguiente número.
+ */
+export function puedeVerPedido(
+  pedido: Pick<PedidoMock, "tokenAcceso" | "usuarioId">,
+  ctx: { usuarioId?: string; esAdmin?: boolean; token?: string },
+) {
+  if (ctx.esAdmin) return true;
+  if (ctx.usuarioId && ctx.usuarioId === pedido.usuarioId) return true;
+  if (ctx.token && ctx.token === pedido.tokenAcceso) return true;
+  return false;
 }

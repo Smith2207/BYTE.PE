@@ -122,8 +122,12 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
   // Todo en una sola transacción: si algo falla (sin stock, error al
   // guardar), no debe quedar stock descontado ni un cupón "gastado" sin
   // pedido real detrás.
-  const numeroPedido = await db.transaction(async (tx) => {
-    // Verificar stock disponible antes de confirmar (puede haber cambiado).
+  const { numeroPedido, tokenAcceso } = await db.transaction(async (tx) => {
+    // Chequeo rápido para el caso común (agotado desde hace rato) y un
+    // mensaje de error específico por producto — pero NO es lo que evita
+    // la sobreventa: dos compras simultáneas del último producto podrían
+    // pasar ambas este chequeo. Lo que de verdad protege es el UPDATE
+    // condicional dentro de decrementarStock, más abajo.
     for (const item of input.items) {
       const producto = await getProductoPorId(item.productoId);
       if (!producto || producto.stock < item.cantidad) {
@@ -132,16 +136,22 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
     }
 
     for (const item of input.items) {
-      await decrementarStock(item.productoId, item.varianteId, item.cantidad, tx);
+      const ok = await decrementarStock(item.productoId, item.varianteId, item.cantidad, tx);
+      if (!ok) {
+        throw new Error(`"${item.nombreProducto}" ya no tiene stock suficiente.`);
+      }
     }
 
     if (input.cuponCodigo) {
-      await incrementarUso(input.cuponCodigo, tx);
+      const cuponOk = await incrementarUso(input.cuponCodigo, tx);
+      if (!cuponOk) {
+        throw new Error("Este cupón alcanzó su límite de usos.");
+      }
     }
 
     const numeroPedido = await generarNumeroPedido(tx);
 
-    await guardarPedido(
+    const { tokenAcceso } = await guardarPedido(
       {
         numeroPedido,
         usuarioId: session?.user?.id,
@@ -171,7 +181,7 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
       tx,
     );
 
-    return numeroPedido;
+    return { numeroPedido, tokenAcceso };
   });
 
   // Fuera de la transacción: un correo que falla no debe deshacer un
@@ -180,7 +190,7 @@ async function crearPedidoPendiente(input: ConfirmarPedidoInput) {
     console.error("[checkout] Error enviando correos del pedido:", error);
   });
 
-  return { numeroPedido, total, items: itemsPedido };
+  return { numeroPedido, tokenAcceso, total, items: itemsPedido };
 }
 
 async function enviarCorreosDePedido(numeroPedido: string) {
@@ -206,8 +216,8 @@ async function enviarCorreosDePedido(numeroPedido: string) {
 export async function confirmarPedidoAction(input: ConfirmarPedidoInput) {
   // Yape/Plin/transferencia/contra-entrega: queda "pendiente" hasta que el
   // admin verifique el pago manualmente (ver /admin/pedidos).
-  const { numeroPedido } = await crearPedidoPendiente(input);
-  return { numeroPedido };
+  const { numeroPedido, tokenAcceso } = await crearPedidoPendiente(input);
+  return { numeroPedido, tokenAcceso };
 }
 
 export async function confirmarPedidoConTarjetaAction(input: ConfirmarPedidoInput) {
@@ -215,11 +225,16 @@ export async function confirmarPedidoConTarjetaAction(input: ConfirmarPedidoInpu
   // está configurado, no debe quedar un pedido huérfano con stock descontado.
   const client = getMercadoPagoClient();
 
-  const { numeroPedido, total, items } = await crearPedidoPendiente(input);
+  const { numeroPedido, tokenAcceso, total, items } = await crearPedidoPendiente(input);
 
   try {
     const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
     const preference = new Preference(client);
+    // El token va en la URL de vuelta: sin sesión (o en otro navegador,
+    // que es justo lo que pasa al volver desde la app de Mercado Pago en
+    // el celular), /pedido/[numero] no tiene otra forma de saber que
+    // quien vuelve es realmente el comprador.
+    const urlPedido = `${baseUrl}/pedido/${numeroPedido}?t=${tokenAcceso}`;
 
     const resultado = await preference.create({
       body: {
@@ -232,8 +247,8 @@ export async function confirmarPedidoConTarjetaAction(input: ConfirmarPedidoInpu
         })),
         external_reference: numeroPedido,
         back_urls: {
-          success: `${baseUrl}/pedido/${numeroPedido}`,
-          pending: `${baseUrl}/pedido/${numeroPedido}`,
+          success: urlPedido,
+          pending: urlPedido,
           failure: `${baseUrl}/checkout?pedido=${numeroPedido}&pago=fallido`,
         },
         auto_return: "approved",
@@ -246,7 +261,7 @@ export async function confirmarPedidoConTarjetaAction(input: ConfirmarPedidoInpu
       throw new Error("Mercado Pago no devolvió una URL de pago.");
     }
 
-    return { numeroPedido, checkoutUrl, total };
+    return { numeroPedido, tokenAcceso, checkoutUrl, total };
   } catch (error) {
     // El pedido ya se creó y el stock ya se descontó: si Mercado Pago
     // falla al generar el link de pago, no lo dejamos "pendiente" colgado.

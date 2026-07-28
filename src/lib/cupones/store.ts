@@ -41,11 +41,28 @@ export async function getCuponDestacado(): Promise<CuponAlmacenado | undefined> 
   return fila ? aCuponAlmacenado(fila) : undefined;
 }
 
-export async function incrementarUso(codigo: string, ejecutor: Pick<typeof db, "update"> = db) {
-  await ejecutor
+/**
+ * Incrementa el uso de un cupón solo si todavía le queda cupo — el WHERE
+ * condicional (no un "leer, comparar, sumar" en dos pasos) es lo que
+ * evita que dos compras simultáneas con el último uso disponible de un
+ * cupón limitado pasen ambas la validación y lo dejen sobre-usado. Mismo
+ * patrón que decrementarStock en src/lib/mock/repo.ts.
+ */
+export async function incrementarUso(
+  codigo: string,
+  ejecutor: Pick<typeof db, "update"> = db,
+): Promise<boolean> {
+  const [actualizado] = await ejecutor
     .update(cupones)
     .set({ usosActuales: sql`${cupones.usosActuales} + 1` })
-    .where(ilike(cupones.codigo, codigo.trim()));
+    .where(
+      and(
+        ilike(cupones.codigo, codigo.trim()),
+        sql`(${cupones.usosMaximos} is null or ${cupones.usosActuales} < ${cupones.usosMaximos})`,
+      ),
+    )
+    .returning({ id: cupones.id });
+  return Boolean(actualizado);
 }
 
 // ---------- Administración ----------

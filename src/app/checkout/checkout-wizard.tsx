@@ -469,9 +469,9 @@ export function CheckoutWizard({
         return;
       }
 
-      const { numeroPedido } = await confirmarPedidoAction(payload);
+      const { numeroPedido, tokenAcceso } = await confirmarPedidoAction(payload);
       vaciarCarrito();
-      router.push(`/pedido/${numeroPedido}`);
+      router.push(`/pedido/${numeroPedido}?t=${tokenAcceso}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No pudimos confirmar tu pedido");
     } finally {

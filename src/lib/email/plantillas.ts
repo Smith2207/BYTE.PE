@@ -53,7 +53,7 @@ export function plantillaConfirmacionPedido(pedido: PedidoMock) {
     </div>
     <p style="margin:20px 0 4px;font-size:13px;color:#a3a3a3;">Envío a</p>
     <p style="margin:0 0 20px;font-size:14px;color:#e5e5e5;">${formatoDireccion(pedido.direccion)}</p>
-    <a href="${BASE_URL}/pedido/${pedido.numeroPedido}"
+    <a href="${BASE_URL}/pedido/${pedido.numeroPedido}?t=${pedido.tokenAcceso}"
        style="display:inline-block;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
       Ver mi pedido
     </a>

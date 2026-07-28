@@ -374,23 +374,38 @@ export async function getProductosPorIds(ids: string[]): Promise<ProductoCatalog
 /**
  * Descuenta stock al confirmar un pedido. El llamador (checkout/actions.ts)
  * la ejecuta dentro de una transacción junto con la creación del pedido.
+ *
+ * El UPDATE es condicional (`WHERE stock >= cantidad`), no un simple
+ * "leer, restar, guardar": eso es lo que lo hace seguro ante dos compras
+ * simultáneas del último producto disponible. Con un `SELECT` previo y
+ * un `UPDATE` separado, dos transacciones concurrentes podrían leer el
+ * mismo stock=1 antes de que ninguna confirme, y las dos pasarían la
+ * validación — sobrevendiendo. Acá, si dos transacciones compiten por la
+ * misma fila, Postgres serializa los UPDATEs: la segunda solo ve el
+ * stock ya descontado por la primera y el WHERE deja de cumplirse, así
+ * que devuelve `false` en vez de vender una unidad que ya no existe.
  */
 export async function decrementarStock(
   productoId: string,
   varianteId: string | null,
   cantidad: number,
   tx: Pick<typeof db, "update"> = db,
-) {
-  await tx
+): Promise<boolean> {
+  const [actualizado] = await tx
     .update(productos)
-    .set({ stock: sql`greatest(0, ${productos.stock} - ${cantidad})` })
-    .where(eq(productos.id, productoId));
+    .set({ stock: sql`${productos.stock} - ${cantidad}` })
+    .where(and(eq(productos.id, productoId), gte(productos.stock, cantidad)))
+    .returning({ id: productos.id });
+
+  if (!actualizado) return false;
+
   if (varianteId) {
     await tx
       .update(variantesProducto)
       .set({ stock: sql`greatest(0, ${variantesProducto.stock} - ${cantidad})` })
       .where(eq(variantesProducto.id, varianteId));
   }
+  return true;
 }
 
 /**

@@ -9,12 +9,26 @@ import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
 import { EstadoPedidoBadge } from "@/components/pedidos/estado-pedido-badge";
 import { ELASTIC_EASE, GLASS_CARD } from "@/lib/motion";
-import { getPedido } from "@/lib/pedidos/store";
+import { getPedido, puedeVerPedido } from "@/lib/pedidos/store";
 import { formatoPEN, formatoDireccion } from "@/lib/format";
+import { auth } from "@/auth";
 
-export default async function PedidoConfirmacionPage({ params }: { params: { numero: string } }) {
+export default async function PedidoConfirmacionPage({
+  params,
+  searchParams,
+}: {
+  params: { numero: string };
+  searchParams: { t?: string };
+}) {
   const pedido = await getPedido(params.numero);
   if (!pedido) notFound();
+
+  const session = await auth();
+  // notFound() en vez de un 403 explícito: no queremos confirmarle a
+  // quien está adivinando números de pedido que este SÍ existe.
+  if (!puedeVerPedido(pedido, { usuarioId: session?.user?.id, esAdmin: session?.user?.rol === "admin", token: searchParams.t })) {
+    notFound();
+  }
 
   return (
     <RevealOnScroll y={20} ease={ELASTIC_EASE} className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
@@ -97,7 +111,7 @@ export default async function PedidoConfirmacionPage({ params }: { params: { num
 
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button variant="outline" asChild>
-          <Link href={`/pedido/${pedido.numeroPedido}/boleta`}>
+          <Link href={`/pedido/${pedido.numeroPedido}/boleta?t=${pedido.tokenAcceso}`}>
             <Receipt className="size-4" /> Ver boleta
           </Link>
         </Button>
