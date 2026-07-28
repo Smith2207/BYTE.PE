@@ -11,6 +11,7 @@ import { SiteChrome } from "@/components/site-chrome";
 import { WhatsappButton } from "@/components/layout/whatsapp-button";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/lib/site-config";
+import { CookieConsent } from "@/components/analytics/cookie-consent";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // Fuente de impacto para titulares "cinematográficos" (hero) — separada de
@@ -66,6 +67,9 @@ export default function RootLayout({
                 </div>
                 <WhatsappButton />
                 <Toaster />
+                {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
+                  <CookieConsent gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+                )}
               </SmoothScrollProvider>
             </CartProvider>
           </SessionProvider>

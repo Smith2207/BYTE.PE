@@ -17,6 +17,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@next/third-parties": "^14.2.35",
     "@perucode/ubigeo-peru": "^1.0.0",
     "@radix-ui/react-accordion": "^1.2.16",
     "@radix-ui/react-alert-dialog": "^1.1.19",
