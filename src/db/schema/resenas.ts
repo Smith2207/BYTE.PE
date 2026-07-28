@@ -26,8 +26,12 @@ export const resenas = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
-    // Un usuario no puede dejar más de una reseña por producto.
-    unaPorUsuarioYProducto: uniqueIndex("resenas_usuario_producto_unq").on(t.usuarioId, t.productoId),
+    // Un usuario no puede dejar más de una reseña por producto. El orden
+    // de columnas importa para qué consultas puede usar este índice:
+    // productoId primero porque listarResenasPorProducto (una vez por
+    // cada visita a la ficha de producto) filtra solo por eso — con
+    // usuarioId primero, esa consulta no podría usar el índice.
+    unaPorProductoYUsuario: uniqueIndex("resenas_producto_usuario_unq").on(t.productoId, t.usuarioId),
   }),
 );
 
