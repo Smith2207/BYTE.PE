@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, ilike, inArray, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { categorias, productos, variantesProducto } from "@/db/schema";
 import { calcularCostoPonderado } from "@/lib/compras/costeo";
@@ -264,8 +264,17 @@ export async function getProductos(filtros: FiltrosProductos = {}) {
   if (precioMin != null) condiciones.push(gte(precioFinalSql, precioMin.toFixed(2)));
   if (precioMax != null) condiciones.push(lte(precioFinalSql, precioMax.toFixed(2)));
   if (busqueda) {
+    // ilike por sí solo es sensible a tildes ("camara" no encuentra
+    // "Cámara") — translate() (función nativa de Postgres, sin depender
+    // de la extensión unaccent) quita los acentos más comunes del
+    // español de ambos lados antes de comparar.
     const q = `%${busqueda}%`;
-    condiciones.push(or(ilike(productos.nombre, q), ilike(productos.marca, q))!);
+    condiciones.push(
+      sql`(
+        translate(lower(${productos.nombre}), 'áéíóúñ', 'aeioun') ilike translate(lower(${q}), 'áéíóúñ', 'aeioun')
+        or translate(lower(${productos.marca}), 'áéíóúñ', 'aeioun') ilike translate(lower(${q}), 'áéíóúñ', 'aeioun')
+      )`,
+    );
   }
 
   const where = and(...condiciones);
