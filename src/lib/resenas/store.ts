@@ -103,6 +103,35 @@ export async function obtenerResenaDeUsuario(
   return fila ? aResenaAlmacenada(fila) : null;
 }
 
+/** Todas las reseñas de un usuario (publicadas o no) — para "descargar mis
+ * datos" en /cuenta. A diferencia de listarResenasPorProducto, no filtra
+ * por estado: acá el usuario está viendo lo suyo, no el catálogo público. */
+export async function listarResenasDeUsuario(usuarioId: string): Promise<
+  (ResenaAlmacenada & { productoNombre: string })[]
+> {
+  const filas = await db
+    .select({
+      id: resenas.id,
+      productoId: resenas.productoId,
+      usuarioId: resenas.usuarioId,
+      usuarioNombre: usuarios.nombre,
+      calificacion: resenas.calificacion,
+      comentario: resenas.comentario,
+      fotoUrl: resenas.fotoUrl,
+      compraVerificada: resenas.compraVerificada,
+      estado: resenas.estado,
+      createdAt: resenas.createdAt,
+      productoNombre: productos.nombre,
+    })
+    .from(resenas)
+    .innerJoin(usuarios, eq(resenas.usuarioId, usuarios.id))
+    .innerJoin(productos, eq(resenas.productoId, productos.id))
+    .where(eq(resenas.usuarioId, usuarioId))
+    .orderBy(desc(resenas.createdAt));
+
+  return filas.map((f) => ({ ...aResenaAlmacenada(f), productoNombre: f.productoNombre }));
+}
+
 export async function promedioCalificacion(productoId: string) {
   const resenasProducto = await listarResenasPorProducto(productoId);
   if (resenasProducto.length === 0) return { promedio: 0, total: 0 };

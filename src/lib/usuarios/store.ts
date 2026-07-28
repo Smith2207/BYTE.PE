@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { usuarios, passwordResetTokens } from "@/db/schema";
+import { usuarios, passwordResetTokens, pedidos, cuponUsos } from "@/db/schema";
 import type { RolUsuario } from "@/db/schema/enums";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
@@ -162,4 +162,24 @@ export async function actualizarUsuario(
   const [fila] = await db.update(usuarios).set(input).where(eq(usuarios.id, id)).returning();
   if (!fila) throw new Error("Usuario no encontrado");
   return aUsuarioAlmacenado(fila);
+}
+
+/**
+ * Derecho de cancelación (ARCO, Ley N° 29733 — Protección de Datos
+ * Personales del Perú): borra la cuenta y todo lo que cuelga de ella con
+ * onDelete "cascade" (direcciones, carrito, wishlist, reseñas). Los
+ * pedidos NO se borran ni se tocan sus datos de facturación — son
+ * registros contables que hay que conservar, y ya guardan su propia
+ * copia de nombre/documento/email/teléfono del comprador al momento de
+ * la compra (ver guardarPedido), así que desvincular el usuarioId no les
+ * quita nada. pedidos y cupon_usos no tienen onDelete definido (default
+ * RESTRICT), así que hay que desvincularlos a mano antes del DELETE o la
+ * transacción entera falla por violar la foreign key.
+ */
+export async function eliminarUsuario(id: string) {
+  await db.transaction(async (tx) => {
+    await tx.update(pedidos).set({ usuarioId: null }).where(eq(pedidos.usuarioId, id));
+    await tx.update(cuponUsos).set({ usuarioId: null }).where(eq(cuponUsos.usuarioId, id));
+    await tx.delete(usuarios).where(eq(usuarios.id, id));
+  });
 }

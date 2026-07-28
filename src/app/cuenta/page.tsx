@@ -11,6 +11,7 @@ import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
 import { PerfilForm } from "./perfil-form";
 import { AvatarUploader } from "./avatar-uploader";
+import { PrivacidadCard } from "./privacidad-card";
 
 export const metadata = { title: "Mi cuenta" };
 
@@ -91,6 +92,8 @@ export default async function CuentaPage() {
           <PerfilForm nombre={usuario.nombre} telefono={usuario.telefono} dni={usuario.dni} />
         </CardContent>
       </Card>
+
+      <PrivacidadCard />
     </RevealOnScroll>
   );
 }

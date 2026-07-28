@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { actualizarUsuario } from "@/lib/usuarios/store";
+import { actualizarUsuario, eliminarUsuario, getUsuarioPorId } from "@/lib/usuarios/store";
+import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
+import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
+import { listarWishlistPorUsuario } from "@/lib/wishlist/store";
+import { listarResenasDeUsuario } from "@/lib/resenas/store";
 
 export async function actualizarPerfilAction(input: {
   nombre: string;
@@ -41,4 +45,61 @@ export async function actualizarAvatarAction(imagenUrl: string) {
   const usuario = await actualizarUsuario(session.user.id, { imagen: imagenUrl });
   revalidatePath("/cuenta");
   return usuario;
+}
+
+/** Derecho de acceso (ARCO): junta todo lo que la tienda tiene guardado
+ * de este usuario para que pueda descargarlo. No incluye el hash de la
+ * contraseña ni tokens internos. */
+export async function exportarMisDatosAction() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Debes iniciar sesión");
+
+  const [usuario, pedidos, direcciones, wishlist, resenas] = await Promise.all([
+    getUsuarioPorId(session.user.id),
+    listarPedidosPorUsuario(session.user.id),
+    listarDireccionesPorUsuario(session.user.id),
+    listarWishlistPorUsuario(session.user.id),
+    listarResenasDeUsuario(session.user.id),
+  ]);
+  if (!usuario) throw new Error("Usuario no encontrado");
+
+  return {
+    generadoEn: new Date().toISOString(),
+    perfil: {
+      nombre: usuario.nombre,
+      email: usuario.email,
+      dni: usuario.dni,
+      telefono: usuario.telefono,
+      miembroDesde: usuario.createdAt,
+    },
+    direcciones,
+    pedidos: pedidos.map((p) => ({
+      numeroPedido: p.numeroPedido,
+      estado: p.estado,
+      total: p.total,
+      items: p.items,
+      direccion: p.direccion,
+      metodoPago: p.metodoPago,
+      createdAt: p.createdAt,
+    })),
+    wishlist,
+    resenas: resenas.map((r) => ({
+      producto: r.productoNombre,
+      calificacion: r.calificacion,
+      comentario: r.comentario,
+      estado: r.estado,
+      createdAt: r.createdAt,
+    })),
+  };
+}
+
+/** Derecho de cancelación (ARCO): borra la cuenta. Los pedidos quedan
+ * como registro contable pero se desvinculan de la cuenta (ver
+ * eliminarUsuario) — el cliente debe cerrar la sesión inmediatamente
+ * después de llamar a esto, ya que el usuarioId de su token ya no existe. */
+export async function eliminarCuentaAction() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Debes iniciar sesión");
+
+  await eliminarUsuario(session.user.id);
 }
