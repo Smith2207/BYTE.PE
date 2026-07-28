@@ -16,6 +16,7 @@ import {
   ClipboardList,
   Route,
   MessageSquareText,
+  ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ export const ADMIN_NAV_ITEMS = [
   { href: "/admin/resenas", label: "Reseñas", icon: MessageSquareText, seccion: "Postventa" },
   { href: "/admin/gastos", label: "Gastos", icon: Wallet, seccion: "Finanzas" },
   { href: "/admin/kardex", label: "Kardex", icon: ClipboardList, seccion: "Finanzas" },
+  { href: "/admin/bitacora", label: "Bitácora", icon: ScrollText, seccion: "Finanzas" },
 ] as const;
 
 function esActivo(pathname: string, href: string) {

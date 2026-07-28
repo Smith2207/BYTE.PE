@@ -14,4 +14,5 @@ export * from "./couriers";
 export * from "./devoluciones";
 export * from "./gastos";
 export * from "./seguridad";
+export * from "./bitacora";
 export * from "./relations";

@@ -1,15 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 import {
   adminCrearProducto,
   adminActualizarProducto,
   adminEliminarProducto,
   adminListarProductos,
   adminListarCategorias,
+  getProductoPorId,
   type ProductoFormInput,
 } from "@/lib/mock/repo";
 import { filaImportacionSchema, type FilaImportacion } from "@/lib/validations/importar-productos";
+import { registrarAccion } from "@/lib/bitacora/store";
 
 export async function crearProductoAction(input: ProductoFormInput) {
   const producto = await adminCrearProducto(input);
@@ -27,7 +30,15 @@ export async function actualizarProductoAction(id: string, input: Partial<Produc
 }
 
 export async function eliminarProductoAction(id: string) {
+  const [session, producto] = await Promise.all([auth(), getProductoPorId(id)]);
   await adminEliminarProducto(id);
+  if (session?.user?.id) {
+    await registrarAccion(
+      { id: session.user.id, nombre: session.user.name ?? session.user.email ?? "admin" },
+      "eliminar_producto",
+      { id, nombre: producto?.nombre, sku: producto?.sku },
+    );
+  }
   revalidatePath("/admin/productos");
   revalidatePath("/productos");
 }

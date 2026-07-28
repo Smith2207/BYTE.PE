@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 import {
   crearCompra,
   actualizarEstadoCompra,
@@ -11,6 +12,7 @@ import {
   type CompraFormInput,
   type CompraAlmacenada,
 } from "@/lib/compras/store";
+import { registrarAccion } from "@/lib/bitacora/store";
 
 export async function crearCompraAction(input: CompraFormInput) {
   const compra = await crearCompra(input);
@@ -46,7 +48,18 @@ export async function confirmarRecepcionCompraAction(
   id: string,
   precios: { itemId: string; precioVenta: number }[],
 ) {
+  const session = await auth();
   const compra = await confirmarRecepcionCompra(id, precios);
+  if (session?.user?.id) {
+    // Esta acción suma stock y recalcula el costo de adquisición por
+    // promedio ponderado de verdad — vale la pena que quede quién la
+    // confirmó, no solo cuándo.
+    await registrarAccion(
+      { id: session.user.id, nombre: session.user.name ?? session.user.email ?? "admin" },
+      "confirmar_recepcion_compra",
+      { compraId: id },
+    );
+  }
   revalidatePath("/admin/compras");
   revalidatePath(`/admin/compras/${id}`);
   revalidatePath("/admin/productos");
