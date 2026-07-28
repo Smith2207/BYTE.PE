@@ -5,6 +5,7 @@ import { put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { detectarTipoImagen, detectarTipoArchivo } from "@/lib/validar-imagen";
+import { normalizarFotoProducto } from "@/lib/imagenes/normalizar-foto-producto";
 
 const MAX_BYTES_IMAGEN = 5 * 1024 * 1024; // 5MB
 const MAX_BYTES_DOCUMENTO = 10 * 1024 * 1024; // 10MB — para PDFs de factura/voucher
@@ -34,9 +35,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const buffer = Buffer.from(await archivo.arrayBuffer());
-  const tipo = aceptaDocumentos ? detectarTipoArchivo(buffer) : detectarTipoImagen(buffer);
-  if (!tipo) {
+  const bufferOriginal = Buffer.from(await archivo.arrayBuffer());
+  const tipoOriginal = aceptaDocumentos ? detectarTipoArchivo(bufferOriginal) : detectarTipoImagen(bufferOriginal);
+  if (!tipoOriginal) {
     return NextResponse.json(
       {
         error: aceptaDocumentos
@@ -45,6 +46,25 @@ export async function POST(req: NextRequest) {
       },
       { status: 400 },
     );
+  }
+
+  // Fotos de producto (no comprobantes, que son documentos de respaldo y
+  // deben quedar tal cual se subieron): se normalizan a un cuadrado con
+  // fondo blanco consistente, para que no se note en el catálogo qué
+  // fotos vinieron prolijas y cuáles tal cual de la publicación del
+  // proveedor. Si por lo que sea sharp no puede procesar el archivo (uno
+  // corrupto, un GIF animado poco común, etc.), se sube el original en
+  // vez de bloquear la subida — mejor una foto sin normalizar que
+  // ninguna foto.
+  let buffer: Buffer = bufferOriginal;
+  let tipo = tipoOriginal;
+  if (!aceptaDocumentos) {
+    try {
+      buffer = await normalizarFotoProducto(bufferOriginal);
+      tipo = { ext: "webp", mime: "image/webp" };
+    } catch (error) {
+      console.error("[upload] No se pudo normalizar la imagen, se sube el original:", error);
+    }
   }
 
   const nombreArchivo = `${randomUUID()}.${tipo.ext}`;
