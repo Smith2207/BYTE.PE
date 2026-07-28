@@ -12,6 +12,8 @@ import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
 import { PerfilForm } from "./perfil-form";
 import { AvatarUploader } from "./avatar-uploader";
 import { PrivacidadCard } from "./privacidad-card";
+import { SeguridadCard } from "./seguridad-card";
+import { VerificacionEmailBanner } from "./verificacion-email-banner";
 
 export const metadata = { title: "Mi cuenta" };
 
@@ -43,6 +45,8 @@ export default async function CuentaPage() {
   return (
     <RevealOnScroll y={20} className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Mi perfil</h1>
+
+      {!usuario.emailVerificado && <VerificacionEmailBanner />}
 
       <Card className={GLASS_CARD}>
         <CardContent className="flex flex-col items-center gap-4 pt-6 text-center sm:flex-row sm:text-left">
@@ -92,6 +96,8 @@ export default async function CuentaPage() {
           <PerfilForm nombre={usuario.nombre} telefono={usuario.telefono} dni={usuario.dni} />
         </CardContent>
       </Card>
+
+      <SeguridadCard totpHabilitado={usuario.totpHabilitado} tienePassword={usuario.passwordHash != null} />
 
       <PrivacidadCard />
     </RevealOnScroll>

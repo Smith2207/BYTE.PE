@@ -19,6 +19,8 @@ export default function robots(): MetadataRoute.Robots {
         "/registro",
         "/olvide-contrasena",
         "/restablecer-contrasena",
+        "/verificar-correo",
+        "/pedido",
       ],
     },
     sitemap: `${BASE_URL}/sitemap.xml`,

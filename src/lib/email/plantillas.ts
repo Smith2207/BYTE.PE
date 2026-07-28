@@ -268,3 +268,21 @@ export function plantillaRecuperarContrasena(nombre: string, token: string) {
     </p>`;
   return envoltorio(contenido);
 }
+
+export function plantillaVerificarCorreo(nombre: string, token: string) {
+  const verificarUrl = `${BASE_URL}/verificar-correo/${token}`;
+  const contenido = `
+    <h1 style="margin:0 0 4px;font-size:20px;color:#ffffff;">Confirma tu correo</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#a3a3a3;">
+      Hola ${nombre.split(" ")[0]}, confirma que esta es tu casilla para terminar de asegurar tu
+      cuenta en ${siteConfig.nombre}.
+    </p>
+    <a href="${verificarUrl}"
+       style="display:inline-block;background:#3987e5;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:10px;">
+      Confirmar mi correo
+    </a>
+    <p style="margin:20px 0 0;font-size:12px;color:#6b6b6b;">
+      Este enlace vence en 48 horas. Si no creaste esta cuenta, puedes ignorar este correo.
+    </p>`;
+  return envoltorio(contenido);
+}

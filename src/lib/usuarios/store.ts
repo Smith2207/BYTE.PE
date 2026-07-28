@@ -1,11 +1,12 @@
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { usuarios, passwordResetTokens, pedidos, cuponUsos } from "@/db/schema";
+import { usuarios, passwordResetTokens, emailVerificationTokens, pedidos, cuponUsos } from "@/db/schema";
 import type { RolUsuario } from "@/db/schema/enums";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hora
+const VERIFICACION_TOKEN_TTL_MS = 48 * 60 * 60 * 1000; // 48 horas
 
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
@@ -20,6 +21,9 @@ export type UsuarioAlmacenado = {
   telefono: string | null;
   rol: RolUsuario;
   imagen: string | null;
+  emailVerificado: boolean;
+  sessionVersion: number;
+  totpHabilitado: boolean;
   createdAt: string;
 };
 
@@ -33,6 +37,9 @@ function aUsuarioAlmacenado(u: typeof usuarios.$inferSelect): UsuarioAlmacenado 
     telefono: u.telefono,
     rol: u.rol,
     imagen: u.imagen,
+    emailVerificado: u.emailVerificado,
+    sessionVersion: u.sessionVersion,
+    totpHabilitado: u.totpHabilitado,
     createdAt: u.createdAt.toISOString(),
   };
 }
@@ -97,6 +104,8 @@ export async function obtenerOCrearUsuarioOAuth(input: {
       passwordHash: null,
       rol: "cliente",
       imagen: input.imagen ?? null,
+      // Google ya confirmó que el usuario controla este correo.
+      emailVerificado: true,
     })
     .returning();
   return aUsuarioAlmacenado(fila);
@@ -147,11 +156,60 @@ export async function restablecerPasswordConToken(token: string, nuevaPassword: 
     }
 
     const passwordHash = await bcrypt.hash(nuevaPassword, 10);
-    await tx.update(usuarios).set({ passwordHash }).where(eq(usuarios.id, fila.usuarioId));
+    // sessionVersion + 1: cualquier sesión que ya estuviera abierta (ej. un
+    // dispositivo robado que motivó el reset) deja de ser válida — ver el
+    // callback jwt en src/auth.ts, que compara esto en cada request.
+    await tx
+      .update(usuarios)
+      .set({ passwordHash, sessionVersion: sql`${usuarios.sessionVersion} + 1` })
+      .where(eq(usuarios.id, fila.usuarioId));
     await tx
       .update(passwordResetTokens)
       .set({ usadoEn: new Date() })
       .where(eq(passwordResetTokens.id, fila.id));
+  });
+}
+
+/** Para el callback `jwt` de NextAuth (ver src/auth.ts): solo la versión,
+ * no el usuario completo, para que el chequeo en cada request sea barato. */
+export async function getSessionVersion(usuarioId: string): Promise<number | null> {
+  const [fila] = await db
+    .select({ sessionVersion: usuarios.sessionVersion })
+    .from(usuarios)
+    .where(eq(usuarios.id, usuarioId))
+    .limit(1);
+  return fila?.sessionVersion ?? null;
+}
+
+/** Genera un token de verificación de correo (válido 48h, un solo uso). */
+export async function crearTokenVerificacionEmail(usuarioId: string) {
+  const token = crypto.randomBytes(32).toString("hex");
+  await db.insert(emailVerificationTokens).values({
+    usuarioId,
+    token: hashToken(token),
+    expiraEn: new Date(Date.now() + VERIFICACION_TOKEN_TTL_MS),
+  });
+  return token;
+}
+
+export async function verificarEmailConToken(token: string) {
+  const tokenHash = hashToken(token);
+  await db.transaction(async (tx) => {
+    const [fila] = await tx
+      .select()
+      .from(emailVerificationTokens)
+      .where(eq(emailVerificationTokens.token, tokenHash))
+      .limit(1);
+
+    if (!fila || fila.usadoEn || fila.expiraEn.getTime() < Date.now()) {
+      throw new Error("El enlace de verificación no es válido o ya expiró.");
+    }
+
+    await tx.update(usuarios).set({ emailVerificado: true }).where(eq(usuarios.id, fila.usuarioId));
+    await tx
+      .update(emailVerificationTokens)
+      .set({ usadoEn: new Date() })
+      .where(eq(emailVerificationTokens.id, fila.id));
   });
 }
 
@@ -182,4 +240,31 @@ export async function eliminarUsuario(id: string) {
     await tx.update(cuponUsos).set({ usuarioId: null }).where(eq(cuponUsos.usuarioId, id));
     await tx.delete(usuarios).where(eq(usuarios.id, id));
   });
+}
+
+// ---------- 2FA (TOTP) ----------
+
+/** Usado por `authorize` en src/auth.ts para decidir si pedir el código
+ * de la segunda etapa del login. */
+export async function getTotpPorUsuarioId(usuarioId: string) {
+  const [fila] = await db
+    .select({ totpSecret: usuarios.totpSecret, totpHabilitado: usuarios.totpHabilitado })
+    .from(usuarios)
+    .where(eq(usuarios.id, usuarioId))
+    .limit(1);
+  return fila ?? null;
+}
+
+/** Guarda el secreto solo después de confirmar un código válido (ver
+ * activarTotpAction) — así nunca queda 2FA "a medias" con un secreto que
+ * el usuario nunca terminó de confirmar con su app de autenticación. */
+export async function activarTotp(usuarioId: string, secret: string) {
+  await db.update(usuarios).set({ totpSecret: secret, totpHabilitado: true }).where(eq(usuarios.id, usuarioId));
+}
+
+export async function desactivarTotp(usuarioId: string) {
+  await db
+    .update(usuarios)
+    .set({ totpSecret: null, totpHabilitado: false })
+    .where(eq(usuarios.id, usuarioId));
 }

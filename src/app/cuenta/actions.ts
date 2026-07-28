@@ -2,11 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { actualizarUsuario, eliminarUsuario, getUsuarioPorId } from "@/lib/usuarios/store";
+import {
+  actualizarUsuario,
+  eliminarUsuario,
+  getUsuarioPorId,
+  crearTokenVerificacionEmail,
+} from "@/lib/usuarios/store";
 import { listarPedidosPorUsuario } from "@/lib/pedidos/store";
 import { listarDireccionesPorUsuario } from "@/lib/direcciones/store";
 import { listarWishlistPorUsuario } from "@/lib/wishlist/store";
 import { listarResenasDeUsuario } from "@/lib/resenas/store";
+import { enviarCorreo } from "@/lib/email/client";
+import { plantillaVerificarCorreo } from "@/lib/email/plantillas";
+import { intentoPermitido } from "@/lib/seguridad/rate-limit";
 
 export async function actualizarPerfilAction(input: {
   nombre: string;
@@ -45,6 +53,29 @@ export async function actualizarAvatarAction(imagenUrl: string) {
   const usuario = await actualizarUsuario(session.user.id, { imagen: imagenUrl });
   revalidatePath("/cuenta");
   return usuario;
+}
+
+export async function reenviarVerificacionEmailAction() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Debes iniciar sesión");
+
+  const usuario = await getUsuarioPorId(session.user.id);
+  if (!usuario) throw new Error("Usuario no encontrado");
+  if (usuario.emailVerificado) return { ok: true };
+
+  const { permitido } = await intentoPermitido(`verificar-email:${usuario.id}`, {
+    max: 3,
+    ventanaMs: 60 * 60 * 1000,
+  });
+  if (!permitido) throw new Error("Ya te enviamos varios correos. Espera un poco antes de pedir otro.");
+
+  const token = await crearTokenVerificacionEmail(usuario.id);
+  await enviarCorreo({
+    para: usuario.email,
+    asunto: "Confirma tu correo",
+    html: plantillaVerificarCorreo(usuario.nombre, token),
+  });
+  return { ok: true };
 }
 
 /** Derecho de acceso (ARCO): junta todo lo que la tienda tiene guardado

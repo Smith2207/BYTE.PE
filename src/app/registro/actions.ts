@@ -2,9 +2,11 @@
 
 import { z } from "zod";
 import { headers } from "next/headers";
-import { crearUsuario } from "@/lib/usuarios/store";
+import { crearUsuario, crearTokenVerificacionEmail } from "@/lib/usuarios/store";
 import { passwordValida, MENSAJE_PASSWORD_INVALIDA } from "@/lib/validations/password";
 import { intentoPermitido } from "@/lib/seguridad/rate-limit";
+import { enviarCorreo } from "@/lib/email/client";
+import { plantillaVerificarCorreo } from "@/lib/email/plantillas";
 
 const registroSchema = z.object({
   nombre: z.string().min(2, "Ingresa tu nombre"),
@@ -35,6 +37,14 @@ export async function registrarUsuarioAction(input: {
   }
 
   const datos = registroSchema.parse(input);
-  await crearUsuario(datos);
+  const usuario = await crearUsuario(datos);
+
+  const token = await crearTokenVerificacionEmail(usuario.id);
+  enviarCorreo({
+    para: usuario.email,
+    asunto: "Confirma tu correo",
+    html: plantillaVerificarCorreo(usuario.nombre, token),
+  }).catch((error) => console.error("[registro] Error enviando correo de verificación:", error));
+
   return { ok: true };
 }

@@ -31,6 +31,10 @@ export function LoginForm({
 }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [codigo2fa, setCodigo2fa] = React.useState("");
+  // Se activa cuando el servidor confirma que el password es correcto
+  // pero falta el segundo factor (ver Requiere2FAError en src/auth.ts).
+  const [pidiendoCodigo, setPidiendoCodigo] = React.useState(false);
   const [enviando, setEnviando] = React.useState(false);
   const { controls, shake } = useShake();
 
@@ -38,9 +42,18 @@ export function LoginForm({
     e.preventDefault();
     setEnviando(true);
     try {
-      const res = await signIn("credentials", { email, password, redirect: false });
+      const res = await signIn("credentials", {
+        email,
+        password,
+        codigo2fa: pidiendoCodigo ? codigo2fa : undefined,
+        redirect: false,
+      });
+      if (res?.error === "requiere_2fa") {
+        setPidiendoCodigo(true);
+        return;
+      }
       if (res?.error) {
-        toast.error("Correo o contraseña incorrectos");
+        toast.error(pidiendoCodigo ? "Código incorrecto" : "Correo o contraseña incorrectos");
         shake();
         return;
       }
@@ -69,74 +82,118 @@ export function LoginForm({
               </div>
             </StaggerField>
             <form onSubmit={onSubmit} className="space-y-4">
-              <StaggerField>
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  required
-                  className={`mt-1.5 ${MODAL_INPUT}`}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </StaggerField>
-              <StaggerField>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Link
-                    href="/olvide-contrasena"
-                    className="text-xs font-medium text-primary hover:underline"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <PasswordInput
-                  id="password"
-                  required
-                  className={`mt-1.5 ${MODAL_INPUT}`}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </StaggerField>
+              {pidiendoCodigo ? (
+                <StaggerField>
+                  <Label htmlFor="codigo2fa">Código de verificación</Label>
+                  <Input
+                    id="codigo2fa"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                    placeholder="123456"
+                    className={`mt-1.5 ${MODAL_INPUT}`}
+                    value={codigo2fa}
+                    onChange={(e) => setCodigo2fa(e.target.value)}
+                  />
+                  <p className="mt-1.5 text-xs text-muted-foreground">
+                    Ingresa el código de tu app de autenticación.
+                  </p>
+                </StaggerField>
+              ) : (
+                <>
+                  <StaggerField>
+                    <Label htmlFor="email">Correo electrónico</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      required
+                      className={`mt-1.5 ${MODAL_INPUT}`}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </StaggerField>
+                  <StaggerField>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Contraseña</Label>
+                      <Link
+                        href="/olvide-contrasena"
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </Link>
+                    </div>
+                    <PasswordInput
+                      id="password"
+                      required
+                      className={`mt-1.5 ${MODAL_INPUT}`}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </StaggerField>
+                </>
+              )}
               <StaggerField>
                 <Magnetic strength={0.15} className="block">
                   <Button type="submit" className="w-full" disabled={enviando}>
-                    {enviando ? <Loader2 className="size-4 animate-spin" /> : "Iniciar sesión"}
+                    {enviando ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : pidiendoCodigo ? (
+                      "Verificar"
+                    ) : (
+                      "Iniciar sesión"
+                    )}
                   </Button>
                 </Magnetic>
               </StaggerField>
             </form>
 
-            <StaggerField className="flex items-center gap-3">
-              <Separator className="flex-1" />
-              <span className="text-xs text-muted-foreground">o</span>
-              <Separator className="flex-1" />
-            </StaggerField>
+            {!pidiendoCodigo && (
+              <>
+                <StaggerField className="flex items-center gap-3">
+                  <Separator className="flex-1" />
+                  <span className="text-xs text-muted-foreground">o</span>
+                  <Separator className="flex-1" />
+                </StaggerField>
 
-            <StaggerField>
-              <Magnetic strength={0.15} className="block">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className={`w-full ${MODAL_INPUT}`}
-                  onClick={() => signIn("google", { callbackUrl: callbackUrl ?? "/cuenta" })}
-                >
-                  <GoogleIcon className="size-4" />
-                  Continuar con Google
-                </Button>
-              </Magnetic>
-            </StaggerField>
+                <StaggerField>
+                  <Magnetic strength={0.15} className="block">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={`w-full ${MODAL_INPUT}`}
+                      onClick={() => signIn("google", { callbackUrl: callbackUrl ?? "/cuenta" })}
+                    >
+                      <GoogleIcon className="size-4" />
+                      Continuar con Google
+                    </Button>
+                  </Magnetic>
+                </StaggerField>
+              </>
+            )}
 
             <StaggerField>
               <p className="text-center text-sm text-muted-foreground">
-                ¿No tienes cuenta?{" "}
-                <button
-                  type="button"
-                  onClick={onSwitchModo}
-                  className="font-medium text-primary hover:underline"
-                >
-                  Regístrate
-                </button>
+                {pidiendoCodigo ? (
+                  <button
+                    type="button"
+                    onClick={() => setPidiendoCodigo(false)}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    Volver
+                  </button>
+                ) : (
+                  <>
+                    ¿No tienes cuenta?{" "}
+                    <button
+                      type="button"
+                      onClick={onSwitchModo}
+                      className="font-medium text-primary hover:underline"
+                    >
+                      Regístrate
+                    </button>
+                  </>
+                )}
               </p>
             </StaggerField>
           </StaggerFields>

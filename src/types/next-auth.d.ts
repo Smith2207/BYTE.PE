@@ -10,11 +10,13 @@ declare module "next-auth" {
 
   interface User {
     rol?: "cliente" | "admin";
+    sessionVersion?: number;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     rol?: "cliente" | "admin";
+    sessionVersion?: number;
   }
 }

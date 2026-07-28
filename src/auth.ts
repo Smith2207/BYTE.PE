@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { authConfig } from "./auth.config";
@@ -6,13 +6,24 @@ import {
   verificarCredenciales,
   obtenerOCrearUsuarioOAuth,
   getUsuarioPorEmail,
+  getSessionVersion,
+  getTotpPorUsuarioId,
 } from "@/lib/usuarios/store";
 import { superoLimiteDeFallos, registrarFallo } from "@/lib/seguridad/rate-limit";
+import { verificarCodigoTotp } from "@/lib/seguridad/totp";
 
 // 8 intentos fallidos por correo en 15 minutos — suficiente margen para
 // que alguien se equivoque de contraseña un par de veces sin bloquearse,
 // pero corta un ataque de fuerza bruta contra una cuenta puntual.
 const LIMITE_LOGIN = { max: 8, ventanaMs: 15 * 60 * 1000 };
+
+/** Señal al cliente de que el password fue correcto pero falta el
+ * segundo factor — login-form.tsx la usa para mostrar el campo de código
+ * sin decirle a un atacante si el password era válido o no en el caso
+ * contrario (código incorrecto vuelve como fallo genérico). */
+class Requiere2FAError extends CredentialsSignin {
+  code = "requiere_2fa";
+}
 
 /**
  * Config completa (Node.js runtime): solo se usa en el route handler de
@@ -26,10 +37,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Correo", type: "email" },
         password: { label: "Contraseña", type: "password" },
+        codigo2fa: { label: "Código de verificación", type: "text" },
       },
       authorize: async (credentials) => {
         const email = credentials?.email as string | undefined;
         const password = credentials?.password as string | undefined;
+        const codigo2fa = (credentials?.codigo2fa as string | undefined)?.trim();
         if (!email || !password) return null;
 
         const clave = `login:${email.trim().toLowerCase()}`;
@@ -40,12 +53,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           await registrarFallo(clave);
           return null;
         }
+
+        if (usuario.totpHabilitado) {
+          if (!codigo2fa) throw new Requiere2FAError();
+          const totp = await getTotpPorUsuarioId(usuario.id);
+          const valido = totp?.totpSecret ? verificarCodigoTotp(totp.totpSecret, codigo2fa) : false;
+          if (!valido) {
+            await registrarFallo(clave);
+            return null;
+          }
+        }
+
         return {
           id: usuario.id,
           name: usuario.nombre,
           email: usuario.email,
           image: usuario.imagen,
           rol: usuario.rol,
+          sessionVersion: usuario.sessionVersion,
         };
       },
     }),
@@ -69,6 +94,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     jwt: async ({ token, user }) => {
       if (user) {
         token.rol = (user as { rol?: string }).rol;
+        token.sessionVersion = (user as { sessionVersion?: number }).sessionVersion ?? 0;
       }
       if (!token.rol && token.email) {
         // Login con Google: el usuario recién se creó en el callback signIn de arriba.
@@ -76,6 +102,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (usuario) {
           token.rol = usuario.rol;
           token.sub = usuario.id;
+          token.sessionVersion = usuario.sessionVersion;
+        }
+      }
+      // Si la contraseña cambió después de emitir este token (ver
+      // restablecerPasswordConToken), sessionVersion ya no coincide —
+      // se trata la sesión como cerrada aunque el JWT no haya expirado
+      // todavía. Cambiar la contraseña sin esto no sacaba a nadie que ya
+      // tuviera una sesión abierta (ej. un dispositivo robado).
+      if (token.sub) {
+        const actual = await getSessionVersion(token.sub);
+        if (actual == null || actual !== token.sessionVersion) {
+          delete token.sub;
+          delete token.rol;
         }
       }
       return token;
