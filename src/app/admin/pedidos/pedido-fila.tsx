@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { FileImage, Receipt } from "lucide-react";
+import { FileImage, Receipt, Ticket } from "lucide-react";
 
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -128,6 +128,11 @@ export function PedidoFila({ pedido }: { pedido: PedidoMock }) {
         <Button variant="ghost" size="icon" asChild aria-label="Ver boleta">
           <Link href={`/pedido/${pedido.numeroPedido}/boleta`} target="_blank">
             <Receipt className="size-4" />
+          </Link>
+        </Button>
+        <Button variant="ghost" size="icon" asChild aria-label="Ver ticket 80mm">
+          <Link href={`/pedido/${pedido.numeroPedido}/ticket`} target="_blank">
+            <Ticket className="size-4" />
           </Link>
         </Button>
       </TableCell>

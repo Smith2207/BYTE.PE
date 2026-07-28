@@ -38,3 +38,21 @@ export function formatoDireccion(direccion: {
     .filter(Boolean)
     .join(", ");
 }
+
+/** Compartido entre la boleta (A4) y el ticket (80mm) — mismo texto en
+ * los dos formatos de impresión de un pedido. */
+export const METODO_PAGO_ETIQUETA: Record<string, string> = {
+  yape: "Yape / Plin",
+  prex: "Prex",
+  transferencia: "Transferencia bancaria",
+  contra_entrega: "Contra entrega",
+  tarjeta: "Tarjeta de crédito/débito",
+};
+
+/** Formato tipo SUNAT (serie-correlativo) simulado a partir del número
+ * interno de pedido — no es un comprobante homologado, ver aviso en la
+ * boleta/ticket. Mismo cálculo en los dos formatos de impresión. */
+export function numeroComprobante(numeroPedido: string, esFactura: boolean) {
+  const correlativo = numeroPedido.replace(/\D/g, "").slice(-8).padStart(8, "0");
+  return `${esFactura ? "F001" : "B001"}-${correlativo}`;
+}

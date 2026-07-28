@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { getPedido, puedeVerPedido } from "@/lib/pedidos/store";
-import { formatoPEN, formatoDireccion } from "@/lib/format";
+import { formatoPEN, formatoDireccion, METODO_PAGO_ETIQUETA, numeroComprobante } from "@/lib/format";
 import { siteConfig } from "@/lib/site-config";
 import { ESTADO_PEDIDO_ETIQUETA } from "@/components/pedidos/estado-pedido-badge";
 import { ImprimirBoton } from "./imprimir-boton";
@@ -12,14 +12,6 @@ import { auth } from "@/auth";
 export const metadata = { title: "Comprobante de pago" };
 
 const IGV_PORCENTAJE = 18;
-
-const METODO_PAGO_ETIQUETA: Record<string, string> = {
-  yape: "Yape / Plin",
-  prex: "Prex",
-  transferencia: "Transferencia bancaria",
-  contra_entrega: "Contra entrega",
-  tarjeta: "Tarjeta de crédito/débito",
-};
 
 export default async function BoletaPage({
   params,
@@ -37,10 +29,6 @@ export default async function BoletaPage({
   }
 
   const esFactura = pedido.requiereFactura;
-  // Formato tipo SUNAT (serie-correlativo) simulado a partir del número
-  // interno de pedido — no es un comprobante homologado, ver aviso abajo.
-  const correlativo = pedido.numeroPedido.replace(/\D/g, "").slice(-8).padStart(8, "0");
-  const numeroComprobante = `${esFactura ? "F001" : "B001"}-${correlativo}`;
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 lg:px-8">
@@ -51,7 +39,15 @@ export default async function BoletaPage({
         >
           <ArrowLeft className="size-4" /> Volver al pedido
         </Link>
-        <ImprimirBoton />
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/pedido/${pedido.numeroPedido}/ticket?t=${pedido.tokenAcceso}`}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            Ver como ticket 80mm
+          </Link>
+          <ImprimirBoton />
+        </div>
       </div>
 
       {/* Colores explícitos con `print:` (no solo la variable --foreground
@@ -77,7 +73,9 @@ export default async function BoletaPage({
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground print:text-neutral-600">
               {esFactura ? "Factura electrónica" : "Boleta de venta electrónica"}
             </p>
-            <p className="font-mono text-base font-semibold print:text-black">{numeroComprobante}</p>
+            <p className="font-mono text-base font-semibold print:text-black">
+              {numeroComprobante(pedido.numeroPedido, esFactura)}
+            </p>
           </div>
         </div>
 
