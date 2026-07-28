@@ -40,10 +40,10 @@ export default async function PedidoConfirmacionPage({
         <h1 className="font-display mt-4 text-2xl font-bold sm:text-3xl">
           ¡Gracias por tu compra!
         </h1>
-        <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
           Pedido <span className="font-mono font-semibold text-foreground">{pedido.numeroPedido}</span>
           <EstadoPedidoBadge estado={pedido.estado} />
-        </p>
+        </div>
       </div>
 
       <Card className={`mt-8 ${GLASS_CARD}`}>
