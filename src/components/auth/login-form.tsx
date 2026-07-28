@@ -19,6 +19,7 @@ import { Magnetic } from "@/components/fx/magnetic";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useShake } from "@/components/fx/use-shake";
 import { MODAL_CARD, MODAL_INPUT } from "@/lib/motion";
+import { requiereCodigoTotpAction } from "@/app/login-actions";
 
 export function LoginForm({
   callbackUrl,
@@ -32,8 +33,11 @@ export function LoginForm({
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [codigo2fa, setCodigo2fa] = React.useState("");
-  // Se activa cuando el servidor confirma que el password es correcto
-  // pero falta el segundo factor (ver Requiere2FAError en src/auth.ts).
+  // Se activa cuando el primer intento (sin código) falla Y la cuenta
+  // tiene 2FA activado. next-auth/react no deja llegar al cliente el
+  // motivo real del error de Credentials (ver login-actions.ts) — por
+  // eso hay que preguntarlo aparte en vez de leerlo de la respuesta de
+  // signIn().
   const [pidiendoCodigo, setPidiendoCodigo] = React.useState(false);
   const [enviando, setEnviando] = React.useState(false);
   const { controls, shake } = useShake();
@@ -48,12 +52,15 @@ export function LoginForm({
         codigo2fa: pidiendoCodigo ? codigo2fa : undefined,
         redirect: false,
       });
-      if (res?.error === "requiere_2fa") {
-        setPidiendoCodigo(true);
-        return;
-      }
       if (res?.error) {
-        toast.error(pidiendoCodigo ? "Código incorrecto" : "Correo o contraseña incorrectos");
+        if (!pidiendoCodigo) {
+          const { requiere } = await requiereCodigoTotpAction(email);
+          if (requiere) {
+            setPidiendoCodigo(true);
+            return;
+          }
+        }
+        toast.error(pidiendoCodigo ? "Código o contraseña incorrectos" : "Correo o contraseña incorrectos");
         shake();
         return;
       }

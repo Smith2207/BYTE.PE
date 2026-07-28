@@ -1,4 +1,4 @@
-import NextAuth, { CredentialsSignin } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { authConfig } from "./auth.config";
@@ -16,14 +16,6 @@ import { verificarCodigoTotp } from "@/lib/seguridad/totp";
 // que alguien se equivoque de contraseña un par de veces sin bloquearse,
 // pero corta un ataque de fuerza bruta contra una cuenta puntual.
 const LIMITE_LOGIN = { max: 8, ventanaMs: 15 * 60 * 1000 };
-
-/** Señal al cliente de que el password fue correcto pero falta el
- * segundo factor — login-form.tsx la usa para mostrar el campo de código
- * sin decirle a un atacante si el password era válido o no en el caso
- * contrario (código incorrecto vuelve como fallo genérico). */
-class Requiere2FAError extends CredentialsSignin {
-  code = "requiere_2fa";
-}
 
 /**
  * Config completa (Node.js runtime): solo se usa en el route handler de
@@ -55,7 +47,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (usuario.totpHabilitado) {
-          if (!codigo2fa) throw new Requiere2FAError();
+          // El cliente decide si mostrar el campo de código con una
+          // consulta aparte (ver requiereCodigoTotpAction en
+          // login-actions.ts) — signIn() no deja llegar al cliente el
+          // motivo real de un error de Credentials, así que acá alcanza
+          // con rechazar sin código igual que un código inválido.
+          if (!codigo2fa) return null;
           const totp = await getTotpPorUsuarioId(usuario.id);
           const valido = totp?.totpSecret ? verificarCodigoTotp(totp.totpSecret, codigo2fa) : false;
           if (!valido) {
