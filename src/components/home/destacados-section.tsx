@@ -59,7 +59,7 @@ export function DestacadosSection({
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {productos.map((p) => {
+        {productos.map((p, i) => {
           const etiqueta = masVendidoSet.has(p.id)
             ? ("mas-vendido" as const)
             : new Date(p.createdAt).getTime() >= limiteNuevo
@@ -67,7 +67,7 @@ export function DestacadosSection({
               : undefined;
           return (
             <div key={p.id} data-destacado-card>
-              <ProductoCard producto={p} etiqueta={etiqueta} />
+              <ProductoCard producto={p} etiqueta={etiqueta} priority={i < 4} />
             </div>
           );
         })}

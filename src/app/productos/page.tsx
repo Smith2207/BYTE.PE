@@ -90,9 +90,9 @@ export default async function ProductosPage({
               ease={ELASTIC_EASE}
               y={20}
             >
-              {items.map((p) => (
+              {items.map((p, i) => (
                 <div key={p.id} data-producto-card>
-                  <ProductoCard producto={p} />
+                  <ProductoCard producto={p} priority={i < 4} />
                 </div>
               ))}
             </RevealOnScroll>

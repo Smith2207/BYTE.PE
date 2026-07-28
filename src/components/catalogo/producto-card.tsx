@@ -12,10 +12,14 @@ import { siteConfig } from "@/lib/site-config";
 export function ProductoCard({
   producto,
   etiqueta,
+  priority,
 }: {
   producto: ProductoCatalogo;
   /** Insignia real (no decorativa): "nuevo" viene de createdAt, "mas-vendido" de unidades vendidas de verdad. */
   etiqueta?: "nuevo" | "mas-vendido";
+  /** Solo para las primeras cards visibles sin scroll (arriba del fold) —
+   * evita que Next.js las cargue "lazy" y retrase el LCP de la página. */
+  priority?: boolean;
 }) {
   return (
     <SpotlightCard className="flex h-full flex-col">
@@ -26,6 +30,7 @@ export function ProductoCard({
             imagenUrl={producto.imagenes[0]}
             alt={producto.nombre}
             className="aspect-square w-full"
+            priority={priority}
           />
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
             {producto.descuentoPorcentaje > 0 && (
