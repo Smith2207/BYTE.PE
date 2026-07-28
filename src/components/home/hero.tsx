@@ -7,6 +7,7 @@ import { ArrowRight, Compass } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Magnetic } from "@/components/fx/magnetic";
 import { HeroScene } from "@/components/home/hero-scene";
+import { HeroDevice } from "@/components/home/hero-device";
 import { categoriasNav } from "@/lib/site-config";
 import { ensureGsapPlugins, gsap, prefersReducedMotion } from "@/lib/gsap";
 
@@ -147,8 +148,12 @@ export function Hero() {
           </div>
         </div>
 
+        <div data-hero-visual className="hidden flex-1 items-center justify-center xl:flex">
+          <HeroDevice />
+        </div>
+
         <div
-          className="hidden flex-col gap-6 text-[10px] font-bold tracking-[0.2em] lg:flex"
+          className="hidden shrink-0 flex-col gap-6 whitespace-nowrap text-[10px] font-bold tracking-[0.2em] lg:flex"
           aria-label="Categorías destacadas"
         >
           {categoriasNav.map((c, i) => (
