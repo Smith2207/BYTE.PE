@@ -64,6 +64,10 @@ Ecommerce completo de electrónica y tecnología para Perú — laptops, celular
 - **Stock reservado vs. liberado**: cancelar un pedido (webhook de Mercado Pago, fallo al generar el link de pago, o el admin a mano) repone el stock automáticamente, y reactivar uno cancelado lo vuelve a descontar — `actualizarEstadoPedido` en `src/lib/pedidos/store.ts` mueve el stock cada vez que el pedido cruza entre un estado "reservado" (pendiente...entregado) y uno "liberado" (cancelado/reembolsado), sin importar por qué camino se llegó ahí.
 - **Reseñas moderadas**: quedan `pendiente` hasta que un admin las aprueba en `/admin/resenas` (nunca se publican solas), se marca si el autor tiene una compra real del producto, y solo se permite una reseña por usuario y producto.
 - **Rate limiting sin Redis**: login, registro y "olvidé mi contraseña" están protegidos contra fuerza bruta/spam con una tabla propia en Postgres (`intentos_seguridad`, ver `src/lib/seguridad/rate-limit.ts`) en vez de un servicio externo — el volumen de auth de esta tienda no lo justifica y ya hay Postgres a mano.
+- **`/pedido/[numero]` no confía en el número de pedido para dar acceso**: `numeroPedido` es un correlativo simple y adivinable (`ORD-2026000001`, `...002`...), así que por sí solo nunca alcanza para ver los datos personales de un pedido. El acceso real lo da `tokenAcceso` (32 bytes aleatorios generados al crear el pedido, ver `puedeVerPedido` en `src/lib/pedidos/store.ts`): admin siempre puede, el dueño de la cuenta logueado puede sin token, y el checkout de invitado usa el token que viaja en el link del correo de confirmación y en la vuelta de Mercado Pago.
+- **Stock y cupones con límite de usos se actualizan con `UPDATE ... WHERE` condicional, no "leer y luego escribir"**: dos compras simultáneas del último producto disponible (o del último uso de un cupón limitado) podrían pasar ambas una validación hecha en dos pasos separados. `decrementarStock` (`src/lib/mock/repo.ts`) e `incrementarUso` (`src/lib/cupones/store.ts`) hacen el chequeo y la escritura en el mismo `UPDATE`, así que Postgres serializa la carrera en vez de dejar pasar a los dos.
+- **Derechos ARCO (Ley de Protección de Datos Personales, Perú)**: desde `/cuenta` cualquier usuario puede descargar un JSON con todo lo que la tienda tiene de él (perfil, direcciones, pedidos, wishlist, reseñas) o eliminar su cuenta. Al eliminarla, los pedidos NO se borran (son comprobantes de compra, hay que conservarlos) — se desvinculan de la cuenta, y ya tenían su propia copia de los datos de facturación desde el momento de la compra.
+- **Sin Sentry ni analytics por defecto**: no hay forma de verificar credenciales de un servicio externo en este entorno, así que en vez de dejar una integración a medias se armó una alerta por correo (`notificarErrorCritico` en `src/lib/monitoreo/notificar-error.ts`, reusa `EMAIL_USER`) para los puntos más caros de fallar en silencio (webhook de pagos, errores no atrapados). Analytics usa Google Analytics 4 vía `@next/third-parties`, con aviso de cookies — ninguno de los dos carga nada si no hay credenciales configuradas.
 
 ---
 
@@ -80,7 +84,9 @@ Copiar `.env.example` a `.env.local` y completar. Todas son opcionales excepto `
 | `MERCADOPAGO_ACCESS_TOKEN` / `MERCADOPAGO_PUBLIC_KEY` | Pago con tarjeta | [mercadopago.com.pe/developers](https://www.mercadopago.com.pe/developers/panel) (credenciales de prueba) |
 | `APIPERU_TOKEN` | Autocompletar DNI/RUC | [apiperu.dev](https://apiperu.dev) (gratis, 100/mes) |
 | `BLOB_READ_WRITE_TOKEN` | Subida de imágenes | Vercel Dashboard → Storage → Blob |
-| `EMAIL_USER` / `EMAIL_APP_PASSWORD` | Envío de correos | [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (contraseña de aplicación, no la normal) |
+| `EMAIL_USER` / `EMAIL_APP_PASSWORD` | Envío de correos + alertas de error al admin | [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (contraseña de aplicación, no la normal) |
+| `CRON_SECRET` | Autenticar los cron jobs | `openssl rand -base64 32` |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Google Analytics 4 | [analytics.google.com](https://analytics.google.com) — sin esto no se carga ningún script de analítica ni se muestra el aviso de cookies |
 
 ---
 
