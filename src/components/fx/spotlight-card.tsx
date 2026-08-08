@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { gsap, prefersReducedMotion, hasFinePointer } from "@/lib/gsap";
 
 const TILT_MAX_DEG = 8;
 
@@ -29,7 +29,7 @@ export function SpotlightCard({
 
   React.useEffect(() => {
     const el = ref.current;
-    if (!el || prefersReducedMotion()) return;
+    if (!el || prefersReducedMotion() || !hasFinePointer()) return;
     gsap.set(el, { transformPerspective: 800 });
     quickRotX.current = gsap.quickTo(el, "rotationX", { duration: 0.4, ease: "power3.out" });
     quickRotY.current = gsap.quickTo(el, "rotationY", { duration: 0.4, ease: "power3.out" });

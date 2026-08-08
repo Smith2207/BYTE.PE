@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { gsap, prefersReducedMotion, hasFinePointer } from "@/lib/gsap";
 import { GlowOrb, AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
 
 /**
@@ -28,7 +28,7 @@ export function HeroScene({
   const [videoReady, setVideoReady] = React.useState(false);
 
   React.useEffect(() => {
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion() || !hasFinePointer()) return;
     const container = containerRef.current;
     const target = parallaxRef.current;
     if (!container || !target) return;

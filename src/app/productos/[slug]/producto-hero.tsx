@@ -11,7 +11,7 @@ import { GaleriaProducto } from "./galeria-producto";
 import { AgregarCarrito } from "./agregar-carrito";
 import { AvisoStockForm } from "./aviso-stock-form";
 import { formatoPEN } from "@/lib/format";
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { gsap, prefersReducedMotion, hasFinePointer } from "@/lib/gsap";
 import type { ProductoCatalogo, VarianteCatalogo } from "@/lib/mock/repo";
 
 const SELECTORES =
@@ -48,7 +48,7 @@ export function ProductoHero({
   }, []);
 
   React.useEffect(() => {
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion() || !hasFinePointer()) return;
     const root = rootRef.current;
     const backdrop = backdropRef.current;
     if (!root || !backdrop) return;
