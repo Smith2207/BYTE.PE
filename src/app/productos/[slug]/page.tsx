@@ -13,6 +13,7 @@ import { AtmosphereLayer } from "@/components/fx/cinematic-backdrop";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { getProductoBySlug, getProductosPorIds } from "@/lib/mock/repo";
 import { getProductoIdsCompradosJuntos } from "@/lib/pedidos/store";
+import { promedioCalificacion } from "@/lib/resenas/store";
 import { auth } from "@/auth";
 import { estaEnWishlist } from "@/lib/wishlist/store";
 import { ResenasSection } from "./resenas-section";
@@ -48,6 +49,9 @@ export default async function ProductoPage({ params }: { params: { slug: string 
     : false;
   const idsCompradosJuntos = await getProductoIdsCompradosJuntos(producto.id);
   const compradosJuntos = await getProductosPorIds(idsCompradosJuntos);
+  const { promedio: ratingPromedio, total: ratingTotal } = await promedioCalificacion(
+    producto.id,
+  );
 
   const productoJsonLd = {
     "@context": "https://schema.org",
@@ -67,6 +71,35 @@ export default async function ProductoPage({ params }: { params: { slug: string 
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
     },
+    // Google exige que aggregateRating solo aparezca si hay reseñas reales
+    // detrás — nunca se inventa un rating por defecto.
+    ...(ratingTotal > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: ratingPromedio,
+        reviewCount: ratingTotal,
+      },
+    }),
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Inicio", item: BASE_URL },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: producto.categoria.nombre,
+        item: `${BASE_URL}/productos?categoria=${producto.categoria.slug}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: producto.nombre,
+        item: `${BASE_URL}/productos/${producto.slug}`,
+      },
+    ],
   };
 
   return (
@@ -75,6 +108,11 @@ export default async function ProductoPage({ params }: { params: { slug: string 
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productoJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <div className="pointer-events-none fixed inset-0 -z-10">
         <AtmosphereLayer
