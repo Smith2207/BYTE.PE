@@ -4,8 +4,11 @@ import { OrdenSelect } from "@/components/catalogo/orden-select";
 import { ProductoCard } from "@/components/catalogo/producto-card";
 import { ProductosPaginacion } from "@/components/catalogo/productos-paginacion";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PackageSearch } from "lucide-react";
 import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 import { getCategorias, getMarcas, getProductos, type FiltrosProductos } from "@/lib/mock/repo";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata = { title: "Catálogo de productos" };
 
@@ -59,7 +62,10 @@ export default async function ProductosPage({
         <h1 className="font-display text-2xl font-bold sm:text-3xl">
           {categoriaActual?.nombre ?? "Todos los productos"}
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{total} productos encontrados</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {total} productos encontrados
+          {siteConfig.envioGratis && " · Envío gratis en todo el catálogo"}
+        </p>
       </div>
 
       <div className="flex flex-col gap-8 lg:flex-row">
@@ -76,12 +82,12 @@ export default async function ProductosPage({
           </div>
 
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 py-24 text-center">
-              <p className="text-lg font-semibold">No encontramos productos con estos filtros</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Prueba quitando algún filtro o cambia el rango de precio.
-              </p>
-            </div>
+            <EmptyState
+              icon={PackageSearch}
+              titulo="No encontramos productos con estos filtros"
+              descripcion="Prueba quitando algún filtro, cambiando el rango de precio o revisa que la palabra buscada esté bien escrita."
+              cta={{ href: "/productos", label: "Limpiar filtros" }}
+            />
           ) : (
             <RevealOnScroll
               className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4"

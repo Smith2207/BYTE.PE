@@ -1,4 +1,4 @@
-import { ProductoLink } from "@/components/catalogo/producto-link";
+import Link from "next/link";
 import { SpotlightCard } from "@/components/fx/spotlight-card";
 import { TextScramble } from "@/components/fx/text-scramble";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
@@ -7,7 +7,6 @@ import { AgregarCarritoRapido } from "@/components/catalogo/agregar-carrito-rapi
 import { Badge } from "@/components/ui/badge";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 import { formatoPEN } from "@/lib/format";
-import { siteConfig } from "@/lib/site-config";
 
 export function ProductoCard({
   producto,
@@ -23,7 +22,7 @@ export function ProductoCard({
 }) {
   return (
     <SpotlightCard className="flex h-full flex-col">
-      <ProductoLink href={`/productos/${producto.slug}`} className="flex h-full flex-col">
+      <Link href={`/productos/${producto.slug}`} className="flex h-full flex-col">
         <div className="relative">
           <ProductoMedia
             categoriaSlug={producto.categoria.slug}
@@ -42,11 +41,6 @@ export function ProductoCard({
               <Badge className="bg-primary text-primary-foreground">Más vendido</Badge>
             )}
             {etiqueta === "nuevo" && <Badge variant="outline">Nuevo</Badge>}
-            {siteConfig.envioGratis && (
-              <Badge variant="outline" className="border-emerald-500/40 text-emerald-600">
-                Envío gratis
-              </Badge>
-            )}
             {!producto.disponible && <Badge variant="secondary">Agotado</Badge>}
           </div>
           <WishlistBoton productoId={producto.id} className="absolute right-3 top-3" />
@@ -80,7 +74,7 @@ export function ProductoCard({
             </span>
           )}
         </div>
-      </ProductoLink>
+      </Link>
     </SpotlightCard>
   );
 }

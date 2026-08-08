@@ -141,30 +141,6 @@
   }
 }
 
-/* Transición fade + escala sutil entre páginas (grilla → detalle de
-   producto), vía View Transitions API nativa — ver producto-link.tsx.
-   Navegadores sin soporte simplemente no ejecutan estas reglas. */
-@media (prefers-reduced-motion: no-preference) {
-  ::view-transition-old(root) {
-    animation: vt-fade-out 280ms ease-in forwards;
-  }
-  ::view-transition-new(root) {
-    animation: vt-fade-in 380ms ease-out forwards;
-  }
-}
-@keyframes vt-fade-out {
-  to {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-}
-@keyframes vt-fade-in {
-  from {
-    opacity: 0;
-    transform: scale(1.015);
-  }
-}
-
 /* Indicador de scroll del hero — ver hero.tsx. */
 @keyframes scrollIndicator {
   0%,

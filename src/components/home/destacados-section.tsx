@@ -1,11 +1,8 @@
-"use client";
-
-import * as React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 import { ProductoCard } from "@/components/catalogo/producto-card";
-import { ensureGsapPlugins, gsap, prefersReducedMotion } from "@/lib/gsap";
+import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { ELASTIC_EASE, STAGGER_MAX } from "@/lib/motion";
 import type { ProductoCatalogo } from "@/lib/mock/repo";
 
@@ -18,31 +15,11 @@ export function DestacadosSection({
   productos: ProductoCatalogo[];
   masVendidoIds?: string[];
 }) {
-  const rootRef = React.useRef<HTMLDivElement>(null);
   const masVendidoSet = new Set(masVendidoIds);
   const limiteNuevo = Date.now() - DIAS_PARA_SER_NUEVO * 24 * 60 * 60 * 1000;
 
-  React.useEffect(() => {
-    if (prefersReducedMotion()) return;
-    ensureGsapPlugins();
-    const ctx = gsap.context(() => {
-      gsap.from("[data-destacado-card]", {
-        y: 40,
-        opacity: 0,
-        duration: 0.7,
-        stagger: STAGGER_MAX,
-        ease: ELASTIC_EASE,
-        scrollTrigger: {
-          trigger: rootRef.current,
-          start: "top 80%",
-        },
-      });
-    }, rootRef);
-    return () => ctx.revert();
-  }, []);
-
   return (
-    <section id="destacados" ref={rootRef} className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+    <section id="destacados" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="mb-10 flex items-end justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold sm:text-3xl">Ofertas destacadas</h2>
@@ -58,7 +35,13 @@ export function DestacadosSection({
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <RevealOnScroll
+        className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+        selector="[data-destacado-card]"
+        stagger={STAGGER_MAX}
+        ease={ELASTIC_EASE}
+        y={40}
+      >
         {productos.map((p, i) => {
           const etiqueta = masVendidoSet.has(p.id)
             ? ("mas-vendido" as const)
@@ -71,7 +54,7 @@ export function DestacadosSection({
             </div>
           );
         })}
-      </div>
+      </RevealOnScroll>
     </section>
   );
 }
