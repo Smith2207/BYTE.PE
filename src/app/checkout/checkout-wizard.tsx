@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Check, Copy, Loader2, Search, Truck } from "lucide-react";
+import { Check, Copy, Loader2, Search, ShieldCheck, Truck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { RevealOnScroll } from "@/components/fx/reveal-on-scroll";
 import { Magnetic } from "@/components/fx/magnetic";
 import { FloatingIndicator } from "@/components/fx/floating-indicator";
+import { ProductoMedia } from "@/components/catalogo/producto-media";
 import { TextScramble } from "@/components/fx/text-scramble";
 import { ELASTIC_EASE } from "@/lib/motion";
 import { useCart } from "@/lib/cart/cart-context";
@@ -44,7 +45,7 @@ import type { ResultadoCupon } from "@/lib/cupones/validar";
 import type { UsuarioAlmacenado } from "@/lib/usuarios/store";
 import type { DireccionAlmacenada } from "@/lib/direcciones/store";
 
-const PASOS = ["Envío", "Método de envío", "Pago", "Confirmación"] as const;
+const PASOS = ["Envío", "Pago", "Confirmación"] as const;
 
 type Facturacion = {
   tipoDocumento: "dni" | "ruc";
@@ -349,11 +350,11 @@ export function CheckoutWizard({
       toast.error("Revisa los campos marcados");
       return;
     }
-    if (paso === 1 && !courierId) {
+    if (paso === 0 && !courierId) {
       toast.error("Elige un courier para continuar");
       return;
     }
-    if (paso === 2 && requiereComprobante && !comprobanteUrl) {
+    if (paso === 1 && requiereComprobante && !comprobanteUrl) {
       toast.error("Sube tu comprobante de pago para continuar");
       return;
     }
@@ -489,21 +490,26 @@ export function CheckoutWizard({
             className="border border-primary/40 bg-primary/10"
           />
           {PASOS.map((nombre, i) => (
-            <div
+            <button
               key={nombre}
+              type="button"
               data-indicator-item
               data-active={i === paso}
+              disabled={i >= paso}
+              onClick={() => i < paso && setPaso(i)}
+              // Solo se puede volver a un paso ya completado (i < paso), nunca
+              // saltar hacia adelante — eso saltaría validaciones pendientes.
               className={`relative flex items-center gap-2 rounded-full border border-transparent px-3 py-1.5 text-xs font-medium ${
                 i === paso
                   ? "text-primary"
                   : i < paso
-                    ? "text-primary/80"
-                    : "text-muted-foreground"
+                    ? "cursor-pointer text-primary/80 hover:text-primary"
+                    : "cursor-default text-muted-foreground"
               }`}
             >
               {i < paso ? <Check className="size-3.5" /> : <span>{i + 1}</span>}
               {nombre}
-            </div>
+            </button>
           ))}
         </div>
 
@@ -620,6 +626,47 @@ export function CheckoutWizard({
                     />
                   </div>
                 </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="mb-4 text-sm font-semibold">Método de envío</h3>
+                {!direccion.departamento ? (
+                  <p className="text-sm text-muted-foreground">
+                    Selecciona un departamento para ver couriers disponibles.
+                  </p>
+                ) : cargandoCouriers ? (
+                  <p className="text-sm text-muted-foreground">Buscando couriers disponibles…</p>
+                ) : couriers.length === 0 ? (
+                  <p className="text-sm text-destructive">
+                    No hay couriers disponibles para {direccion.departamento} por ahora.
+                  </p>
+                ) : (
+                  <RadioGroup value={courierId ?? undefined} onValueChange={setCourierId}>
+                    {couriers.map((c) => (
+                      <label
+                        key={c.courierId}
+                        className="flex items-center gap-3 rounded-xl border border-border/60 p-4"
+                      >
+                        <RadioGroupItem value={c.courierId} />
+                        <Truck className="size-5 text-primary" />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold">
+                            {c.nombre} — {siteConfig.envioGratis ? "Gratis" : formatoPEN(c.costo)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Llega en {c.diasEstimadosMin}-{c.diasEstimadosMax} días hábiles a{" "}
+                            {direccion.departamento}.
+                          </p>
+                        </div>
+                      </label>
+                    ))}
+                    <p className="text-xs text-muted-foreground">
+                      Envío por agencia — recibirás el número de tracking por correo.
+                    </p>
+                  </RadioGroup>
+                )}
               </div>
 
               <Separator />
@@ -780,49 +827,6 @@ export function CheckoutWizard({
 
         {paso === 1 && (
           <Card>
-            <CardContent className="pt-6">
-              <h3 className="mb-4 text-sm font-semibold">Método de envío</h3>
-              {!direccion.departamento ? (
-                <p className="text-sm text-muted-foreground">
-                  Selecciona un departamento en el paso anterior para ver couriers disponibles.
-                </p>
-              ) : cargandoCouriers ? (
-                <p className="text-sm text-muted-foreground">Buscando couriers disponibles…</p>
-              ) : couriers.length === 0 ? (
-                <p className="text-sm text-destructive">
-                  No hay couriers disponibles para {direccion.departamento} por ahora.
-                </p>
-              ) : (
-                <RadioGroup value={courierId ?? undefined} onValueChange={setCourierId}>
-                  {couriers.map((c) => (
-                    <label
-                      key={c.courierId}
-                      className="flex items-center gap-3 rounded-xl border border-border/60 p-4"
-                    >
-                      <RadioGroupItem value={c.courierId} />
-                      <Truck className="size-5 text-primary" />
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold">
-                          {c.nombre} — {siteConfig.envioGratis ? "Gratis" : formatoPEN(c.costo)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Llega en {c.diasEstimadosMin}-{c.diasEstimadosMax} días hábiles a{" "}
-                          {direccion.departamento}.
-                        </p>
-                      </div>
-                    </label>
-                  ))}
-                  <p className="text-xs text-muted-foreground">
-                    Envío por agencia — recibirás el número de tracking por correo.
-                  </p>
-                </RadioGroup>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {paso === 2 && (
-          <Card>
             <CardContent className="space-y-6 pt-6">
               <div>
                 <h3 className="mb-4 text-sm font-semibold">¿Tienes un cupón?</h3>
@@ -856,7 +860,11 @@ export function CheckoutWizard({
               <Separator />
 
               <div>
-              <h3 className="mb-4 text-sm font-semibold">Método de pago</h3>
+              <h3 className="mb-1.5 text-sm font-semibold">Método de pago</h3>
+              <p className="mb-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <ShieldCheck className="size-3.5 text-primary" />
+                Tus datos de pago nunca se comparten con terceros — verificamos cada pago a mano.
+              </p>
               <RadioGroup value={metodoPago} onValueChange={(v) => setMetodoPago(v as typeof metodoPago)}>
                 <div className="rounded-xl border border-border/60 p-4">
                   <label className="flex items-center gap-3">
@@ -934,7 +942,7 @@ export function CheckoutWizard({
           </Card>
         )}
 
-        {paso === 3 && (
+        {paso === 2 && (
           <Card>
             <CardContent className="space-y-4 pt-6">
               <h3 className="text-sm font-semibold">Revisa tu pedido</h3>
@@ -991,10 +999,20 @@ export function CheckoutWizard({
         <Card className="sticky top-24">
           <CardContent className="space-y-3 pt-6">
             <h3 className="text-sm font-semibold">Resumen del pedido</h3>
-            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+            <div className="max-h-56 space-y-3 overflow-y-auto pr-1">
               {items.map((i) => (
-                <div key={`${i.productoId}-${i.varianteId}`} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
+                <div key={`${i.productoId}-${i.varianteId}`} className="flex items-center gap-3 text-sm">
+                  <div className="size-10 shrink-0 overflow-hidden rounded-lg border border-border/60">
+                    <ProductoMedia
+                      categoriaSlug={i.categoriaSlug}
+                      imagenUrl={i.imagenUrl}
+                      alt={i.nombre}
+                      className="size-full"
+                      iconClassName="size-4"
+                      sizes="40px"
+                    />
+                  </div>
+                  <span className="flex-1 text-muted-foreground">
                     {i.cantidad}x {i.nombre}
                     {i.varianteLabel ? ` (${i.varianteLabel})` : ""}
                   </span>
