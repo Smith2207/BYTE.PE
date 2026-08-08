@@ -1,8 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 import { ProductoMedia } from "@/components/catalogo/producto-media";
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { gsap, prefersReducedMotion, hasFinePointer } from "@/lib/gsap";
 import { cn } from "@/lib/utils";
 
 /**
@@ -20,9 +23,27 @@ export function GaleriaProducto({
   nombre: string;
 }) {
   const [seleccionada, setSeleccionada] = React.useState(0);
-  const frameRef = React.useRef<HTMLDivElement>(null);
+  const [lightboxAbierto, setLightboxAbierto] = React.useState(false);
+  const frameRef = React.useRef<HTMLButtonElement>(null);
   const imgWrapRef = React.useRef<HTMLDivElement>(null);
   const primerRender = React.useRef(true);
+
+  const anterior = React.useCallback(() => {
+    setSeleccionada((i) => (i - 1 + imagenes.length) % imagenes.length);
+  }, [imagenes.length]);
+  const siguiente = React.useCallback(() => {
+    setSeleccionada((i) => (i + 1) % imagenes.length);
+  }, [imagenes.length]);
+
+  React.useEffect(() => {
+    if (!lightboxAbierto) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "ArrowLeft") anterior();
+      if (e.key === "ArrowRight") siguiente();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [lightboxAbierto, anterior, siguiente]);
 
   React.useEffect(() => {
     if (primerRender.current) {
@@ -40,7 +61,7 @@ export function GaleriaProducto({
   }, [seleccionada]);
 
   React.useEffect(() => {
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion() || !hasFinePointer()) return;
     const frame = frameRef.current;
     const target = imgWrapRef.current;
     if (!frame || !target) return;
@@ -70,9 +91,12 @@ export function GaleriaProducto({
 
   return (
     <div>
-      <div
+      <button
+        type="button"
         ref={frameRef}
-        className="group relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/5"
+        onClick={() => setLightboxAbierto(true)}
+        aria-label="Ampliar foto del producto"
+        className="group relative block w-full cursor-zoom-in overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/5 text-left"
         style={{ perspective: "1000px" }}
       >
         <div ref={imgWrapRef} style={{ transformStyle: "preserve-3d" }}>
@@ -88,7 +112,10 @@ export function GaleriaProducto({
         </div>
         {/* Barrido de luz al hover */}
         <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-tr from-transparent via-foreground/10 to-transparent transition-transform duration-1000 ease-out group-hover:translate-x-full" />
-      </div>
+        <div className="absolute bottom-3 right-3 flex size-9 items-center justify-center rounded-full bg-background/80 text-foreground shadow-sm backdrop-blur transition-opacity group-hover:opacity-100 sm:opacity-0">
+          <ZoomIn className="size-4" />
+        </div>
+      </button>
 
       {imagenes.length > 1 && (
         <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
@@ -116,6 +143,50 @@ export function GaleriaProducto({
           ))}
         </div>
       )}
+
+      <Dialog open={lightboxAbierto} onOpenChange={setLightboxAbierto}>
+        <DialogContent className="max-w-3xl border-none bg-transparent p-0 shadow-none sm:rounded-2xl">
+          <DialogTitle className="sr-only">{nombre}</DialogTitle>
+          <div className="relative">
+            <ProductoMedia
+              categoriaSlug={categoriaSlug}
+              imagenUrl={imagenes[seleccionada]}
+              alt={nombre}
+              className="aspect-square w-full rounded-2xl"
+              iconClassName="size-32 text-foreground/40"
+              sizes="(max-width: 768px) 100vw, 768px"
+              priority
+            />
+            {imagenes.length > 1 && (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  aria-label="Foto anterior"
+                  onClick={anterior}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full shadow-md"
+                >
+                  <ChevronLeft className="size-5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  aria-label="Foto siguiente"
+                  onClick={siguiente}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full shadow-md"
+                >
+                  <ChevronRight className="size-5" />
+                </Button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-background/80 px-3 py-1 text-xs font-medium backdrop-blur">
+                  {seleccionada + 1} / {imagenes.length}
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
