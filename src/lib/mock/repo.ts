@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, inArray, lte, ne, or, sql } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { db } from "@/db";
 import { categorias, productos, variantesProducto } from "@/db/schema";
 import { calcularCostoPonderado } from "@/lib/compras/costeo";
@@ -181,7 +182,7 @@ async function mapaCategorias() {
 
 // ---------- Lecturas públicas del catálogo ----------
 
-export async function getCategorias(): Promise<CategoriaConHijas[]> {
+async function _getCategorias(): Promise<CategoriaConHijas[]> {
   const todas = await db.select().from(categorias);
   return todas
     .filter((c) => !c.categoriaPadreId)
@@ -195,13 +196,21 @@ export async function getCategorias(): Promise<CategoriaConHijas[]> {
     }));
 }
 
-export async function getMarcas(): Promise<string[]> {
+/** Cacheada: las categorías casi nunca cambian y se piden en cada página
+ * (navbar, catálogo, producto) — evita un round-trip a la DB por request. */
+export const getCategorias = unstable_cache(_getCategorias, ["categorias"], {
+  revalidate: 300,
+});
+
+async function _getMarcas(): Promise<string[]> {
   const filas = await db
     .selectDistinct({ marca: productos.marca })
     .from(productos)
     .where(eq(productos.activo, true));
   return filas.map((f) => f.marca).filter((m): m is string => Boolean(m)).sort();
 }
+
+export const getMarcas = unstable_cache(_getMarcas, ["marcas"], { revalidate: 300 });
 
 /** Solo slug + fecha de actualización, para el sitemap — evita traer la
  * ficha completa de cada producto solo para listar URLs. */
@@ -212,7 +221,7 @@ export async function listarSlugsProductos(): Promise<{ slug: string; updatedAt:
     .where(eq(productos.activo, true));
 }
 
-export async function getProductosDestacados(limit = 4): Promise<ProductoCatalogo[]> {
+async function _getProductosDestacados(limit = 4): Promise<ProductoCatalogo[]> {
   const categoriasPorId = await mapaCategorias();
   const filas = await db
     .select()
@@ -225,6 +234,10 @@ export async function getProductosDestacados(limit = 4): Promise<ProductoCatalog
   );
 }
 
+export const getProductosDestacados = unstable_cache(_getProductosDestacados, ["destacados"], {
+  revalidate: 60,
+});
+
 export type FiltrosProductos = {
   categoriaSlug?: string;
   marcas?: string[];
@@ -236,7 +249,7 @@ export type FiltrosProductos = {
   pageSize?: number;
 };
 
-export async function getProductos(filtros: FiltrosProductos = {}) {
+async function _getProductos(filtros: FiltrosProductos = {}) {
   const { marcas, precioMin, precioMax, orden = "relevancia", busqueda } = filtros;
   const page = filtros.page ?? 1;
   const pageSize = filtros.pageSize ?? 12;
@@ -307,7 +320,15 @@ export async function getProductos(filtros: FiltrosProductos = {}) {
   return { items, total, page, pageSize };
 }
 
-export async function getProductoBySlug(slug: string) {
+/** Cacheada por combinación de filtros (incluidos en la key automáticamente
+ * por unstable_cache al hashear los argumentos) — el precio/stock mostrado
+ * puede quedar hasta 60s desatrasado, pero el checkout revalida stock real
+ * en la propia transacción, así que no hay riesgo de sobreventa. */
+export const getProductos = unstable_cache(_getProductos, ["productos-lista"], {
+  revalidate: 60,
+});
+
+async function _getProductoBySlug(slug: string) {
   const categoriasPorId = await mapaCategorias();
   const [productoFila] = await db
     .select()
@@ -354,6 +375,12 @@ export async function getProductoBySlug(slug: string) {
 
   return { producto, variantes, relacionados };
 }
+
+export const getProductoBySlug = unstable_cache(
+  _getProductoBySlug,
+  ["producto-por-slug"],
+  { revalidate: 60 },
+);
 
 export async function getProductoPorId(productoId: string): Promise<ProductoCatalogo | null> {
   const categoriasPorId = await mapaCategorias();
