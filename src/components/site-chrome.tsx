@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { AuthModal } from "@/components/auth/auth-modal";
+import type { CategoriaConHijas } from "@/lib/mock/repo";
 
 // Transición de página con framer-motion — complementa a GSAP/Lenis (que
 // animan *dentro* de cada página) cubriendo lo que ellos no hacen: el
@@ -35,10 +36,16 @@ function TransicionPagina({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function SiteChrome({ children }: { children: React.ReactNode }) {
+export function SiteChrome({
+  children,
+  categorias,
+}: {
+  children: React.ReactNode;
+  categorias: CategoriaConHijas[];
+}) {
   return (
     <>
-      <Navbar />
+      <Navbar categorias={categorias} />
       <main className="flex-1">
         <TransicionPagina>{children}</TransicionPagina>
       </main>

@@ -2,8 +2,19 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, Search, Heart, ShoppingBag, User, LogOut, Package, Shield } from "lucide-react";
+import {
+  Menu,
+  Search,
+  X,
+  Heart,
+  ShoppingBag,
+  User,
+  LogOut,
+  Package,
+  Shield,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +41,7 @@ import { useCart } from "@/lib/cart/cart-context";
 import { FloatingIndicator } from "@/components/fx/floating-indicator";
 import { StaggerFields, StaggerField } from "@/components/fx/stagger-fields";
 import { useAbrirAuthModal } from "@/components/auth/use-auth-modal";
+import type { CategoriaConHijas } from "@/lib/mock/repo";
 
 /** Pop sutil al pasar el mouse/tocar — para íconos sueltos del navbar
  * (wishlist, cuenta) que no tienen ninguna otra animación propia. */
@@ -45,11 +57,15 @@ function IconPop({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Navbar() {
+export function Navbar({ categorias }: { categorias: CategoriaConHijas[] }) {
+  const subcategoriasPorSlug = new Map(categorias.map((c) => [c.slug, c.subcategorias]));
   const [scrolled, setScrolled] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = React.useState(false);
   const [hoverSlug, setHoverSlug] = React.useState<string | null>(null);
   const navRef = React.useRef<HTMLElement>(null);
+  const mobileSearchInputRef = React.useRef<HTMLInputElement>(null);
+  const router = useRouter();
   const { cantidadTotal } = useCart();
   const { data: session, status } = useSession();
   const abrirAuthModal = useAbrirAuthModal();
@@ -60,6 +76,18 @@ export function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  React.useEffect(() => {
+    if (mobileSearchOpen) mobileSearchInputRef.current?.focus();
+  }, [mobileSearchOpen]);
+
+  function handleBuscar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const q = new FormData(e.currentTarget).get("q");
+    const query = typeof q === "string" ? q.trim() : "";
+    router.push(query ? `/productos?q=${encodeURIComponent(query)}` : "/productos");
+    setMobileSearchOpen(false);
+  }
 
   return (
     <header
@@ -84,17 +112,34 @@ export function Navbar() {
               </SheetTitle>
             </SheetHeader>
             <StaggerFields className="mt-6 flex flex-col gap-1">
-              {categoriasNav.map((c) => (
-                <StaggerField key={c.slug}>
-                  <Link
-                    href={`/productos?categoria=${c.slug}`}
-                    onClick={() => setMobileOpen(false)}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition hover:bg-secondary hover:text-foreground"
-                  >
-                    {c.nombre}
-                  </Link>
-                </StaggerField>
-              ))}
+              {categoriasNav.map((c) => {
+                const subcategorias = subcategoriasPorSlug.get(c.slug) ?? [];
+                return (
+                  <StaggerField key={c.slug}>
+                    <Link
+                      href={`/productos?categoria=${c.slug}`}
+                      onClick={() => setMobileOpen(false)}
+                      className="block rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/80 transition hover:bg-secondary hover:text-foreground"
+                    >
+                      {c.nombre}
+                    </Link>
+                    {subcategorias.length > 0 && (
+                      <div className="ml-3 space-y-0.5 border-l border-border/60 pl-3">
+                        {subcategorias.map((sub) => (
+                          <Link
+                            key={sub.slug}
+                            href={`/productos?categoria=${sub.slug}`}
+                            onClick={() => setMobileOpen(false)}
+                            className="block rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+                          >
+                            {sub.nombre}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </StaggerField>
+                );
+              })}
               <StaggerField>
                 <Link
                   href="/productos"
@@ -124,29 +169,57 @@ export function Navbar() {
           className="relative hidden items-center gap-1 lg:flex"
         >
           <FloatingIndicator containerRef={navRef} activeKey={hoverSlug ?? ""} />
-          {categoriasNav.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/productos?categoria=${c.slug}`}
-              data-indicator-item
-              data-active={hoverSlug === c.slug}
-              onMouseEnter={() => setHoverSlug(c.slug)}
-              className="relative rounded-full px-3.5 py-2 text-sm font-medium text-foreground/75 transition hover:text-foreground"
-            >
-              {c.nombre}
-            </Link>
-          ))}
+          {categoriasNav.map((c) => {
+            const subcategorias = subcategoriasPorSlug.get(c.slug) ?? [];
+            return (
+              <div key={c.slug} className="group relative">
+                <Link
+                  href={`/productos?categoria=${c.slug}`}
+                  data-indicator-item
+                  data-active={hoverSlug === c.slug}
+                  onMouseEnter={() => setHoverSlug(c.slug)}
+                  className="relative block rounded-full px-3.5 py-2 text-sm font-medium text-foreground/75 transition hover:text-foreground"
+                >
+                  {c.nombre}
+                </Link>
+                {subcategorias.length > 0 && (
+                  <div className="invisible absolute left-0 top-full z-10 pt-2 opacity-0 transition group-hover:visible group-hover:opacity-100">
+                    <div className="min-w-48 rounded-xl border border-border/60 bg-popover p-1.5 shadow-lg">
+                      {subcategorias.map((sub) => (
+                        <Link
+                          key={sub.slug}
+                          href={`/productos?categoria=${sub.slug}`}
+                          className="block rounded-lg px-3 py-2 text-sm text-foreground/80 transition hover:bg-secondary hover:text-foreground"
+                        >
+                          {sub.nombre}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          <div className="relative hidden sm:block">
+          <form onSubmit={handleBuscar} className="relative hidden sm:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              name="q"
+              type="search"
               placeholder="Buscar productos..."
+              aria-label="Buscar productos"
               className="h-9 w-40 rounded-full bg-secondary/60 pl-9 md:w-56"
             />
-          </div>
-          <Button variant="ghost" size="icon" className="sm:hidden" aria-label="Buscar">
+          </form>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="sm:hidden"
+            aria-label="Buscar"
+            onClick={() => setMobileSearchOpen(true)}
+          >
             <Search className="size-5" />
           </Button>
           <Button variant="ghost" size="icon" asChild aria-label="Lista de deseos">
@@ -228,6 +301,39 @@ export function Navbar() {
           </Button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {mobileSearchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-b border-border/60 bg-background sm:hidden"
+          >
+            <form onSubmit={handleBuscar} className="relative flex items-center gap-2 px-4 py-3">
+              <Search className="pointer-events-none absolute left-7 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                ref={mobileSearchInputRef}
+                name="q"
+                type="search"
+                placeholder="Buscar productos..."
+                aria-label="Buscar productos"
+                className="h-10 flex-1 rounded-full bg-secondary/60 pl-9"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Cerrar búsqueda"
+                onClick={() => setMobileSearchOpen(false)}
+              >
+                <X className="size-5" />
+              </Button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

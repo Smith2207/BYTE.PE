@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { categoriasNav, footerLegalLinks, siteConfig } from "@/lib/site-config";
+import { MetodosPago } from "@/components/metodos-pago";
 
 export function Footer() {
   return (
@@ -11,6 +12,7 @@ export function Footer() {
             {siteConfig.nombre}
           </span>
           <p className="mt-3 max-w-xs text-sm text-muted-foreground">{siteConfig.descripcion}</p>
+          <MetodosPago className="mt-5" />
         </div>
 
         <div>

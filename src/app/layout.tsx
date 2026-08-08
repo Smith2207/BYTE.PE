@@ -12,6 +12,7 @@ import { WhatsappButton } from "@/components/layout/whatsapp-button";
 import { Toaster } from "@/components/ui/sonner";
 import { siteConfig } from "@/lib/site-config";
 import { CookieConsent } from "@/components/analytics/cookie-consent";
+import { getCategorias } from "@/lib/mock/repo";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 // Fuente de impacto para titulares "cinematográficos" (hero) — separada de
@@ -41,11 +42,13 @@ const organizacionJsonLd = {
   areaServed: "PE",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const categorias = await getCategorias();
+
   return (
     <html
       lang="es"
@@ -63,7 +66,7 @@ export default function RootLayout({
             <CartProvider>
               <SmoothScrollProvider>
                 <div className="relative flex min-h-screen flex-col">
-                  <SiteChrome>{children}</SiteChrome>
+                  <SiteChrome categorias={categorias}>{children}</SiteChrome>
                 </div>
                 <WhatsappButton />
                 <Toaster />
